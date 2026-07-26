@@ -1,0 +1,13 @@
+# Python hook bytecode — regenerated on every run, never source
+__pycache__/
+*.py[cod]
+
+# Unreal, when the project lands here
+Binaries/
+Build/
+DerivedDataCache/
+Intermediate/
+Saved/
+*.sln
+*.suo
+.vs/
