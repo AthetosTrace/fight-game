@@ -361,34 +361,87 @@ _HARD_BOUNDARY_RE_RULE4 = re.compile(r"\b(?:and|but)\b", re.IGNORECASE)
 # trigger it is supposed to govern - this is the gap that let "None
 # constitute ..., or an alternate arena state." slip through as a false
 # positive.
+_LEADING_LIST_NEGATOR_RE_RULE4 = re.compile(
+    r"^[\s,]*\b(?:none|nothing|neither|no\s+\w+)\b", re.IGNORECASE
+)
+
+# Added per Assignment #04 audit fix (2026-07-28, negated-governing-predicate
+# revision): a leading quantifier ("None", "No <subject>", ...) is not the
+# only way English denies a whole coordinated object list. A *negated
+# governing predicate* - a verb of assertion negated by "does not"/"do
+# not"/"did not"/"never"/"cannot"/"can not" (or its contraction) - governs
+# every Rule 4 trigger occurrence coordinated as its object, across commas
+# and "or"/"nor", exactly like a leading list negator does: "It does not
+# describe a second arena, an alternate version of the Ring, or any location
+# beyond what's on screen." denies all three objects of "describe", not just
+# the first.
 #
-# The list-negation scope must not become a second way to blindly suppress
-# the rest of the sentence, so it is bounded to one assertion segment. A
-# sentence is first split on true assertion boundaries - "but", "however",
-# "yet", "instead", a semicolon, or a comma immediately followed by "and" -
-# each of which starts a fresh, independently-true statement. Only a segment
-# that itself opens with the leading negator is governed; a later segment
-# (after "but", after a semicolon, ...) is scanned exactly as before, so
-# "None are destructible, but Phase 2 introduces an alternate arena state."
-# still flags the "but" clause.
+# This is intentionally a *pattern* (negation word + governing verb), not a
+# hardcoded phrase: it fires for "does not describe", "does not add", "does
+# not introduce", "never creates", "cannot open", and their close
+# grammatical variants alike, so no single wording (e.g. "does not
+# describe") is special-cased. It is also intentionally narrow - only these
+# specific negation words paired with these specific assertion verbs count -
+# so a generic "not" elsewhere in the sentence ("The text is not random and
+# introduces a second space.") never matches this pattern and can never
+# suppress an unrelated, later trigger; that would be exactly the blanket
+# "any not anywhere suppresses everything" rule this fix must not become.
+#
+# The match is anchored near the *start* of the segment (allowing up to four
+# filler words for the subject - "it", "the pack", "the text", "the
+# design", ...) so a negated predicate deep inside a segment, governing
+# nothing before it, can never be mistaken for the segment's governing
+# predicate.
+_NEGATED_GOVERNING_PREDICATE_RE_RULE4 = re.compile(
+    r"^[\s,]*(?:\w+\s+){0,4}"
+    r"(?:does\s+not|doesn't|do\s+not|did\s+not|never|cannot|can\s+not|can't)\s+"
+    r"(?:describes?|adds?|introduces?|creates?|opens?)\b",
+    re.IGNORECASE,
+)
+
+# The list-negation scope (leading quantifier or negated governing
+# predicate) must not become a second way to blindly suppress the rest of
+# the sentence, so it is bounded to one assertion segment. A sentence is
+# first split on true assertion boundaries - "but", "however", "yet",
+# "instead", a semicolon, or a comma immediately followed by "and" that
+# opens a *fresh clause with its own subject and predicate* - each of which
+# starts a fresh, independently-true statement. Only a segment that itself
+# opens with a governing negator (leading quantifier or negated predicate)
+# is suppressed; a later segment (after "but", after a semicolon, ...) is
+# scanned exactly as before, so "None are destructible, but Phase 2
+# introduces an alternate arena state." still flags the "but" clause, and so
+# does "It does not describe a second arena, but Phase 2 opens another
+# arena."
 #
 # A *bare* coordinating "and" (no preceding comma) is deliberately NOT a
 # boundary: "None of these effects creates a second arena and another
 # arena." and "No reaction introduces a second space and an alternate arena
 # effect." both coordinate two objects of the same governed verb, not two
 # independent statements - splitting on bare "and" would wrongly cut the
-# second object out of "None"/"No reaction"'s scope and flag it as a false
-# positive. "and" only becomes a boundary once a comma marks it as joining
-# two independent clauses ("...second space, and Phase 2 opens another
-# arena." - the second clause has its own subject "Phase 2" and is not an
-# object of "introduces"). "or"/"nor" are never boundaries here, since a
-# list negator is precisely what makes them distribute the negation instead
-# of starting a fresh assertion.
-_ASSERTION_BOUNDARY_RE_RULE4 = re.compile(
-    r"\b(?:but|however|yet|instead)\b|,\s*\band\b|;", re.IGNORECASE
+# second object out of the governing negator's scope and flag it as a false
+# positive. "and" only becomes a *candidate* boundary once a comma marks it
+# as joining two independent clauses ("...second space, and Phase 2 opens
+# another arena." - the second clause has its own subject "Phase 2" and is
+# not an object of "introduces"). "or"/"nor" are never boundaries here,
+# since a governing negator is precisely what makes them distribute the
+# negation instead of starting a fresh assertion.
+#
+# A comma-plus-"and" is itself not automatically a boundary, though: an
+# Oxford-comma list ending ("...an alternate arena, and another arena.") is
+# still just the last coordinated object, not a new clause - there is no new
+# subject or predicate after "and", only (optionally) an article and a Rule
+# 4 trigger phrase running straight to the end of the segment/sentence. That
+# specific shape - and only that shape - is exempted from the boundary so a
+# genuinely fresh clause ("...second space, and Phase 2 opens another
+# arena.") still splits normally.
+_KEYWORD_BOUNDARY_RE_RULE4 = re.compile(
+    r"\b(?:but|however|yet|instead)\b|;", re.IGNORECASE
 )
-_LEADING_LIST_NEGATOR_RE_RULE4 = re.compile(
-    r"^[\s,]*\b(?:none|nothing|neither|no\s+\w+)\b", re.IGNORECASE
+_COMMA_AND_RE_RULE4 = re.compile(r",\s*\band\b", re.IGNORECASE)
+_TRIGGER_PHRASES_ALT_RULE4 = "|".join(re.escape(p) for p in _TRIGGER_PHRASES_RULE4)
+_OXFORD_LIST_ENDING_RE_RULE4 = re.compile(
+    r",\s*and\s+(?:a|an|the)?\s*(?:" + _TRIGGER_PHRASES_ALT_RULE4 + r")\b\s*[.!?]?\s*$",
+    re.IGNORECASE,
 )
 
 
@@ -398,6 +451,45 @@ def _rule4_segment_is_list_negated(segment):
     meaning every Rule 4 trigger occurrence in this segment is governed by
     that negator and none of them should be treated as an assertion."""
     return bool(_LEADING_LIST_NEGATOR_RE_RULE4.match(segment))
+
+
+def _rule4_segment_has_negated_governing_predicate(segment):
+    """True if `segment` opens with a negated governing predicate ("does not
+    describe", "never introduces", "cannot open", ...) per
+    `_NEGATED_GOVERNING_PREDICATE_RE_RULE4`, meaning every Rule 4 trigger
+    occurrence coordinated as that predicate's object - across commas and
+    "or"/"nor" - is denied, not asserted."""
+    return bool(_NEGATED_GOVERNING_PREDICATE_RE_RULE4.match(segment))
+
+
+def _rule4_split_into_assertion_segments(sentence_lower):
+    """Split `sentence_lower` (already lowercased) into assertion segments on
+    true assertion boundaries: "but"/"however"/"yet"/"instead", a semicolon,
+    or a comma immediately followed by "and" that begins a fresh clause with
+    its own subject and predicate.
+
+    A comma-plus-"and" that merely closes a coordinated object list - an
+    Oxford-comma ending that runs straight into a Rule 4 trigger phrase and
+    then the end of the segment/sentence, e.g. "..., an alternate arena, and
+    another arena." - is deliberately NOT treated as a boundary here (see
+    `_OXFORD_LIST_ENDING_RE_RULE4` above): splitting on it would sever the
+    last list item from the governing negation that covers the rest of the
+    list, exactly the false positive this function exists to avoid.
+    """
+    boundaries = [match.span() for match in _KEYWORD_BOUNDARY_RE_RULE4.finditer(sentence_lower)]
+    for match in _COMMA_AND_RE_RULE4.finditer(sentence_lower):
+        if _OXFORD_LIST_ENDING_RE_RULE4.match(sentence_lower, match.start()):
+            continue  # Oxford-comma list ending, not a new assertion
+        boundaries.append(match.span())
+    boundaries.sort()
+
+    segments = []
+    cursor = 0
+    for start, end in boundaries:
+        segments.append(sentence_lower[cursor:start])
+        cursor = end
+    segments.append(sentence_lower[cursor:])
+    return segments
 
 
 def _rule4_local_negation_window(clause, phrase_start):
@@ -434,18 +526,22 @@ def _rule4_unnegated_phrase_hit(sentence):
     order is preserved:
 
     1. The sentence is split into assertion segments on true assertion
-       boundaries (see `_ASSERTION_BOUNDARY_RE_RULE4`). A segment that opens
-       with a leading list negator (see `_rule4_segment_is_list_negated`) is
-       skipped outright - every occurrence in it is governed by that
-       negator, no matter how many commas or "or"/"nor" sit between the
-       negator and the occurrence.
-    2. Within a segment that is *not* list-negated, behavior is unchanged
+       boundaries (see `_rule4_split_into_assertion_segments`). A segment
+       that opens with a leading list negator (see
+       `_rule4_segment_is_list_negated`) or a negated governing predicate
+       (see `_rule4_segment_has_negated_governing_predicate`) is skipped
+       outright - every occurrence in it is governed by that negator/
+       predicate, no matter how many commas or "or"/"nor" sit between it and
+       the occurrence.
+    2. Within a segment that is governed by neither, behavior is unchanged
        from before this fix: split into clauses on commas/semicolons, and
        within a clause check each occurrence's own local negation window.
     """
-    for segment in _ASSERTION_BOUNDARY_RE_RULE4.split(sentence.lower()):
+    for segment in _rule4_split_into_assertion_segments(sentence.lower()):
         if _rule4_segment_is_list_negated(segment):
             continue  # whole segment denied by a leading list negator
+        if _rule4_segment_has_negated_governing_predicate(segment):
+            continue  # whole segment denied by a negated governing predicate
         for clause in re.split(r"[,;]", segment):
             for phrase_start, phrase in _rule4_all_occurrences(clause):
                 window = _rule4_local_negation_window(clause, phrase_start)
