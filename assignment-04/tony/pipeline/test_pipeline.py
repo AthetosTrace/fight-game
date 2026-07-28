@@ -420,6 +420,48 @@ class CriticRuleTests(unittest.TestCase):
         text = "The Impact Window opens only after a correctly timed perfect dodge or counter."
         self.assertIsNone(critic_rules.check_rule_3_free_impact_window(text))
 
+    def test_rule_3_negative_false_positive_nothing_presses_or_converts(self):
+        # The exact canon-correct sentence the 2026-07-28 audit found
+        # incorrectly flagged - "nothing" negates both trigger phrases in
+        # the same sentence.
+        text = (
+            "Nothing about this window presses the input for the player or "
+            "converts a miss into a success."
+        )
+        self.assertIsNone(critic_rules.check_rule_3_free_impact_window(text))
+
+    def test_rule_3_negative_does_not_press_the_input(self):
+        text = "The game does not press the input for the player."
+        self.assertIsNone(critic_rules.check_rule_3_free_impact_window(text))
+
+    def test_rule_3_negative_miss_never_converted(self):
+        text = "A miss is never converted into success."
+        self.assertIsNone(critic_rules.check_rule_3_free_impact_window(text))
+
+    def test_rule_3_positive_presses_the_input_for_the_player(self):
+        text = "The game presses the input for the player."
+        result = critic_rules.check_rule_3_free_impact_window(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 3)
+
+    def test_rule_3_positive_miss_converts_into_success(self):
+        text = "A miss converts into success."
+        result = critic_rules.check_rule_3_free_impact_window(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 3)
+
+    def test_rule_3_positive_automatically_succeeds(self):
+        text = "The Impact Window automatically succeeds."
+        result = critic_rules.check_rule_3_free_impact_window(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 3)
+
+    def test_rule_3_positive_holding_the_input_guarantees_success(self):
+        text = "Holding the input guarantees success."
+        result = critic_rules.check_rule_3_free_impact_window(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 3)
+
     def test_rule_4_positive_fifth_attack(self):
         text = "Crimson Vanguard unleashes Attack E, a devastating finisher unseen until Phase 2."
         result = critic_rules.check_rule_4_extra_arena_or_attack(text)

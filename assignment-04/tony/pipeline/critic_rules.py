@@ -156,35 +156,55 @@ _TRIGGER_PHRASES_RULE3 = (
     "auto-played",
     "auto-plays the input",
     "converts a miss into success",
+    "converted into success",
+    "miss converts into success",
     "free impact window",
     "presses the input for the player",
+    "press the input for the player",
     "mashing the input guarantees",
     "holding the input guarantees",
 )
 
+# Added per Assignment #04 audit fix (2026-07-28): a sentence that names one
+# of the phrases above only to deny it - "Nothing about this window presses
+# the input for the player" - is canon-correct, not a violation. Rule 3 is
+# checked sentence-by-sentence so a negation cue anywhere in the *same*
+# sentence as the phrase suppresses the flag; a negation elsewhere in the
+# text (a different sentence) must not launder a real violation.
+_NEGATION_WORDS_RULE3 = (
+    "not",
+    "never",
+    "nothing",
+    "does not",
+    "cannot",
+    "no automatic",
+    "without converting",
+)
+
 
 def check_rule_3_free_impact_window(text):
-    lowered_full = text.lower()
-    hit = _contains_any(lowered_full, _TRIGGER_PHRASES_RULE3)
-    if not hit:
-        return None
     for sentence in _split_sentences(text):
-        if hit in sentence.lower():
-            return Violation(
-                rule_number=3,
-                rule_name="Automatic or free Impact Window success",
-                matched_sentence=sentence,
-                explanation=(
-                    "Text implies an Impact Window can succeed without a correctly "
-                    "timed player input, via '{}'.".format(hit)
-                ),
-                citation="impact-window-cinematics.md, \"Impact Windows\"",
-                correction_instruction=(
-                    "Rewrite to state the window requires a correctly timed player "
-                    "input; failure returns to combat with no cinematic extension. "
-                    "Keep the sentence's original topic/length."
-                ),
-            )
+        lowered = sentence.lower()
+        hit = _contains_any(lowered, _TRIGGER_PHRASES_RULE3)
+        if not hit:
+            continue
+        if any(neg in lowered for neg in _NEGATION_WORDS_RULE3):
+            continue  # sentence explicitly negates the violation phrase
+        return Violation(
+            rule_number=3,
+            rule_name="Automatic or free Impact Window success",
+            matched_sentence=sentence,
+            explanation=(
+                "Text implies an Impact Window can succeed without a correctly "
+                "timed player input, via '{}'.".format(hit)
+            ),
+            citation="impact-window-cinematics.md, \"Impact Windows\"",
+            correction_instruction=(
+                "Rewrite to state the window requires a correctly timed player "
+                "input; failure returns to combat with no cinematic extension. "
+                "Keep the sentence's original topic/length."
+            ),
+        )
     return None
 
 
