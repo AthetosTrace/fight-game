@@ -196,7 +196,16 @@ flowchart TD
     V -->|build-sequence.md| G2{developer complete?}
     G2 -->|no| X2[BLOCKED]
     G2 -->|yes| I[Inspector]
-    I -->|inspection.md| Z([Ready to submit])
+    I -->|inspection.md| G3{inspector complete?}
+    G3 -->|no| X3[BLOCKED]
+    G3 -->|yes| F[Framework Evaluator]
+    F -->|framework-evaluation.md| G4{recommendation human-approved?}
+    G4 -->|no| X4[BLOCKED]
+    G4 -->|yes| A[Combat Integration Architect]
+    A -->|combat-integration-plan.md| G5{architect complete?}
+    G5 -->|no| X5[BLOCKED]
+    G5 -->|yes| CI[Cinematic Integration Inspector]
+    CI -->|cinematic-integration-inspection.md| H([Human approval / implementation decision])
 ```
 
 ## The crew (one specialist at a time)
