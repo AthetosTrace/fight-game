@@ -782,6 +782,175 @@ class CriticRuleTests(unittest.TestCase):
         self.assertEqual(result.rule_number, 4)
         self.assertIn("second space", result.matched_sentence.lower())
 
+    # -- 2026-07-28 audit fix (list-negation revision): a leading "None" /
+    # "Nothing" / "Neither" / "No <subject>" must govern every Rule 4
+    # trigger later in the same enumerated list, across commas and
+    # "or"/"nor", but must stop at a true assertion boundary. -------------
+
+    def test_rule_4_negative_none_constitute_enumeration(self):
+        # The exact false positive from the audit: the leading "None"
+        # governs all three comma/"or"-joined list items, including the
+        # final "an alternate arena state".
+        text = (
+            "None constitute a destructible object, a damage volume, or an "
+            "alternate arena state."
+        )
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule4_all_occurrences(text.lower())
+        }
+        self.assertIn("alternate arena", matched_phrases)
+        self.assertIsNone(critic_rules.check_rule_4_extra_arena_or_attack(text))
+
+    def test_rule_4_negative_none_of_these_effects_enumeration(self):
+        text = (
+            "None of these effects creates a second arena, an alternate "
+            "arena, or another arena."
+        )
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule4_all_occurrences(text.lower())
+        }
+        self.assertIn("second arena", matched_phrases)
+        self.assertIn("alternate arena", matched_phrases)
+        self.assertIn("another arena", matched_phrases)
+        self.assertIsNone(critic_rules.check_rule_4_extra_arena_or_attack(text))
+
+    def test_rule_4_negative_no_reaction_introduces_enumeration(self):
+        text = (
+            "No reaction introduces a second space, alternate arena, or "
+            "off-screen location."
+        )
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule4_all_occurrences(text.lower())
+        }
+        self.assertIn("second space", matched_phrases)
+        self.assertIn("alternate arena", matched_phrases)
+        self.assertIn("off-screen location", matched_phrases)
+        self.assertIsNone(critic_rules.check_rule_4_extra_arena_or_attack(text))
+
+    def test_rule_4_negative_neither_nor_creates_alternate_arena(self):
+        text = (
+            "Neither the lighting cue nor the debris reaction creates an "
+            "alternate arena."
+        )
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule4_all_occurrences(text.lower())
+        }
+        self.assertIn("alternate arena", matched_phrases)
+        self.assertIsNone(critic_rules.check_rule_4_extra_arena_or_attack(text))
+
+    # -- 2026-07-28 audit fix (bare-"and" revision): a bare coordinating
+    # "and" (no preceding comma) coordinates two objects of the same
+    # governed verb/negator and must NOT act as an assertion boundary - only
+    # a comma-plus-"and" splits off a fresh, independently-true clause. -----
+
+    def test_rule_4_negative_none_governs_both_sides_of_bare_and(self):
+        # The exact false positive from the follow-up audit: a bare "and"
+        # (no comma) coordinates two objects of "creates", both still under
+        # "None"'s scope.
+        text = "None of these effects creates a second arena and another arena."
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule4_all_occurrences(text.lower())
+        }
+        self.assertIn("second arena", matched_phrases)
+        self.assertIn("another arena", matched_phrases)
+        self.assertIsNone(critic_rules.check_rule_4_extra_arena_or_attack(text))
+
+    def test_rule_4_negative_no_reaction_governs_both_sides_of_bare_and(self):
+        text = (
+            "No reaction introduces a second space and an alternate arena "
+            "effect."
+        )
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule4_all_occurrences(text.lower())
+        }
+        self.assertIn("second space", matched_phrases)
+        self.assertIn("alternate arena", matched_phrases)
+        self.assertIsNone(critic_rules.check_rule_4_extra_arena_or_attack(text))
+
+    def test_rule_4_negative_neither_nor_second_arena_another_arena(self):
+        text = "Neither cue creates a second arena nor another arena."
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule4_all_occurrences(text.lower())
+        }
+        self.assertIn("second arena", matched_phrases)
+        self.assertIn("another arena", matched_phrases)
+        self.assertIsNone(critic_rules.check_rule_4_extra_arena_or_attack(text))
+
+    def test_rule_4_positive_list_negation_stops_at_but(self):
+        text = (
+            "None are destructible, but Phase 2 introduces an alternate "
+            "arena state."
+        )
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule4_all_occurrences(text.lower())
+        }
+        self.assertIn("alternate arena", matched_phrases)
+        result = critic_rules.check_rule_4_extra_arena_or_attack(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 4)
+
+    def test_rule_4_positive_list_negation_stops_at_semicolon(self):
+        text = "Nothing changes at first; later, a second arena opens."
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule4_all_occurrences(text.lower())
+        }
+        self.assertIn("second arena", matched_phrases)
+        result = critic_rules.check_rule_4_extra_arena_or_attack(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 4)
+
+    def test_rule_4_positive_list_negation_stops_at_but_no_additional_arena(self):
+        text = (
+            "No additional arena appears during Phase 1, but Phase 2 uses "
+            "an alternate version of the Ring."
+        )
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule4_all_occurrences(text.lower())
+        }
+        self.assertIn("additional arena", matched_phrases)
+        self.assertIn("alternate version of the ring", matched_phrases)
+        result = critic_rules.check_rule_4_extra_arena_or_attack(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 4)
+        self.assertIn("alternate version of the ring", result.matched_sentence.lower())
+
+    def test_rule_4_positive_list_negation_stops_at_and(self):
+        text = (
+            "No reaction introduces a second space, and Phase 2 opens "
+            "another arena."
+        )
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule4_all_occurrences(text.lower())
+        }
+        self.assertIn("second space", matched_phrases)
+        self.assertIn("another arena", matched_phrases)
+        result = critic_rules.check_rule_4_extra_arena_or_attack(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 4)
+        self.assertIn("another arena", result.matched_sentence.lower())
+
+    def test_rule_4_positive_list_negation_same_trigger_negated_then_flagged(self):
+        # Proves list-negation is scoped per assertion segment, not per
+        # trigger phrase: the first "alternate arena state" sits inside the
+        # "None constitute ..." segment and is governed by it, but the
+        # identical phrase recurs after "but", in a fresh segment that
+        # opens with no negator of its own, and that occurrence must still
+        # be flagged.
+        text = (
+            "None constitute an alternate arena state, but Phase 2 uses an "
+            "alternate arena state."
+        )
+        occurrences = critic_rules._rule4_all_occurrences(text.lower())
+        matched_phrases = {phrase for _, phrase in occurrences}
+        self.assertIn("alternate arena", matched_phrases)
+        self.assertGreaterEqual(
+            sum(1 for _, phrase in occurrences if phrase == "alternate arena"), 2
+        )
+        result = critic_rules.check_rule_4_extra_arena_or_attack(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 4)
+        self.assertIn("alternate arena", result.matched_sentence.lower())
+
     def test_rule_5_positive_altered_meter_gain(self):
         text = "A perfect dodge grants +9 meter, rewarding a clean defensive read."
         result = critic_rules.check_rule_5_altered_numbers(text)

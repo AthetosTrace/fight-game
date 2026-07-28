@@ -349,6 +349,56 @@ _TRIGGER_TUPLE_INDEX_RULE4 = {
 _NEGATION_RE_RULE4 = re.compile(r"\b(no|not|never|cannot|nothing)\b|n't", re.IGNORECASE)
 _HARD_BOUNDARY_RE_RULE4 = re.compile(r"\b(?:and|but)\b", re.IGNORECASE)
 
+# Added per Assignment #04 audit fix (2026-07-28, list-negation revision): a
+# leading quantified/list negator - "none", "nothing", "neither", or "no
+# <subject>" - governs every Rule 4 trigger occurrence for the rest of the
+# enumerated list it opens, even across commas and "or"/"nor" ("None
+# constitute a destructible object, a damage volume, or an alternate arena
+# state." denies all three list items, not just the first). The trigger-local
+# direct-negation logic above (`_rule4_local_negation_window`) only ever
+# looks at the words immediately governing one occurrence within one clause,
+# so it cannot see a negator that sits one or more commas upstream of the
+# trigger it is supposed to govern - this is the gap that let "None
+# constitute ..., or an alternate arena state." slip through as a false
+# positive.
+#
+# The list-negation scope must not become a second way to blindly suppress
+# the rest of the sentence, so it is bounded to one assertion segment. A
+# sentence is first split on true assertion boundaries - "but", "however",
+# "yet", "instead", a semicolon, or a comma immediately followed by "and" -
+# each of which starts a fresh, independently-true statement. Only a segment
+# that itself opens with the leading negator is governed; a later segment
+# (after "but", after a semicolon, ...) is scanned exactly as before, so
+# "None are destructible, but Phase 2 introduces an alternate arena state."
+# still flags the "but" clause.
+#
+# A *bare* coordinating "and" (no preceding comma) is deliberately NOT a
+# boundary: "None of these effects creates a second arena and another
+# arena." and "No reaction introduces a second space and an alternate arena
+# effect." both coordinate two objects of the same governed verb, not two
+# independent statements - splitting on bare "and" would wrongly cut the
+# second object out of "None"/"No reaction"'s scope and flag it as a false
+# positive. "and" only becomes a boundary once a comma marks it as joining
+# two independent clauses ("...second space, and Phase 2 opens another
+# arena." - the second clause has its own subject "Phase 2" and is not an
+# object of "introduces"). "or"/"nor" are never boundaries here, since a
+# list negator is precisely what makes them distribute the negation instead
+# of starting a fresh assertion.
+_ASSERTION_BOUNDARY_RE_RULE4 = re.compile(
+    r"\b(?:but|however|yet|instead)\b|,\s*\band\b|;", re.IGNORECASE
+)
+_LEADING_LIST_NEGATOR_RE_RULE4 = re.compile(
+    r"^[\s,]*\b(?:none|nothing|neither|no\s+\w+)\b", re.IGNORECASE
+)
+
+
+def _rule4_segment_is_list_negated(segment):
+    """True if `segment` opens with a leading quantified/list negator (none /
+    nothing / neither / no <subject>) per `_LEADING_LIST_NEGATOR_RE_RULE4`,
+    meaning every Rule 4 trigger occurrence in this segment is governed by
+    that negator and none of them should be treated as an assertion."""
+    return bool(_LEADING_LIST_NEGATOR_RE_RULE4.match(segment))
+
 
 def _rule4_local_negation_window(clause, phrase_start):
     """Return the slice of `clause` that governs negation for a trigger
@@ -376,16 +426,32 @@ def _rule4_all_occurrences(clause):
 
 
 def _rule4_unnegated_phrase_hit(sentence):
-    """Return the first Rule 4 trigger occurrence in `sentence` (checked
-    clause by clause, and within a clause in textual order) whose own local
-    negation window has no negation cue, or None if every occurrence in the
-    sentence is directly negated (or there is no occurrence at all)."""
-    for clause in re.split(r"[,;]", sentence.lower()):
-        for phrase_start, phrase in _rule4_all_occurrences(clause):
-            window = _rule4_local_negation_window(clause, phrase_start)
-            if _NEGATION_RE_RULE4.search(window):
-                continue  # this specific occurrence is directly negated
-            return phrase
+    """Return the first Rule 4 trigger occurrence in `sentence` whose own
+    local negation window has no negation cue, or None if every occurrence
+    in the sentence is negated (or there is no occurrence at all).
+
+    Scanned in two nested passes, both left-to-right so overall occurrence
+    order is preserved:
+
+    1. The sentence is split into assertion segments on true assertion
+       boundaries (see `_ASSERTION_BOUNDARY_RE_RULE4`). A segment that opens
+       with a leading list negator (see `_rule4_segment_is_list_negated`) is
+       skipped outright - every occurrence in it is governed by that
+       negator, no matter how many commas or "or"/"nor" sit between the
+       negator and the occurrence.
+    2. Within a segment that is *not* list-negated, behavior is unchanged
+       from before this fix: split into clauses on commas/semicolons, and
+       within a clause check each occurrence's own local negation window.
+    """
+    for segment in _ASSERTION_BOUNDARY_RE_RULE4.split(sentence.lower()):
+        if _rule4_segment_is_list_negated(segment):
+            continue  # whole segment denied by a leading list negator
+        for clause in re.split(r"[,;]", segment):
+            for phrase_start, phrase in _rule4_all_occurrences(clause):
+                window = _rule4_local_negation_window(clause, phrase_start)
+                if _NEGATION_RE_RULE4.search(window):
+                    continue  # this specific occurrence is directly negated
+                return phrase
     return None
 
 
