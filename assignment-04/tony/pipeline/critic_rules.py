@@ -490,3 +490,27 @@ shown to be least anticipated. When Phase 2 begins at 50% health, the same \
 four attacks re-time to a tighter rhythm, thrusters flaring brighter as the \
 Vanguard closes distance with less hesitation than before.
 """
+
+# The exact planted-violation sentence the fixture is built to trip on rule
+# #2. Kept as its own constant (rather than re-deriving it from run_critic at
+# import time) so the fixed correction below is a plain, inspectable literal.
+REGRESSION_FIXTURE_FLAGGED_SENTENCE = (
+    "Over the course of the fight, Crimson Vanguard learns from the player's "
+    "patterns and adapts its attacks in real time, favoring whichever of its "
+    "four strikes the fight has shown to be least anticipated."
+)
+
+# Fixed, canon-safe correction for the controlled fixture only. This is never
+# produced by a Claude call - the controlled fixture exists to prove the
+# critic can catch and correct a real hit without depending on a live model
+# response, so the corrected sentence is a hand-authored literal, re-verified
+# against all seven rules by pipeline.run_regression_fixture on every run.
+REGRESSION_FIXTURE_CORRECTED_SENTENCE = (
+    "Crimson Vanguard uses an authored state machine to select among four "
+    "fixed attacks by range and cooldown; it does not learn from the player "
+    "or adapt at runtime."
+)
+
+REGRESSION_FIXTURE_CORRECTED_TEXT = REGRESSION_FIXTURE_TEXT.replace(
+    REGRESSION_FIXTURE_FLAGGED_SENTENCE, REGRESSION_FIXTURE_CORRECTED_SENTENCE, 1
+)

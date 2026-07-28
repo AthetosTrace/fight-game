@@ -274,16 +274,33 @@ def finalize_output(output_cfg, draft_text, violations, model):
     return final_text
 
 
-def run_regression_fixture(model):
+def run_regression_fixture():
+    """Run the controlled rule-#2 regression fixture end to end.
+
+    Unlike apply_corrections (used for real generated drafts), this never
+    calls Claude: the fixture's planted violation always maps to the same
+    fixed, canon-safe correction, hand-authored and re-verified against all
+    seven deterministic rules on every run. If that fixed correction ever
+    stops passing (a rule drifted, or the fixture text changed underneath
+    it), this fails loudly via CorrectionValidationError rather than writing
+    out stale or invalid evidence.
+    """
     fixture_text = critic_rules.REGRESSION_FIXTURE_TEXT
     violations = critic_rules.run_critic(fixture_text)
-    if not violations:
-        # Defensive only - the fixture is designed to always trip rule #2.
+    rule_numbers = [v.rule_number for v in violations]
+    if rule_numbers != [2]:
+        # Defensive only - the fixture is designed to always trip exactly
+        # rule #2, nothing more and nothing less.
         raise PipelineError(
-            "Regression fixture did not trip any rule; the fixture or the "
-            "detectors have drifted out of sync and need review."
+            "Regression fixture must trip exactly rule #2; got rule(s) {} "
+            "instead. The fixture or the detectors have drifted out of sync "
+            "and need review.".format(rule_numbers)
         )
-    final_text, corrections = apply_corrections(fixture_text, violations, model)
+
+    corrected_text = critic_rules.REGRESSION_FIXTURE_CORRECTED_TEXT
+    critic_rules.verify_correction(corrected_text)
+
+    corrections = [(violations[0], critic_rules.REGRESSION_FIXTURE_CORRECTED_SENTENCE)]
     atomic_write_text(
         CRITIC_EVIDENCE_DIR / "regression-fixture.md",
         render_critic_evidence(
@@ -291,7 +308,7 @@ def run_regression_fixture(model):
             violations, corrections, is_fixture=True,
         ),
     )
-    return final_text
+    return corrected_text
 
 
 def main(argv=None):
@@ -332,7 +349,7 @@ def main(argv=None):
                 "All three natural drafts passed clean — running the controlled "
                 "regression fixture to demonstrate the critic."
             )
-            run_regression_fixture(model)
+            run_regression_fixture()
         else:
             print(
                 "At least one natural draft was flagged and corrected — "

@@ -574,6 +574,9 @@ class ApplyCorrectionsRevalidationTests(unittest.TestCase):
         )
         with self.assertRaises(critic_rules.CorrectionValidationError):
             pipeline.apply_corrections(draft_text, violations, model="sonnet")
+        # Real-output corrections must still go through Claude - only the
+        # controlled regression fixture skips the call.
+        mock_call.assert_called_once()
 
     @patch("pipeline.llm_client.call_claude")
     def test_accepts_correction_that_is_actually_clean(self, mock_call):
@@ -590,6 +593,7 @@ class ApplyCorrectionsRevalidationTests(unittest.TestCase):
         # A clean correction must not raise, and run_critic on the result
         # confirms it truly is clean (belt-and-suspenders on the fixture).
         self.assertEqual(critic_rules.run_critic(corrected_text), [])
+        mock_call.assert_called_once()
 
     @patch("pipeline.llm_client.call_claude")
     def test_no_final_written_when_correction_still_invalid(self, mock_call):
@@ -606,6 +610,72 @@ class ApplyCorrectionsRevalidationTests(unittest.TestCase):
                     pipeline.finalize_output(output_cfg, draft_text, violations, model="sonnet")
                 self.assertFalse((Path(tmp) / "critic" / "unit-test-slug.md").exists())
                 self.assertFalse((Path(tmp) / "outputs" / "unit-test-slug-final.md").exists())
+
+
+# ---------------------------------------------------------------------------
+# pipeline.run_regression_fixture: controlled rule-#2 fixture uses a fixed,
+# non-Claude correction (2026-07-28 audit fix)
+# ---------------------------------------------------------------------------
+
+class RegressionFixtureTests(unittest.TestCase):
+    """The controlled Rule 2 regression fixture must never depend on a live
+    Claude rewrite - the correction is a fixed, canon-safe literal, always
+    re-verified against all seven rules rather than accepted on faith."""
+
+    def test_planted_fixture_still_triggers_exactly_rule_2(self):
+        violations = critic_rules.run_critic(critic_rules.REGRESSION_FIXTURE_TEXT)
+        self.assertEqual([v.rule_number for v in violations], [2])
+        self.assertEqual(
+            violations[0].matched_sentence,
+            critic_rules.REGRESSION_FIXTURE_FLAGGED_SENTENCE,
+        )
+
+    def test_fixed_corrected_fixture_passes_all_seven_rules(self):
+        self.assertEqual(
+            critic_rules.run_critic(critic_rules.REGRESSION_FIXTURE_CORRECTED_TEXT),
+            [],
+        )
+        # verify_correction must not raise on the fixed correction.
+        self.assertEqual(
+            critic_rules.verify_correction(critic_rules.REGRESSION_FIXTURE_CORRECTED_TEXT),
+            [],
+        )
+
+    def test_fixed_correction_fails_clearly_if_it_ever_stops_passing(self):
+        # Simulates the fixed correction drifting out of sync with the rules
+        # (e.g. a future rule addition catching it) - must fail loudly via
+        # CorrectionValidationError, never pass silently.
+        drifted_correction = (
+            critic_rules.REGRESSION_FIXTURE_CORRECTED_TEXT
+            + " It also tracks the player's patterns between exchanges."
+        )
+        with self.assertRaises(critic_rules.CorrectionValidationError):
+            critic_rules.verify_correction(drifted_correction)
+
+    @patch("pipeline.llm_client.call_claude")
+    def test_controlled_fixture_path_does_not_call_claude(self, mock_call):
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.object(pipeline, "CRITIC_EVIDENCE_DIR", Path(tmp) / "critic"):
+                pipeline.run_regression_fixture()
+        mock_call.assert_not_called()
+
+    def test_controlled_fixture_returns_the_fixed_corrected_text(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.object(pipeline, "CRITIC_EVIDENCE_DIR", Path(tmp) / "critic"):
+                corrected_text = pipeline.run_regression_fixture()
+        self.assertEqual(corrected_text, critic_rules.REGRESSION_FIXTURE_CORRECTED_TEXT)
+
+    def test_controlled_fixture_evidence_contains_before_rule_and_after(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            critic_dir = Path(tmp) / "critic"
+            with patch.object(pipeline, "CRITIC_EVIDENCE_DIR", critic_dir):
+                pipeline.run_regression_fixture()
+            evidence_text = (critic_dir / "regression-fixture.md").read_text(encoding="utf-8")
+
+        self.assertIn("CONTROLLED REGRESSION FIXTURE", evidence_text)
+        self.assertIn(critic_rules.REGRESSION_FIXTURE_FLAGGED_SENTENCE, evidence_text)
+        self.assertIn("Rule 2", evidence_text)
+        self.assertIn(critic_rules.REGRESSION_FIXTURE_CORRECTED_SENTENCE, evidence_text)
 
 
 # ---------------------------------------------------------------------------
