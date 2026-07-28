@@ -100,6 +100,17 @@ _TRIGGER_PHRASES_RULE2 = (
     "runtime model call",
     "reads and evolves",
     "evolves its strategy",
+    # Added per Assignment #04 audit fix: adaptive-sounding phrasing that
+    # implies Crimson Vanguard reads/predicts the player across a fight,
+    # rather than an authored state machine selecting by range/cooldown.
+    # Deliberately distinct from canonical, non-triggering phrasing like
+    # "adapt to Phase 2" (a one-time authored escalation, not adaptation to
+    # the player).
+    "tracks the player's patterns",
+    "tracks player patterns",
+    "least anticipated",
+    "predicts the player's habits",
+    "studies the player's behavior",
 )
 
 
@@ -408,6 +419,36 @@ def run_critic(text):
         result = check(text)
         if result is not None:
             violations.append(result)
+    return violations
+
+
+class CorrectionValidationError(Exception):
+    """Raised when text produced to fix a critic violation still trips one
+    or more of the seven rules on re-check. A correction is never accepted
+    on faith - it must be re-verified, so an LLM correction that fails to
+    actually fix the problem (or introduces a new one) is a hard failure,
+    not a silently-written invalid final."""
+
+    def __init__(self, violations):
+        self.violations = tuple(violations)
+        rule_summary = ", ".join(
+            "#{} ({})".format(v.rule_number, v.rule_name) for v in self.violations
+        )
+        super().__init__(
+            "Corrected text still violates rule(s): {}".format(rule_summary)
+        )
+
+
+def verify_correction(corrected_text):
+    """Re-run all seven deterministic critic rules against corrected_text.
+
+    Returns the (empty) violations list on success. Raises
+    CorrectionValidationError if any rule still fires - callers must not
+    write out a corrected final until this passes clean.
+    """
+    violations = run_critic(corrected_text)
+    if violations:
+        raise CorrectionValidationError(violations)
     return violations
 
 

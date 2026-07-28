@@ -48,13 +48,26 @@ class ScoredChunk:
     matched_tokens: tuple
 
 
+# Selection-reason labels recorded per chunk in RetrievalResult.selected,
+# parallel to RetrievalResult.selection_reasons. A chunk is "lexical" when
+# the top-K score cutoff alone put it there, "required" when only a pin
+# added it (it fell outside the lexical top-K), and "lexical+required" when
+# both independently would have selected it.
+SELECTED_BY_LEXICAL = "lexical"
+SELECTED_BY_REQUIRED = "required"
+SELECTED_BY_BOTH = "lexical+required"
+
+
 @dataclass(frozen=True)
 class RetrievalResult:
     slug: str
     query: str
     eligible_files: tuple
     candidates: tuple  # every scored chunk, sorted best-first, deterministic tie-break
-    selected: tuple    # top-K of candidates with score > 0
+    selected: tuple    # lexical top-K (score > 0) plus any required pins
+    selection_reasons: tuple = ()  # parallel to `selected`: SELECTED_BY_* per chunk
+    required_chunks: tuple = ()    # (source_file, heading) pins requested for this retrieval
+    top_k: int = DEFAULT_TOP_K
 
 
 def parse_markdown_chunks(text, source_file):
@@ -116,8 +129,28 @@ def load_chunks_for_files(eligible_files, kb_dir=KNOWLEDGE_BASE_DIR):
     return chunks
 
 
-def retrieve(slug, query, eligible_files, kb_dir=KNOWLEDGE_BASE_DIR, top_k=DEFAULT_TOP_K):
-    """Run one manifest-driven retrieval pass and return the full evidence trail."""
+def _reason_for(key, lexical_keys, required_key_set):
+    in_lexical = key in lexical_keys
+    in_required = key in required_key_set
+    if in_lexical and in_required:
+        return SELECTED_BY_BOTH
+    if in_required:
+        return SELECTED_BY_REQUIRED
+    return SELECTED_BY_LEXICAL
+
+
+def retrieve(slug, query, eligible_files, kb_dir=KNOWLEDGE_BASE_DIR, top_k=DEFAULT_TOP_K,
+             required_chunks=()):
+    """Run one manifest-driven retrieval pass and return the full evidence trail.
+
+    required_chunks is a tuple of (source_file, heading) pairs that must be
+    present in the returned `selected` set regardless of lexical score - this
+    pins safety-critical context (e.g. restoration-gap caveats) that a flat
+    top-K score cutoff would otherwise drop. A required chunk already present
+    in the lexical top-K is not duplicated; ordering is deterministic: the
+    lexical top-K first (score desc, file, index, as before), then any
+    required-only chunks appended in the exact order the caller declared them.
+    """
     chunks = load_chunks_for_files(eligible_files, kb_dir=kb_dir)
     query_tokens = tokenize(query)
 
@@ -132,7 +165,33 @@ def retrieve(slug, query, eligible_files, kb_dir=KNOWLEDGE_BASE_DIR, top_k=DEFAU
         scored,
         key=lambda sc: (-sc.score, sc.chunk.source_file, sc.chunk.index),
     ))
-    selected = tuple(sc for sc in candidates if sc.score > 0)[:top_k]
+    by_key = {(sc.chunk.source_file, sc.chunk.heading): sc for sc in candidates}
+
+    lexical_selected = tuple(sc for sc in candidates if sc.score > 0)[:top_k]
+    lexical_keys = {(sc.chunk.source_file, sc.chunk.heading) for sc in lexical_selected}
+
+    required_keys = tuple(required_chunks)
+    required_key_set = set(required_keys)
+
+    required_only = []
+    seen = set()
+    for key in required_keys:
+        if key in lexical_keys or key in seen:
+            continue
+        if key not in by_key:
+            raise ValueError(
+                "Required chunk not found among eligible chunks for {!r}: {}".format(
+                    slug, key
+                )
+            )
+        seen.add(key)
+        required_only.append(by_key[key])
+
+    selected = lexical_selected + tuple(required_only)
+    selection_reasons = tuple(
+        _reason_for((sc.chunk.source_file, sc.chunk.heading), lexical_keys, required_key_set)
+        for sc in selected
+    )
 
     return RetrievalResult(
         slug=slug,
@@ -140,6 +199,9 @@ def retrieve(slug, query, eligible_files, kb_dir=KNOWLEDGE_BASE_DIR, top_k=DEFAU
         eligible_files=tuple(eligible_files),
         candidates=candidates,
         selected=selected,
+        selection_reasons=selection_reasons,
+        required_chunks=required_keys,
+        top_k=top_k,
     )
 
 
@@ -185,6 +247,21 @@ OUTPUTS = [
             "response-time values."
         ),
         "eligible_files": ("impact-window-cinematics.md", "core-canon.md"),
+        # Pinned per the 2026-07-28 audit: the lexical top-4 for this
+        # output's query cut both restoration-caveat chunks (scored 5 and 3,
+        # below the top-4 cutoff of 10/9/7/6), so the generator never saw the
+        # guardrail context and wrote unhedged restoration certainty that the
+        # critic's Rule 6 then failed to catch. Required regardless of score.
+        "required_chunks": (
+            (
+                "impact-window-cinematics.md",
+                "The restoration rule (why every cinematic beat must \"hand back\" cleanly)",
+            ),
+            (
+                "impact-window-cinematics.md",
+                "OPEN — restoration gaps flagged by inspection, not yet corrected",
+            ),
+        ),
         "allowed_to_create": (
             "Separate short burst descriptions for Echo and Nova expressing "
             "each fighter's stated identity and accent color.",
@@ -200,6 +277,11 @@ OUTPUTS = [
             "not cleanly return afterward - the restoration gaps are OPEN, "
             "not resolved.",
             "A meter gain value other than the ones in impact-window-cinematics.md.",
+        ),
+        "extra_constraints": (
+            "Describe the burst ending with a return to combat, but do not "
+            "assert specific rival-AI, camera-ownership, montage-cleanup, or "
+            "gameplay-state restoration behavior that is still marked OPEN.",
         ),
     },
     {

@@ -54,6 +54,13 @@ def atomic_write_text(path, content, encoding="utf-8"):
         raise
 
 
+_SELECTION_REASON_LABELS = {
+    knowledge_base.SELECTED_BY_LEXICAL: "lexical top-{k} score",
+    knowledge_base.SELECTED_BY_REQUIRED: "required pin (outside lexical top-{k})",
+    knowledge_base.SELECTED_BY_BOTH: "lexical top-{k} score + required pin",
+}
+
+
 def render_retrieval_evidence(result):
     lines = []
     lines.append("# Retrieval evidence — {}".format(result.slug))
@@ -64,6 +71,14 @@ def render_retrieval_evidence(result):
         ", ".join(result.eligible_files)
     ))
     lines.append("")
+    if result.required_chunks:
+        lines.append("**Required (pinned) chunks:** {}".format(
+            "; ".join(
+                "{} — {}".format(source_file, heading)
+                for source_file, heading in result.required_chunks
+            )
+        ))
+        lines.append("")
     lines.append("## All candidate chunks (scored)")
     lines.append("")
     lines.append("| Score | Source file | Heading | Matched tokens |")
@@ -74,17 +89,20 @@ def render_retrieval_evidence(result):
             ", ".join(sc.matched_tokens) if sc.matched_tokens else "(none)",
         ))
     lines.append("")
-    lines.append("## Selected chunks passed to the generator (top-{}, score > 0)".format(
-        len(result.selected)
-    ))
+    lines.append(
+        "## Selected chunks passed to the generator "
+        "(lexical top-{k}, score > 0, plus any required pins)".format(k=result.top_k)
+    )
     lines.append("")
     if not result.selected:
-        lines.append("_No chunk scored above zero for this query._")
-    for sc in result.selected:
+        lines.append("_No chunk scored above zero and no chunk was pinned for this query._")
+    for sc, reason in zip(result.selected, result.selection_reasons):
         lines.append("### {} — {}".format(sc.chunk.source_file, sc.chunk.heading))
         lines.append("")
-        lines.append("Score: {} (matched: {})".format(
-            sc.score, ", ".join(sc.matched_tokens) if sc.matched_tokens else "(none)"
+        reason_label = _SELECTION_REASON_LABELS[reason].format(k=result.top_k)
+        lines.append("Score: {} (matched: {}) — selected by: {} [{}]".format(
+            sc.score, ", ".join(sc.matched_tokens) if sc.matched_tokens else "(none)",
+            reason_label, reason,
         ))
         lines.append("")
         lines.append(sc.chunk.body)
@@ -100,6 +118,13 @@ def build_generation_prompt(output_cfg, retrieval_result):
     allowed = "\n".join("- {}".format(item) for item in output_cfg["allowed_to_create"])
     forbidden = "\n".join("- {}".format(item) for item in output_cfg["must_not_invent"])
 
+    extra_constraints = output_cfg.get("extra_constraints", ())
+    extra_block = ""
+    if extra_constraints:
+        extra_block = "\n\nADDITIONAL CONSTRAINTS FOR THIS OUTPUT:\n" + "\n".join(
+            "- {}".format(item) for item in extra_constraints
+        )
+
     return (
         "You are drafting a short piece of authored game content for the Unreal "
         "Engine 5.8 action fighter Ascendant Impact, for use as offline design "
@@ -108,7 +133,7 @@ def build_generation_prompt(output_cfg, retrieval_result):
         "GROUNDING CONTEXT (retrieved from the approved knowledge base — treat as "
         "fact, do not contradict it):\n{grounding}\n\n"
         "YOU MAY CREATE:\n{allowed}\n\n"
-        "YOU MUST NEVER INVENT:\n{forbidden}\n\n"
+        "YOU MUST NEVER INVENT:\n{forbidden}{extra}\n\n"
         "Every timing/tuning number is provisional and belongs to the human "
         "designer — quote governed numbers verbatim if you reference them at "
         "all, never alter or round them. Crimson Vanguard is deterministic "
@@ -116,7 +141,8 @@ def build_generation_prompt(output_cfg, retrieval_result):
         "learning, adapting, or calling a model at runtime. Write the output now "
         "as plain prose/markdown, with no meta-commentary about these "
         "instructions.".format(
-            title=output_cfg["title"], grounding=grounding, allowed=allowed, forbidden=forbidden,
+            title=output_cfg["title"], grounding=grounding, allowed=allowed,
+            forbidden=forbidden, extra=extra_block,
         )
     )
 
@@ -156,6 +182,13 @@ def apply_corrections(draft_text, violations, model):
                 violation.matched_sentence, corrected_sentence, 1
             )
         corrections.append((violation, corrected_sentence))
+
+    # Never accept an LLM correction on faith: re-run all seven deterministic
+    # rules against the fully-corrected text. If anything still fires (the
+    # original problem persists, or the rewrite introduced a new one), fail
+    # loudly here rather than letting a caller write out an invalid final.
+    critic_rules.verify_correction(corrected_text)
+
     return corrected_text, corrections
 
 
@@ -206,6 +239,7 @@ def run_output(output_cfg, model):
         slug=output_cfg["slug"],
         query=output_cfg["query"],
         eligible_files=output_cfg["eligible_files"],
+        required_chunks=output_cfg.get("required_chunks", ()),
     )
     atomic_write_text(
         RETRIEVAL_EVIDENCE_DIR / "{}.md".format(output_cfg["slug"]),
@@ -307,6 +341,9 @@ def main(argv=None):
 
     except llm_client.ClaudeClientError as exc:
         print("FAIL (Claude CLI): {}".format(exc), file=sys.stderr)
+        return 1
+    except critic_rules.CorrectionValidationError as exc:
+        print("FAIL (critic correction still invalid): {}".format(exc), file=sys.stderr)
         return 1
     except PipelineError as exc:
         print("FAIL (pipeline): {}".format(exc), file=sys.stderr)

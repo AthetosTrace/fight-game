@@ -20,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import critic_rules  # noqa: E402
 import knowledge_base  # noqa: E402
 import llm_client  # noqa: E402
+import pipeline  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -158,6 +159,184 @@ class ScoringAndTopKTests(unittest.TestCase):
             "Unrelated Section", {sc.chunk.heading for sc in result.candidates}
         )
 
+# ---------------------------------------------------------------------------
+# knowledge_base: required (pinned) chunks - audit-fix coverage
+# ---------------------------------------------------------------------------
+
+class RequiredChunksTests(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.kb_dir = Path(self.tmpdir.name)
+        self.query = (
+            "gauntlet telegraph attack readable range purpose crimson vanguard "
+            "authored four"
+        )
+        (self.kb_dir / "eligible.md").write_text(
+            "# Eligible File\n\n"
+            "## High Score Heading\n\n"
+            "gauntlet telegraph attack readable range purpose crimson vanguard "
+            "authored four\n\n"
+            "## Low Score Required Heading\n\n"
+            "This section barely overlaps with the query at all, just one "
+            "relevant token: telegraph.\n\n"
+            "## Zero Score Heading\n\n"
+            "Nothing relevant here whatsoever, completely unrelated content.\n",
+            encoding="utf-8",
+        )
+
+    def tearDown(self):
+        self.tmpdir.cleanup()
+
+    def test_required_chunk_included_outside_top_k(self):
+        result = knowledge_base.retrieve(
+            slug="test-output",
+            query=self.query,
+            eligible_files=("eligible.md",),
+            kb_dir=self.kb_dir,
+            top_k=1,
+            required_chunks=(("eligible.md", "Low Score Required Heading"),),
+        )
+        selected_headings = [sc.chunk.heading for sc in result.selected]
+        self.assertIn("Low Score Required Heading", selected_headings)
+        # Confirms it truly fell outside the lexical top-1 cut.
+        lexical_only = knowledge_base.retrieve(
+            slug="test-output", query=self.query, eligible_files=("eligible.md",),
+            kb_dir=self.kb_dir, top_k=1,
+        )
+        self.assertNotIn(
+            "Low Score Required Heading",
+            [sc.chunk.heading for sc in lexical_only.selected],
+        )
+
+    def test_required_chunk_reason_is_required_when_outside_top_k(self):
+        result = knowledge_base.retrieve(
+            slug="test-output",
+            query=self.query,
+            eligible_files=("eligible.md",),
+            kb_dir=self.kb_dir,
+            top_k=1,
+            required_chunks=(("eligible.md", "Low Score Required Heading"),),
+        )
+        headings = [sc.chunk.heading for sc in result.selected]
+        idx = headings.index("Low Score Required Heading")
+        self.assertEqual(result.selection_reasons[idx], knowledge_base.SELECTED_BY_REQUIRED)
+
+    def test_required_chunk_dedup_when_already_in_top_k(self):
+        result = knowledge_base.retrieve(
+            slug="test-output",
+            query=self.query,
+            eligible_files=("eligible.md",),
+            kb_dir=self.kb_dir,
+            top_k=4,
+            required_chunks=(("eligible.md", "High Score Heading"),),
+        )
+        headings = [sc.chunk.heading for sc in result.selected]
+        self.assertEqual(headings.count("High Score Heading"), 1)
+        idx = headings.index("High Score Heading")
+        self.assertEqual(result.selection_reasons[idx], knowledge_base.SELECTED_BY_BOTH)
+
+    def test_selected_ordering_is_deterministic_with_required_chunks(self):
+        kwargs = dict(
+            slug="test-output",
+            query=self.query,
+            eligible_files=("eligible.md",),
+            kb_dir=self.kb_dir,
+            top_k=1,
+            required_chunks=(("eligible.md", "Low Score Required Heading"),),
+        )
+        first = knowledge_base.retrieve(**kwargs)
+        second = knowledge_base.retrieve(**kwargs)
+        self.assertEqual(
+            [sc.chunk.heading for sc in first.selected],
+            [sc.chunk.heading for sc in second.selected],
+        )
+        self.assertEqual(first.selection_reasons, second.selection_reasons)
+        # Lexical top-K always precedes the required-only tail.
+        self.assertEqual(
+            [sc.chunk.heading for sc in first.selected],
+            ["High Score Heading", "Low Score Required Heading"],
+        )
+
+    def test_missing_required_chunk_raises(self):
+        with self.assertRaises(ValueError):
+            knowledge_base.retrieve(
+                slug="test-output",
+                query=self.query,
+                eligible_files=("eligible.md",),
+                kb_dir=self.kb_dir,
+                top_k=1,
+                required_chunks=(("eligible.md", "Nonexistent Heading"),),
+            )
+
+
+class ImpactWindowRequiredChunksIntegrationTests(unittest.TestCase):
+    """Verifies the real pipeline config for impact-window-beat-pack pins
+    both restoration-caveat headings the 2026-07-28 audit found missing."""
+
+    def test_impact_window_output_config_pins_both_restoration_headings(self):
+        output_cfg = knowledge_base.get_output("impact-window-beat-pack")
+        headings = {heading for (_source, heading) in output_cfg.get("required_chunks", ())}
+        self.assertTrue(any("restoration rule" in h.lower() for h in headings))
+        self.assertTrue(
+            any(h.startswith("OPEN") and "restoration gaps" in h.lower() for h in headings)
+        )
+
+    def test_impact_window_retrieval_selects_both_required_headings(self):
+        output_cfg = knowledge_base.get_output("impact-window-beat-pack")
+        result = knowledge_base.retrieve(
+            slug=output_cfg["slug"],
+            query=output_cfg["query"],
+            eligible_files=output_cfg["eligible_files"],
+            required_chunks=output_cfg.get("required_chunks", ()),
+        )
+        selected_keys = {(sc.chunk.source_file, sc.chunk.heading) for sc in result.selected}
+        for key in output_cfg["required_chunks"]:
+            self.assertIn(key, selected_keys)
+
+    def test_impact_window_prompt_carries_the_new_generation_constraint(self):
+        output_cfg = knowledge_base.get_output("impact-window-beat-pack")
+        result = knowledge_base.retrieve(
+            slug=output_cfg["slug"],
+            query=output_cfg["query"],
+            eligible_files=output_cfg["eligible_files"],
+            required_chunks=output_cfg.get("required_chunks", ()),
+        )
+        prompt = pipeline.build_generation_prompt(output_cfg, result)
+        self.assertIn("still marked OPEN", prompt)
+        self.assertIn("camera-ownership", prompt)
+
+
+class RetrievalEvidenceRenderingTests(unittest.TestCase):
+    def test_render_shows_selection_reason_for_required_and_lexical_chunks(self):
+        result = knowledge_base.RetrievalResult(
+            slug="demo",
+            query="demo query",
+            eligible_files=("a.md",),
+            candidates=(),
+            selected=(
+                knowledge_base.ScoredChunk(
+                    chunk=knowledge_base.Chunk("a.md", "Lexical Heading", "body one", 0),
+                    score=5, matched_tokens=("demo",),
+                ),
+                knowledge_base.ScoredChunk(
+                    chunk=knowledge_base.Chunk("a.md", "Required Heading", "body two", 1),
+                    score=0, matched_tokens=(),
+                ),
+            ),
+            selection_reasons=(
+                knowledge_base.SELECTED_BY_LEXICAL,
+                knowledge_base.SELECTED_BY_REQUIRED,
+            ),
+            required_chunks=(("a.md", "Required Heading"),),
+            top_k=1,
+        )
+        rendered = pipeline.render_retrieval_evidence(result)
+        self.assertIn("Lexical Heading", rendered)
+        self.assertIn("Required Heading", rendered)
+        self.assertIn(knowledge_base.SELECTED_BY_LEXICAL, rendered)
+        self.assertIn(knowledge_base.SELECTED_BY_REQUIRED, rendered)
+        self.assertIn("Required (pinned) chunks:", rendered)
+
 
 # ---------------------------------------------------------------------------
 # critic_rules: all seven detectors, positive + negative, and the fixture
@@ -190,6 +369,46 @@ class CriticRuleTests(unittest.TestCase):
     def test_rule_2_false_positive_protection_adapt_to_phase_2(self):
         text = "The core loop asks the player to escalate and adapt to Phase 2 once it begins."
         self.assertIsNone(critic_rules.check_rule_2_runtime_learning(text))
+
+    def test_rule_2_false_positive_protection_adapt_to_phase_2_alongside_vanguard(self):
+        # Confirms the new adaptive-phrase additions don't collaterally catch
+        # the canonical, one-time-authored-escalation phrasing even when
+        # Crimson Vanguard and "Phase 2" appear in the same sentence.
+        text = (
+            "Crimson Vanguard commits to its same four authored attacks and "
+            "simply adapts to Phase 2 once health crosses 50%, with no new tools."
+        )
+        self.assertIsNone(critic_rules.check_rule_2_runtime_learning(text))
+
+    def test_rule_2_positive_tracks_the_players_patterns(self):
+        text = "Crimson Vanguard tracks the player's patterns and reacts accordingly."
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+
+    def test_rule_2_positive_tracks_player_patterns(self):
+        text = "Crimson Vanguard tracks player patterns across the whole duel."
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+
+    def test_rule_2_positive_least_anticipated(self):
+        text = "Crimson Vanguard favors whichever attack has been least anticipated."
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+
+    def test_rule_2_positive_predicts_the_players_habits(self):
+        text = "Crimson Vanguard predicts the player's habits before it ever strikes."
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+
+    def test_rule_2_positive_studies_the_players_behavior(self):
+        text = "Crimson Vanguard studies the player's behavior between exchanges."
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
 
     def test_rule_3_positive_free_impact_window(self):
         text = "The first Impact Window automatically succeeds without player input."
@@ -272,6 +491,79 @@ class CriticRuleTests(unittest.TestCase):
     def test_regression_fixture_matched_sentence_is_in_fixture_text(self):
         violations = critic_rules.run_critic(critic_rules.REGRESSION_FIXTURE_TEXT)
         self.assertIn(violations[0].matched_sentence, critic_rules.REGRESSION_FIXTURE_TEXT)
+
+    def test_verify_correction_passes_on_clean_text(self):
+        clean_text = "An authored state machine selects among four fixed attacks by range and cooldown."
+        self.assertEqual(critic_rules.verify_correction(clean_text), [])
+
+    def test_verify_correction_raises_on_still_violating_text(self):
+        still_bad = "Crimson Vanguard still tracks the player's patterns during the fight."
+        with self.assertRaises(critic_rules.CorrectionValidationError):
+            critic_rules.verify_correction(still_bad)
+
+
+# ---------------------------------------------------------------------------
+# pipeline.apply_corrections: post-correction re-verification (audit fix)
+# ---------------------------------------------------------------------------
+
+class ApplyCorrectionsRevalidationTests(unittest.TestCase):
+    """Assignment #04 audit fix: an LLM-produced correction must be re-checked
+    against all seven rules before it is accepted. A correction that still
+    violates a rule (original problem persists, or a new one was introduced)
+    must fail loudly, never be silently written out as a valid final."""
+
+    def _draft_and_violations(self):
+        draft_text = (
+            "Crimson Vanguard learns from the player and adapts its attacks "
+            "in real time during the fight."
+        )
+        violations = critic_rules.run_critic(draft_text)
+        self.assertEqual([v.rule_number for v in violations], [2])
+        return draft_text, violations
+
+    @patch("pipeline.llm_client.call_claude")
+    def test_rejects_correction_that_still_violates_a_rule(self, mock_call):
+        draft_text, violations = self._draft_and_violations()
+        # The "fix" swaps one adaptive phrase for another new one added by
+        # this same audit - still a rule 2 violation.
+        mock_call.return_value = (
+            "Crimson Vanguard still tracks the player's patterns and reacts "
+            "in real time during the fight."
+        )
+        with self.assertRaises(critic_rules.CorrectionValidationError):
+            pipeline.apply_corrections(draft_text, violations, model="sonnet")
+
+    @patch("pipeline.llm_client.call_claude")
+    def test_accepts_correction_that_is_actually_clean(self, mock_call):
+        draft_text, violations = self._draft_and_violations()
+        mock_call.return_value = (
+            "An authored state machine selects among four fixed attacks by "
+            "range and cooldown during the fight."
+        )
+        corrected_text, corrections = pipeline.apply_corrections(
+            draft_text, violations, model="sonnet"
+        )
+        self.assertNotIn("learns from the player", corrected_text)
+        self.assertEqual(len(corrections), 1)
+        # A clean correction must not raise, and run_critic on the result
+        # confirms it truly is clean (belt-and-suspenders on the fixture).
+        self.assertEqual(critic_rules.run_critic(corrected_text), [])
+
+    @patch("pipeline.llm_client.call_claude")
+    def test_no_final_written_when_correction_still_invalid(self, mock_call):
+        # finalize_output must not reach its atomic_write_text calls when
+        # apply_corrections raises - simulated here by asserting the
+        # exception propagates past finalize_output rather than returning.
+        draft_text, violations = self._draft_and_violations()
+        mock_call.return_value = "Crimson Vanguard tracks player patterns in real time."
+        output_cfg = {"slug": "unit-test-slug", "title": "Unit Test Output"}
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.object(pipeline, "CRITIC_EVIDENCE_DIR", Path(tmp) / "critic"), \
+                 patch.object(pipeline, "OUTPUTS_DIR", Path(tmp) / "outputs"):
+                with self.assertRaises(critic_rules.CorrectionValidationError):
+                    pipeline.finalize_output(output_cfg, draft_text, violations, model="sonnet")
+                self.assertFalse((Path(tmp) / "critic" / "unit-test-slug.md").exists())
+                self.assertFalse((Path(tmp) / "outputs" / "unit-test-slug-final.md").exists())
 
 
 # ---------------------------------------------------------------------------
