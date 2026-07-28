@@ -10,7 +10,6 @@ Standalone use (mirrors .claude/hooks/check_leaveoff.py's own pattern):
 """
 
 import argparse
-import json
 import os
 import shutil
 import subprocess
@@ -32,9 +31,6 @@ _AUTH_FAILURE_MARKERS = (
     "invalid api key",
     "credentials",
 )
-
-_RESULT_KEY = "result"
-_ERROR_FLAG_KEY = "is_error"
 
 
 class ClaudeClientError(Exception):
@@ -58,7 +54,7 @@ class ClaudeCLIError(ClaudeClientError):
 
 
 class ClaudeResponseParseError(ClaudeClientError):
-    """stdout was not valid JSON, or the JSON did not match the expected shape."""
+    """A successful CLI call returned empty or whitespace-only stdout."""
 
 
 def find_claude_executable():
@@ -77,10 +73,9 @@ def build_command(executable, model):
     return [
         executable,
         "-p",
-        "--bare",
         "--model", model,
         "--tools", "",
-        "--output-format", "json",
+        "--output-format", "text",
         "--no-session-persistence",
     ]
 
@@ -88,47 +83,6 @@ def build_command(executable, model):
 def _looks_like_auth_failure(*texts):
     combined = " ".join(t or "" for t in texts).lower()
     return any(marker in combined for marker in _AUTH_FAILURE_MARKERS)
-
-
-def extract_result_text(payload):
-    """Pull the generated text out of a parsed --output-format json payload.
-
-    Only the documented 'result' field is trusted. If the shape is anything
-    else, this fails loudly rather than guessing at an alternate key - the
-    real schema should be confirmed empirically (see llm_client.py --check)
-    before this function is taught any additional field names.
-    """
-    if not isinstance(payload, dict):
-        raise ClaudeResponseParseError(
-            "Expected the Claude CLI JSON response to be an object, got {}.".format(
-                type(payload).__name__
-            )
-        )
-
-    if payload.get(_ERROR_FLAG_KEY):
-        detail = payload.get(_RESULT_KEY) or payload.get("error") or "(no detail provided)"
-        raise ClaudeCLIError(
-            "Claude CLI reported an error result (is_error=true): {}".format(detail)
-        )
-
-    if _RESULT_KEY not in payload:
-        raise ClaudeResponseParseError(
-            "Claude CLI JSON response is missing the expected '{}' field. "
-            "Top-level keys present: {}. The --output-format json schema may "
-            "differ from what this wrapper assumes - confirm empirically and "
-            "update extract_result_text() rather than guessing.".format(
-                _RESULT_KEY, sorted(payload.keys())
-            )
-        )
-
-    result = payload[_RESULT_KEY]
-    if not isinstance(result, str):
-        raise ClaudeResponseParseError(
-            "Claude CLI '{}' field was not a string (got {}).".format(
-                _RESULT_KEY, type(result).__name__
-            )
-        )
-    return result
 
 
 def call_claude(prompt, model=None, timeout=DEFAULT_TIMEOUT_S, executable=None):
@@ -175,15 +129,14 @@ def call_claude(prompt, model=None, timeout=DEFAULT_TIMEOUT_S, executable=None):
             )
         )
 
-    try:
-        payload = json.loads(stdout)
-    except json.JSONDecodeError as exc:
+    text = stdout.strip()
+    if not text:
         raise ClaudeResponseParseError(
-            "Claude CLI stdout was not valid JSON: {}. Raw stdout (truncated): "
-            "{!r}".format(exc, stdout[:500])
-        ) from exc
+            "Claude CLI exited successfully but stdout was empty or "
+            "whitespace-only. stderr: {!r}".format(stderr.strip())
+        )
 
-    return extract_result_text(payload)
+    return text
 
 
 def preflight(model=None, timeout=PREFLIGHT_TIMEOUT_S):

@@ -8,7 +8,6 @@ Run with:
     python -m unittest assignment-04/tony/pipeline/test_pipeline.py -v
 """
 
-import json
 import subprocess
 import sys
 import tempfile
@@ -285,38 +284,19 @@ class BuildCommandTests(unittest.TestCase):
         self.assertEqual(
             command,
             [
-                "claude", "-p", "--bare", "--model", "sonnet", "--tools", "",
-                "--output-format", "json", "--no-session-persistence",
+                "claude", "-p", "--model", "sonnet", "--tools", "",
+                "--output-format", "text", "--no-session-persistence",
             ],
         )
 
+    def test_command_never_includes_bare(self):
+        command = llm_client.build_command("claude", "sonnet")
+        self.assertNotIn("--bare", command)
 
-class ExtractResultTextTests(unittest.TestCase):
-    def test_representative_success_shape(self):
-        payload = {
-            "type": "result", "subtype": "success", "is_error": False,
-            "result": "generated text", "session_id": "abc123",
-        }
-        self.assertEqual(llm_client.extract_result_text(payload), "generated text")
-
-    def test_is_error_true_raises_cli_error(self):
-        payload = {"type": "result", "is_error": True, "result": "something went wrong"}
-        with self.assertRaises(llm_client.ClaudeCLIError):
-            llm_client.extract_result_text(payload)
-
-    def test_missing_result_key_raises_parse_error(self):
-        payload = {"type": "result", "is_error": False, "session_id": "abc123"}
-        with self.assertRaises(llm_client.ClaudeResponseParseError):
-            llm_client.extract_result_text(payload)
-
-    def test_non_string_result_raises_parse_error(self):
-        payload = {"is_error": False, "result": 12345}
-        with self.assertRaises(llm_client.ClaudeResponseParseError):
-            llm_client.extract_result_text(payload)
-
-    def test_non_dict_payload_raises_parse_error(self):
-        with self.assertRaises(llm_client.ClaudeResponseParseError):
-            llm_client.extract_result_text(["not", "a", "dict"])
+    def test_command_requests_text_output_format(self):
+        command = llm_client.build_command("claude", "sonnet")
+        idx = command.index("--output-format")
+        self.assertEqual(command[idx + 1], "text")
 
 
 class CallClaudeMockedSubprocessTests(unittest.TestCase):
@@ -326,26 +306,29 @@ class CallClaudeMockedSubprocessTests(unittest.TestCase):
         )
 
     @patch("llm_client.subprocess.run")
-    def test_successful_call_returns_result_text(self, mock_run):
-        mock_run.return_value = self._mock_completed(
-            stdout=json.dumps({"is_error": False, "result": "hello world"})
-        )
+    def test_successful_plain_text_response(self, mock_run):
+        mock_run.return_value = self._mock_completed(stdout="hello world")
         text = llm_client.call_claude("prompt", executable="fake-claude")
         self.assertEqual(text, "hello world")
         self.assertEqual(mock_run.call_args.kwargs.get("shell"), False)
         self.assertEqual(mock_run.call_args.kwargs.get("input"), "prompt")
 
     @patch("llm_client.subprocess.run")
-    def test_malformed_json_raises_parse_error(self, mock_run):
-        mock_run.return_value = self._mock_completed(stdout="not json at all {")
-        with self.assertRaises(llm_client.ClaudeResponseParseError):
-            llm_client.call_claude("prompt", executable="fake-claude")
+    def test_multiline_markdown_response_is_preserved(self, mock_run):
+        markdown = "# Heading\n\n- item one\n- item two\n\n```\ncode block\n```"
+        mock_run.return_value = self._mock_completed(stdout=markdown)
+        text = llm_client.call_claude("prompt", executable="fake-claude")
+        self.assertEqual(text, markdown)
 
     @patch("llm_client.subprocess.run")
-    def test_missing_result_field_raises_parse_error(self, mock_run):
-        mock_run.return_value = self._mock_completed(
-            stdout=json.dumps({"is_error": False, "session_id": "abc"})
-        )
+    def test_surrounding_whitespace_is_stripped(self, mock_run):
+        mock_run.return_value = self._mock_completed(stdout="\n\n  hello world  \n\n")
+        text = llm_client.call_claude("prompt", executable="fake-claude")
+        self.assertEqual(text, "hello world")
+
+    @patch("llm_client.subprocess.run")
+    def test_empty_stdout_raises_parse_error(self, mock_run):
+        mock_run.return_value = self._mock_completed(stdout="   \n  \n")
         with self.assertRaises(llm_client.ClaudeResponseParseError):
             llm_client.call_claude("prompt", executable="fake-claude")
 
@@ -377,9 +360,7 @@ class CallClaudeMockedSubprocessTests(unittest.TestCase):
 
     @patch("llm_client.subprocess.run")
     def test_prompt_passed_via_stdin_not_argv(self, mock_run):
-        mock_run.return_value = self._mock_completed(
-            stdout=json.dumps({"is_error": False, "result": "ok"})
-        )
+        mock_run.return_value = self._mock_completed(stdout="ok")
         secret_prompt = "prompt with special chars ; & | $(rm -rf) `backticks`"
         llm_client.call_claude(secret_prompt, executable="fake-claude")
         called_args = mock_run.call_args[0][0]
