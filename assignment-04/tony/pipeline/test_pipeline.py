@@ -367,6 +367,22 @@ class CallClaudeMockedSubprocessTests(unittest.TestCase):
         self.assertNotIn(secret_prompt, called_args)
         self.assertEqual(mock_run.call_args.kwargs["input"], secret_prompt)
 
+    @patch("llm_client.subprocess.run")
+    def test_unicode_prompt_and_response_use_utf8_not_default_codepage(self, mock_run):
+        unicode_prompt = (
+            "Describe the telegraph -> impact window for Echo/Nova: "
+            "“strike—dodge—counter.”"
+        )
+        unicode_reply = "Echo/Nova telegraph -> impact window: “clean read.”"
+        mock_run.return_value = self._mock_completed(stdout=unicode_reply)
+
+        text = llm_client.call_claude(unicode_prompt, executable="fake-claude")
+
+        self.assertEqual(text, unicode_reply)
+        self.assertEqual(mock_run.call_args.kwargs.get("input"), unicode_prompt)
+        self.assertEqual(mock_run.call_args.kwargs.get("encoding"), "utf-8")
+        self.assertEqual(mock_run.call_args.kwargs.get("text"), True)
+
 
 if __name__ == "__main__":
     unittest.main()

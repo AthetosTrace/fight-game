@@ -101,6 +101,7 @@ def call_claude(prompt, model=None, timeout=DEFAULT_TIMEOUT_S, executable=None):
             input=prompt,
             capture_output=True,
             text=True,
+            encoding="utf-8",
             timeout=timeout,
             shell=False,
         )
