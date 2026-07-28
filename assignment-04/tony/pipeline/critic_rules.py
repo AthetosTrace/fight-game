@@ -312,27 +312,121 @@ def check_rule_3_free_impact_window(text):
 _TRIGGER_PHRASES_RULE4 = (
     "second arena", "another arena", "alternate arena", "alternate version of the ring",
     "off-screen duel", "off-screen location", "new arena",
+    # Added per Assignment #04 audit fix (2026-07-28): a canon-correct
+    # sentence denying an extra duel space or a fifth attack necessarily
+    # *names* one of these phrases ("no second space", "no ... fifth
+    # attack"). Without them in the trigger list, the negation-aware scan
+    # below would have nothing to find and the "prove this is a real
+    # trigger match, not just nothing matching" tests could not hold.
+    "additional arena", "second space", "fifth attack", "new rival attack",
 )
 _ATTACK_LETTER_RE = re.compile(r"\battack\s+([a-z])\b", re.IGNORECASE)
 _VALID_ATTACK_LETTERS = frozenset({"a", "b", "c", "d"})
 
+# Word-form (not letter-form) phrasing of a fifth/altered attack. Kept apart
+# from the arena phrases only so the explanation text can name the right
+# canon rule; both families are otherwise scanned identically below.
+_ATTACK_WORD_TRIGGERS_RULE4 = frozenset({"fifth attack", "new rival attack"})
+
+# Index of each trigger phrase's position in the tuple above, used as the
+# deterministic tie-breaker in `_rule4_all_occurrences` below - mirrors
+# `_TRIGGER_TUPLE_INDEX_RULE2`.
+_TRIGGER_TUPLE_INDEX_RULE4 = {
+    phrase: index for index, phrase in enumerate(_TRIGGER_PHRASES_RULE4)
+}
+
+# Added per Assignment #04 audit fix (2026-07-28): Rule 4's arena/attack
+# phrase check originally had no negation awareness at all, so a
+# canon-correct sentence denying an extra arena or a fifth attack (e.g. "no
+# second space, no alternate version of the Ring") was flagged as if it
+# asserted one. This mirrors Rule 2's fix exactly: negation is scoped to the
+# individual trigger *occurrence*, not the whole sentence or clause, so an
+# unrelated or earlier negation cannot launder a later, affirmative
+# occurrence of a different (or the same) trigger phrase. "and"/"but" are
+# hard boundaries (they start a fresh, independently-true statement);
+# "or"/"nor" are deliberately not, since negation distributes across them
+# ("no second space or alternate version of the Ring" denies both).
+_NEGATION_RE_RULE4 = re.compile(r"\b(no|not|never|cannot|nothing)\b|n't", re.IGNORECASE)
+_HARD_BOUNDARY_RE_RULE4 = re.compile(r"\b(?:and|but)\b", re.IGNORECASE)
+
+
+def _rule4_local_negation_window(clause, phrase_start):
+    """Return the slice of `clause` that governs negation for a trigger
+    phrase starting at `phrase_start`: everything since the nearest
+    preceding 'and'/'but', or since the start of the clause if there is
+    none. Identical in spirit to `_rule2_local_negation_window`."""
+    boundaries = list(_HARD_BOUNDARY_RE_RULE4.finditer(clause, 0, phrase_start))
+    window_start = boundaries[-1].end() if boundaries else 0
+    return clause[window_start:phrase_start]
+
+
+def _rule4_all_occurrences(clause):
+    """Return every (start_index, phrase) occurrence of every Rule 4 trigger
+    phrase in `clause`, in textual (left-to-right) order - identical in
+    spirit to `_rule2_all_occurrences`, so a negated first occurrence of a
+    phrase can never hide a later, affirmative repeat of it."""
+    occurrences = []
+    for phrase in _TRIGGER_PHRASES_RULE4:
+        start = clause.find(phrase)
+        while start != -1:
+            occurrences.append((start, phrase))
+            start = clause.find(phrase, start + 1)
+    occurrences.sort(key=lambda occurrence: (occurrence[0], _TRIGGER_TUPLE_INDEX_RULE4[occurrence[1]]))
+    return occurrences
+
+
+def _rule4_unnegated_phrase_hit(sentence):
+    """Return the first Rule 4 trigger occurrence in `sentence` (checked
+    clause by clause, and within a clause in textual order) whose own local
+    negation window has no negation cue, or None if every occurrence in the
+    sentence is directly negated (or there is no occurrence at all)."""
+    for clause in re.split(r"[,;]", sentence.lower()):
+        for phrase_start, phrase in _rule4_all_occurrences(clause):
+            window = _rule4_local_negation_window(clause, phrase_start)
+            if _NEGATION_RE_RULE4.search(window):
+                continue  # this specific occurrence is directly negated
+            return phrase
+    return None
+
 
 def check_rule_4_extra_arena_or_attack(text):
     for sentence in _split_sentences(text):
-        lowered = sentence.lower()
-        phrase_hit = _contains_any(lowered, _TRIGGER_PHRASES_RULE4)
+        # Attack-letter detection is unchanged from before this fix: a
+        # letter outside A-D is always a violation, negation-unaware, same
+        # as prior behavior.
         letter_match = _ATTACK_LETTER_RE.search(sentence)
         bad_letter = (
             letter_match.group(1).lower()
             if letter_match and letter_match.group(1).lower() not in _VALID_ATTACK_LETTERS
             else None
         )
-        if not phrase_hit and not bad_letter:
-            continue
         if bad_letter:
+            return Violation(
+                rule_number=4,
+                rule_name="Extra arenas or a fifth/altered rival attack",
+                matched_sentence=sentence,
+                explanation=(
+                    "Text references 'Attack {}', outside the exactly four authored "
+                    "attacks A-D.".format(bad_letter.upper())
+                ),
+                citation=(
+                    "vanguard-telegraphs.md, \"The four authored attacks\"; "
+                    "shattered-ring-reactions.md, \"Status\""
+                ),
+                correction_instruction=(
+                    "Remove the extra arena/attack reference; map any new attack idea "
+                    "back onto one of A-D or cut it, and keep the arena singular to "
+                    "Shattered Ring. Keep the sentence's original topic/length."
+                ),
+            )
+
+        phrase_hit = _rule4_unnegated_phrase_hit(sentence)
+        if not phrase_hit:
+            continue
+        if phrase_hit in _ATTACK_WORD_TRIGGERS_RULE4:
             explanation = (
-                "Text references 'Attack {}', outside the exactly four authored "
-                "attacks A-D.".format(bad_letter.upper())
+                "Text references a fifth or altered rival attack via '{}', "
+                "outside the exactly four authored attacks A-D.".format(phrase_hit)
             )
         else:
             explanation = (

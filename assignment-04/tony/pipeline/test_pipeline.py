@@ -670,6 +670,118 @@ class CriticRuleTests(unittest.TestCase):
         text = "Attack A and Attack B are two of the four authored attacks used in both phases."
         self.assertIsNone(critic_rules.check_rule_4_extra_arena_or_attack(text))
 
+    # -- 2026-07-28 audit fix: Rule 4 arena/attack trigger-local negation ----
+
+    def test_rule_4_negative_false_positive_functional_requirements_sentence(self):
+        # The exact canon-correct sentence the audit found incorrectly
+        # flagged - "no second space", "no alternate version of the Ring",
+        # and "nothing off-screen" are each a denial, not an assertion.
+        text = (
+            "No reaction is described for anything beyond the central floor, "
+            "the far doorway, and the surrounding walls/ceiling rig already "
+            "specified in the arena's functional requirements — no second "
+            "space, no alternate version of the Ring, nothing off-screen."
+        )
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule4_all_occurrences(text.lower())
+        }
+        self.assertIn("second space", matched_phrases)
+        self.assertIn("alternate version of the ring", matched_phrases)
+        self.assertIsNone(critic_rules.check_rule_4_extra_arena_or_attack(text))
+
+    def test_rule_4_negative_no_second_space_or_alternate_version(self):
+        text = "There is no second space or alternate version of the Ring."
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule4_all_occurrences(text.lower())
+        }
+        self.assertIn("second space", matched_phrases)
+        self.assertIn("alternate version of the ring", matched_phrases)
+        self.assertIsNone(critic_rules.check_rule_4_extra_arena_or_attack(text))
+
+    def test_rule_4_negative_duel_never_leaves_shattered_ring(self):
+        text = "The duel never leaves Shattered Ring."
+        self.assertIsNone(critic_rules.check_rule_4_extra_arena_or_attack(text))
+
+    def test_rule_4_negative_no_additional_arena_introduced(self):
+        text = "No additional arena is introduced."
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule4_all_occurrences(text.lower())
+        }
+        self.assertIn("additional arena", matched_phrases)
+        self.assertIsNone(critic_rules.check_rule_4_extra_arena_or_attack(text))
+
+    def test_rule_4_negative_no_fifth_attack(self):
+        text = "Crimson Vanguard has no fifth attack."
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule4_all_occurrences(text.lower())
+        }
+        self.assertIn("fifth attack", matched_phrases)
+        self.assertIsNone(critic_rules.check_rule_4_extra_arena_or_attack(text))
+
+    def test_rule_4_positive_second_space(self):
+        text = "The duel shifts to a second space."
+        result = critic_rules.check_rule_4_extra_arena_or_attack(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 4)
+
+    def test_rule_4_positive_alternate_version_of_the_ring(self):
+        text = "Phase 2 uses an alternate version of the Ring."
+        result = critic_rules.check_rule_4_extra_arena_or_attack(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 4)
+
+    def test_rule_4_positive_second_arena_opens(self):
+        text = "A second arena opens after the Impact Window."
+        result = critic_rules.check_rule_4_extra_arena_or_attack(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 4)
+
+    def test_rule_4_positive_gains_a_fifth_attack(self):
+        text = "Crimson Vanguard gains a fifth attack."
+        result = critic_rules.check_rule_4_extra_arena_or_attack(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 4)
+
+    def test_rule_4_positive_new_rival_attack(self):
+        text = "Phase 2 introduces a new rival attack."
+        result = critic_rules.check_rule_4_extra_arena_or_attack(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 4)
+
+    def test_rule_4_negated_first_occurrence_does_not_hide_later_alternate_ring(self):
+        # "no second space" is correctly negated, but the "but" clause that
+        # follows starts a fresh, independently-true (and violating)
+        # statement - relying on whole-sentence negation would wrongly clear
+        # this whole sentence.
+        text = (
+            "There is no second space at first, but Phase 2 uses an "
+            "alternate version of the Ring."
+        )
+        result = critic_rules.check_rule_4_extra_arena_or_attack(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 4)
+        self.assertIn("alternate version of the ring", result.matched_sentence.lower())
+
+    def test_rule_4_negated_fifth_attack_does_not_hide_later_second_arena(self):
+        text = (
+            "Crimson Vanguard has no fifth attack, but the duel moves to a "
+            "second arena."
+        )
+        result = critic_rules.check_rule_4_extra_arena_or_attack(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 4)
+        self.assertIn("second arena", result.matched_sentence.lower())
+
+    def test_rule_4_unrelated_negation_does_not_hide_second_space_after_semicolon(self):
+        text = (
+            "The duel does not leave through the doorway; instead, a second "
+            "space opens beneath the arena."
+        )
+        result = critic_rules.check_rule_4_extra_arena_or_attack(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 4)
+        self.assertIn("second space", result.matched_sentence.lower())
+
     def test_rule_5_positive_altered_meter_gain(self):
         text = "A perfect dodge grants +9 meter, rewarding a clean defensive read."
         result = critic_rules.check_rule_5_altered_numbers(text)
