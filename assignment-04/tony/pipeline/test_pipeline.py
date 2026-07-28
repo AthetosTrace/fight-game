@@ -305,6 +305,175 @@ class ImpactWindowRequiredChunksIntegrationTests(unittest.TestCase):
         self.assertIn("still marked OPEN", prompt)
         self.assertIn("camera-ownership", prompt)
 
+    def test_impact_window_prompt_forbids_unsupported_weapons_and_equipment(self):
+        # 2026-07-28 grounding pass: the retrieved canon never establishes a
+        # weapon/gear for Echo or Nova, so the prompt must explicitly forbid
+        # inventing one (the earlier draft invented "blade angle").
+        output_cfg = knowledge_base.get_output("impact-window-beat-pack")
+        result = knowledge_base.retrieve(
+            slug=output_cfg["slug"],
+            query=output_cfg["query"],
+            eligible_files=output_cfg["eligible_files"],
+            required_chunks=output_cfg.get("required_chunks", ()),
+        )
+        prompt = pipeline.build_generation_prompt(output_cfg, result)
+        self.assertIn("weapon", prompt.lower())
+        self.assertIn("gear", prompt.lower())
+        self.assertIn("armor feature", prompt.lower())
+
+    def test_impact_window_prompt_anchors_echo_and_nova_to_supported_identities(self):
+        output_cfg = knowledge_base.get_output("impact-window-beat-pack")
+        result = knowledge_base.retrieve(
+            slug=output_cfg["slug"],
+            query=output_cfg["query"],
+            eligible_files=output_cfg["eligible_files"],
+            required_chunks=output_cfg.get("required_chunks", ()),
+        )
+        prompt = pipeline.build_generation_prompt(output_cfg, result)
+        self.assertIn("precision and controlled timing", prompt)
+        self.assertIn("speed and aggressive momentum", prompt)
+
+    def test_impact_window_prompt_requires_neutral_combat_wording(self):
+        output_cfg = knowledge_base.get_output("impact-window-beat-pack")
+        result = knowledge_base.retrieve(
+            slug=output_cfg["slug"],
+            query=output_cfg["query"],
+            eligible_files=output_cfg["eligible_files"],
+            required_chunks=output_cfg.get("required_chunks", ()),
+        )
+        prompt = pipeline.build_generation_prompt(output_cfg, result)
+        for term in ("guard angle", "body angle", "strike line", "stance", "momentum"):
+            self.assertIn(term, prompt)
+        self.assertIn("blade angle", prompt)  # named only as the forbidden phrasing
+        self.assertIn("never 'blade angle'", prompt)
+
+
+class VanguardPromptGroundingTests(unittest.TestCase):
+    """2026-07-28 grounding pass: the four attack names are new authored
+    proposals (the GDD only gives A-D range/purpose), so the prompt must
+    require proposed-name labeling, ban an implied announcer/dialogue
+    system, and ban the word 'countertext'."""
+
+    def _prompt(self):
+        output_cfg = knowledge_base.get_output("vanguard-telegraph-pack")
+        result = knowledge_base.retrieve(
+            slug=output_cfg["slug"],
+            query=output_cfg["query"],
+            eligible_files=output_cfg["eligible_files"],
+            required_chunks=output_cfg.get("required_chunks", ()),
+        )
+        return pipeline.build_generation_prompt(output_cfg, result)
+
+    def test_prompt_requires_proposed_name_labeling(self):
+        prompt = self._prompt()
+        self.assertIn("proposed working name", prompt)
+        self.assertIn("new authored content", prompt)
+        self.assertIn("pending designer review", prompt)
+        self.assertIn("not an established GDD fact", prompt)
+
+    def test_prompt_uses_playtest_readability_shorthand_label(self):
+        prompt = self._prompt()
+        self.assertIn("Playtest readability shorthand", prompt)
+
+    def test_prompt_forbids_announcer_or_shipped_dialogue_system(self):
+        prompt = self._prompt()
+        self.assertIn("announcer system", prompt)
+        self.assertIn("voice-over system", prompt)
+        self.assertIn("never ", prompt)
+        self.assertTrue(
+            "shipped dialogue" in prompt or "ships in the game" in prompt
+        )
+
+    def test_prompt_prohibits_countertext(self):
+        prompt = self._prompt()
+        self.assertIn("countertext", prompt)
+        self.assertIn("counterplay", prompt)
+        self.assertIn("counterattack", prompt)
+        self.assertIn("punish opportunity", prompt)
+        # It must be named only as the forbidden word, with alternatives
+        # required - never presented as an allowed term on its own.
+        self.assertIn("Never write the word 'countertext'", prompt)
+
+
+class ShatteredRingRequiredChunkIntegrationTests(unittest.TestCase):
+    """Verifies the real pipeline config for shattered-ring-reaction-pack
+    pins the 'Build-side notes' chunk the 2026-07-28 grounding pass found
+    was the only source directly supporting the Phase 1/Phase 2 build-status
+    language this output uses."""
+
+    BUILD_SIDE_HEADING = (
+        "Build-side notes (Phase 1 vs. Phase 2 — not fiction, but "
+        "constrains tone)"
+    )
+
+    def test_shattered_ring_config_pins_the_build_side_notes_heading(self):
+        output_cfg = knowledge_base.get_output("shattered-ring-reaction-pack")
+        headings = {heading for (_source, heading) in output_cfg.get("required_chunks", ())}
+        self.assertIn(self.BUILD_SIDE_HEADING, headings)
+
+    def test_shattered_ring_retrieval_selects_the_required_heading(self):
+        output_cfg = knowledge_base.get_output("shattered-ring-reaction-pack")
+        result = knowledge_base.retrieve(
+            slug=output_cfg["slug"],
+            query=output_cfg["query"],
+            eligible_files=output_cfg["eligible_files"],
+            required_chunks=output_cfg.get("required_chunks", ()),
+        )
+        selected_keys = {(sc.chunk.source_file, sc.chunk.heading) for sc in result.selected}
+        for key in output_cfg["required_chunks"]:
+            self.assertIn(key, selected_keys)
+
+    def test_shattered_ring_required_heading_is_marked_required_not_lexical(self):
+        # Confirms the pin is load-bearing: the heading falls outside the
+        # lexical top-K on its own and is only present because of the pin.
+        output_cfg = knowledge_base.get_output("shattered-ring-reaction-pack")
+        result = knowledge_base.retrieve(
+            slug=output_cfg["slug"],
+            query=output_cfg["query"],
+            eligible_files=output_cfg["eligible_files"],
+            required_chunks=output_cfg.get("required_chunks", ()),
+        )
+        key = ("shattered-ring-reactions.md", self.BUILD_SIDE_HEADING)
+        idx = [
+            (sc.chunk.source_file, sc.chunk.heading) for sc in result.selected
+        ].index(key)
+        self.assertEqual(
+            result.selection_reasons[idx], knowledge_base.SELECTED_BY_REQUIRED
+        )
+
+    def test_shattered_ring_retrieval_is_deterministic_with_the_pin(self):
+        output_cfg = knowledge_base.get_output("shattered-ring-reaction-pack")
+        kwargs = dict(
+            slug=output_cfg["slug"],
+            query=output_cfg["query"],
+            eligible_files=output_cfg["eligible_files"],
+            required_chunks=output_cfg.get("required_chunks", ()),
+        )
+        first = knowledge_base.retrieve(**kwargs)
+        second = knowledge_base.retrieve(**kwargs)
+        self.assertEqual(
+            [sc.chunk.heading for sc in first.selected],
+            [sc.chunk.heading for sc in second.selected],
+        )
+        self.assertEqual(first.selection_reasons, second.selection_reasons)
+
+    def test_shattered_ring_prompt_omits_unsupported_m4_stability_gate_claim(self):
+        # The generated output previously claimed M4 stability gates M5
+        # presentation work - that claim is not supported by anything in
+        # this pack's eligible files, so the prompt must instruct the
+        # generator to omit it rather than invent support for it.
+        output_cfg = knowledge_base.get_output("shattered-ring-reaction-pack")
+        result = knowledge_base.retrieve(
+            slug=output_cfg["slug"],
+            query=output_cfg["query"],
+            eligible_files=output_cfg["eligible_files"],
+            required_chunks=output_cfg.get("required_chunks", ()),
+        )
+        prompt = pipeline.build_generation_prompt(output_cfg, result)
+        self.assertIn("M4", prompt)
+        self.assertIn("not established by the retrieved arena facts", prompt)
+        self.assertIn("build-side production status", prompt)
+
 
 class RetrievalEvidenceRenderingTests(unittest.TestCase):
     def test_render_shows_selection_reason_for_required_and_lexical_chunks(self):

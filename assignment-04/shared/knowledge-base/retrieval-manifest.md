@@ -47,9 +47,17 @@ attack's range/purpose and readability requirement.
   out of this pack entirely — this output is Crimson Vanguard only.
 
 **The generator is allowed to create:**
-- A short name per attack (A–D) consistent with its stated range/purpose.
-- One or two lines of telegraph/announcer-readable flavor text per attack,
-  consistent with the stated readability requirement and behavioral intent.
+- A short *proposed working name* per attack (A–D) consistent with its
+  stated range/purpose — labeled explicitly in the output text as a
+  proposed working name, new authored content, pending designer review,
+  not an established GDD fact. Attacks A–D are only defined by range/
+  purpose in the GDD; any name is new authored content, never fact.
+- One or two lines of **"Playtest readability shorthand"** per attack —
+  internal designer-facing copy used to talk about the attack during
+  playtesting, consistent with the stated readability requirement and
+  behavioral intent. This is **not** dialogue that ships in the game, and
+  it must never be labeled "Announcer/readable cue" or otherwise imply a
+  shipped announcer/voice-over/dialogue system exists.
 - Tone-consistent language describing the six-state cycle in narrative form
   (e.g., for a bestiary-style readout), so long as all six states and their
   order are preserved.
@@ -63,6 +71,11 @@ attack's range/purpose and readability requirement.
   runtime-generated — selection is authored/weighted, not intelligent.
 - A backstory for Crimson Vanguard or Project Valor-7 — that is out of
   scope for this pack (no origin-fiction output was confirmed).
+- Any implication that an announcer system, voice-over system, or spoken
+  in-game dialogue exists — the "Playtest readability shorthand" is
+  internal designer-facing copy only.
+- The word **"countertext"** — use "counterplay", "counterattack", or
+  "punish opportunity" instead.
 
 ---
 
@@ -119,6 +132,14 @@ identity.
   cleanly return afterward — see the OPEN restoration gaps; do not claim
   more certainty about restoration than the source specifies.
 - A meter gain value other than the ones in `impact-window-cinematics.md`.
+- Any weapon, named equipment, armor feature, or gear for Echo or Nova —
+  neither `impact-window-cinematics.md` nor `core-canon.md` establishes a
+  weapon for either fighter, only combat identity and accent color. Echo
+  and Nova are differentiated **only** by their stated traits (Echo:
+  precision and controlled timing; Nova: speed and aggressive momentum),
+  never by an invented blade, gauntlet blade, or other gear. Use neutral
+  combat wording only — guard angle, body angle, strike line, stance,
+  momentum — never "blade angle."
 
 ---
 
@@ -155,6 +176,14 @@ exist.
   needed to keep reaction descriptions fighter-agnostic (the arena reacts
   to "a major impact," not to a specific fighter's kit).
 
+**Required (pinned) chunk:** `shattered-ring-reactions.md` → "Build-side
+notes (Phase 1 vs. Phase 2 — not fiction, but constrains tone)" is pinned
+regardless of lexical score. This is the **only** chunk that directly
+supports the Phase 1/Phase 2 build-status framing this pack uses (reaction
+deferred to M5/Phase 2; Phase 1 has no hazards/damage volumes/physics
+objects) — a flat top-K score cutoff would otherwise not guarantee its
+inclusion.
+
 **The generator is allowed to create:**
 - Short descriptive flavor for how the central floor, far doorway, or wall
   surfaces visibly respond to a major impact (light flicker, dust,
@@ -172,6 +201,15 @@ exist.
   be cited or inferred from.
 - A history or origin for the Shattered Ring — that is out of scope for
   this pack (no lore/history output was confirmed).
+- A claim that M5/Phase 2 presentation work is gated on M4 stability or
+  milestone sign-off. That specific gating condition (from `CLAUDE.md`'s
+  build-order table) is **not** established by anything in this pack's
+  eligible files — the pinned "Build-side notes" chunk supports only
+  "reaction is deferred to M5/Phase 2" and "Phase 1 has no hazards," not an
+  M4-stability precondition. Any M1–M4/M5/Phase 1/Phase 2 language used
+  here must stay build-side/production status, never in-world fiction, and
+  must omit the unsupported M4-stability claim rather than inventing
+  support for it.
 
 ---
 

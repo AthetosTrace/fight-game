@@ -221,9 +221,14 @@ OUTPUTS = [
         ),
         "eligible_files": ("vanguard-telegraphs.md", "core-canon.md"),
         "allowed_to_create": (
-            "A short name per attack (A-D) consistent with its stated range/purpose.",
-            "One or two lines of telegraph/announcer-readable flavor text per "
-            "attack, consistent with the stated readability requirement and "
+            "A short proposed working name per attack (A-D), consistent with "
+            "its stated range/purpose, explicitly labeled in the output text "
+            "as a proposed working name, new authored content, pending "
+            "designer review, not an established GDD fact.",
+            "One or two lines of 'Playtest readability shorthand' per "
+            "attack - internal designer-facing copy used to talk about the "
+            "attack during playtesting, not dialogue that ships in the "
+            "game - consistent with the stated readability requirement and "
             "behavioral intent.",
             "Tone-consistent narrative language for the six-state cycle, so "
             "long as all six states and their order are preserved.",
@@ -235,6 +240,25 @@ OUTPUTS = [
             "Any implication that attack selection is learned, adaptive, or "
             "runtime-generated.",
             "A backstory for Crimson Vanguard or Project Valor-7.",
+            "Any implication that an announcer system, voice-over system, "
+            "or spoken in-game dialogue exists - the 'Playtest readability "
+            "shorthand' is internal designer-facing copy only, never "
+            "dialogue that ships in the game.",
+            "The word 'countertext' - use 'counterplay', 'counterattack', "
+            "or 'punish opportunity' instead.",
+        ),
+        "extra_constraints": (
+            "Label every proposed attack name, in the output text itself, "
+            "as a proposed working name, new authored content, pending "
+            "designer review, not an established GDD fact.",
+            "Use the label 'Playtest readability shorthand' (never "
+            "'Announcer/readable cue' or any label implying a shipped "
+            "voice/announcer system) for each attack's short flavor copy, "
+            "and describe it explicitly as internal designer-facing "
+            "shorthand for playtesting, not shipped dialogue.",
+            "Never write the word 'countertext'; when describing the "
+            "punish opening, use 'counterplay', 'counterattack', or "
+            "'punish opportunity' instead.",
         ),
     },
     {
@@ -277,11 +301,21 @@ OUTPUTS = [
             "not cleanly return afterward - the restoration gaps are OPEN, "
             "not resolved.",
             "A meter gain value other than the ones in impact-window-cinematics.md.",
+            "A weapon, named equipment, armor feature, or piece of gear for "
+            "Echo or Nova - the retrieved canon establishes combat identity "
+            "and accent color only, never a weapon or gear, for either fighter.",
         ),
         "extra_constraints": (
             "Describe the burst ending with a return to combat, but do not "
             "assert specific rival-AI, camera-ownership, montage-cleanup, or "
             "gameplay-state restoration behavior that is still marked OPEN.",
+            "Differentiate Echo and Nova only through their stated combat "
+            "identity - Echo: precision and controlled timing; Nova: speed "
+            "and aggressive momentum - never through an invented weapon, "
+            "blade, gauntlet blade, armor feature, or other gear.",
+            "Use neutral combat wording for stance/positioning only - e.g., "
+            "guard angle, body angle, strike line, stance, momentum - never "
+            "'blade angle' or any other bladed/weapon/gear-based phrasing.",
         ),
     },
     {
@@ -293,6 +327,16 @@ OUTPUTS = [
             "presentation only, without adding gameplay hazards."
         ),
         "eligible_files": ("shattered-ring-reactions.md", "core-canon.md"),
+        # Pinned per the 2026-07-28 grounding pass: the retrieved "Build-side
+        # notes" chunk is the only source of the Phase 1/Phase 2 build-status
+        # framing this output is allowed to use, so it is pinned regardless
+        # of lexical score to keep milestone language tied to real grounding.
+        "required_chunks": (
+            (
+                "shattered-ring-reactions.md",
+                "Build-side notes (Phase 1 vs. Phase 2 — not fiction, but constrains tone)",
+            ),
+        ),
         "allowed_to_create": (
             "Short descriptive flavor for how the floor, doorway, or wall "
             "surfaces visibly respond to a major impact (light flicker, "
@@ -308,6 +352,19 @@ OUTPUTS = [
             "Any description drawn from GDD pages 10-14 (image reference "
             "sheets, no extractable text).",
             "A history or origin for the Shattered Ring.",
+            "A claim that M5/Phase 2 presentation work is gated on M4 "
+            "stability or milestone sign-off - that specific gating "
+            "condition is not established by the retrieved arena facts for "
+            "this pack; state only what the Build-side notes chunk actually "
+            "supports (reaction deferred to M5/Phase 2, no hazards in Phase 1).",
+        ),
+        "extra_constraints": (
+            "Keep any M1-M4 / Phase 1 / M5 / Phase 2 language explicitly "
+            "framed as build-side production status, never as in-world "
+            "fiction, and limited to what the retrieved 'Build-side notes' "
+            "chunk actually states - do not add an M4-stability-before-"
+            "presentation gating claim, since that is not supported by this "
+            "pack's retrieved context; omit it rather than inventing support.",
         ),
     },
 ]
