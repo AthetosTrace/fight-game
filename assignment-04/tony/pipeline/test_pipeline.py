@@ -410,6 +410,199 @@ class CriticRuleTests(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(result.rule_number, 2)
 
+    # -- 2026-07-28 audit fix: Rule 2 negation-awareness ---------------------
+
+    def test_rule_2_false_positive_protection_authored_deterministic_no_runtime_calls(self):
+        # The exact canon-correct sentence the audit found incorrectly
+        # flagged - "no runtime model calls" and "no ... adaptive selection"
+        # are each negated within their own comma-separated clause.
+        text = (
+            "Authored, deterministic AI behavior — no runtime model calls, "
+            "no learned or adaptive selection."
+        )
+        self.assertIsNone(critic_rules.check_rule_2_runtime_learning(text))
+
+    def test_rule_2_negative_does_not_learn_from_player(self):
+        text = "Crimson Vanguard does not learn from the player."
+        self.assertIsNone(critic_rules.check_rule_2_runtime_learning(text))
+
+    def test_rule_2_negative_never_adapts_at_runtime(self):
+        text = "The boss never adapts its attacks at runtime."
+        self.assertIsNone(critic_rules.check_rule_2_runtime_learning(text))
+
+    def test_rule_2_negative_no_adaptive_selection(self):
+        text = "There is no adaptive selection."
+        self.assertIsNone(critic_rules.check_rule_2_runtime_learning(text))
+
+    def test_rule_2_negative_cannot_predict_habits(self):
+        text = "The system cannot predict the player's habits."
+        # Prove this sentence genuinely contains a Rule 2 trigger occurrence
+        # first - otherwise a None result below would be indistinguishable
+        # from "nothing matched" rather than "negation correctly suppressed
+        # a real match".
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule2_all_occurrences(text.lower())
+        }
+        self.assertIn("predict the player's habits", matched_phrases)
+        self.assertIsNone(critic_rules.check_rule_2_runtime_learning(text))
+
+    def test_rule_2_positive_can_predict_the_players_habits(self):
+        text = "The system can predict the player's habits."
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule2_all_occurrences(text.lower())
+        }
+        self.assertIn("predict the player's habits", matched_phrases)
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+
+    def test_rule_2_positive_learns_from_the_player_bare(self):
+        text = "Crimson Vanguard learns from the player."
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+
+    def test_rule_2_positive_adapts_its_attacks_at_runtime(self):
+        text = "The boss adapts its attacks at runtime."
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+
+    def test_rule_2_positive_uses_adaptive_selection(self):
+        text = "The AI uses adaptive selection."
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+
+    def test_rule_2_positive_predicts_the_players_habits_bare(self):
+        text = "The system predicts the player's habits."
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+
+    def test_rule_2_positive_tracks_the_players_patterns_bare(self):
+        text = "The boss tracks the player's patterns."
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+
+    def test_rule_2_negation_in_one_clause_does_not_hide_violation_in_another(self):
+        # "no fixed order" is a real, canon-correct negation, but it lives in
+        # a different clause than the affirmative "it learns from the
+        # player" - the negation must not launder that second clause.
+        text = "The system has no fixed order, and it learns from the player."
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+        self.assertIn("learns from the player", result.matched_sentence.lower())
+
+    def test_rule_2_negation_in_one_sentence_does_not_hide_violation_in_next(self):
+        # Same idea across a sentence boundary rather than a clause boundary.
+        text = (
+            "The boss does not use random attacks. It adapts to the player "
+            "at runtime."
+        )
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+        self.assertIn("adapts to the player at runtime", result.matched_sentence.lower())
+
+    # -- 2026-07-28 audit fix (revised): negation scoped to the trigger -----
+    # occurrence itself, not the whole comma/semicolon clause, so unrelated
+    # negation earlier in a clause can no longer launder an affirmative
+    # trigger later in that same clause.
+
+    def test_rule_2_unrelated_negation_before_and_does_not_suppress_trigger(self):
+        text = "The boss does not use random attacks and adapts to the player at runtime."
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+
+    def test_rule_2_unrelated_negation_before_but_does_not_suppress_trigger(self):
+        text = "The system is not random but learns from the player."
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+
+    def test_rule_2_negated_first_clause_does_not_suppress_but_clause(self):
+        text = "The boss does not learn from the player but adapts its attacks at runtime."
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+
+    def test_rule_2_negative_compound_denial_across_or(self):
+        # A single negation governing two verb phrases joined by "or" must
+        # still pass - "or" is not treated as a hard boundary the way
+        # "and"/"but" are, since negation naturally distributes across it.
+        # Both "learn from the player" and "adapt at runtime" are real
+        # trigger phrases (see the base-form additions below), so this
+        # proves the negation logic actually suppressed two genuine
+        # matches - it is not passing because nothing matched.
+        text = "The boss does not learn from the player or adapt at runtime."
+        self.assertIsNone(critic_rules.check_rule_2_runtime_learning(text))
+
+    # -- 2026-07-28 audit fix (second revision): base-form triggers, and ----
+    # every occurrence of a trigger phrase (not just the first) is checked.
+
+    def test_rule_2_positive_base_form_can_learn_from_the_player(self):
+        text = "The boss can learn from the player."
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+
+    def test_rule_2_positive_base_form_can_adapt_at_runtime(self):
+        text = "The boss can adapt at runtime."
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+
+    def test_rule_2_negative_base_form_cannot_learn_from_the_player(self):
+        text = "The boss cannot learn from the player."
+        self.assertIsNone(critic_rules.check_rule_2_runtime_learning(text))
+
+    def test_rule_2_negative_never_adapts_at_runtime_bare(self):
+        text = "The boss never adapts at runtime."
+        # Same non-vacuous proof as above: confirm the trigger genuinely
+        # matches before asserting negation suppressed it.
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule2_all_occurrences(text.lower())
+        }
+        self.assertIn("adapts at runtime", matched_phrases)
+        self.assertIsNone(critic_rules.check_rule_2_runtime_learning(text))
+
+    def test_rule_2_positive_adapts_at_runtime_bare(self):
+        text = "The boss adapts at runtime."
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule2_all_occurrences(text.lower())
+        }
+        self.assertIn("adapts at runtime", matched_phrases)
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+
+    def test_rule_2_negated_first_occurrence_does_not_hide_later_affirmative_occurrence(self):
+        # Same trigger phrase, twice: the first occurrence is negated by
+        # "never", but "but later" starts a fresh affirmative clause with a
+        # second, unnegated occurrence of the exact same phrase. Relying on
+        # str.find() (first occurrence only) would wrongly stop at the
+        # negated first hit and miss this.
+        text = (
+            "The boss never adapts to the player at runtime but later "
+            "adapts to the player at runtime."
+        )
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+
+    def test_rule_2_negated_first_occurrence_of_different_phrase_family_does_not_hide_later_one(self):
+        text = (
+            "The system does not use adaptive selection but its backup "
+            "mode uses adaptive selection."
+        )
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+
     def test_rule_3_positive_free_impact_window(self):
         text = "The first Impact Window automatically succeeds without player input."
         result = critic_rules.check_rule_3_free_impact_window(text)

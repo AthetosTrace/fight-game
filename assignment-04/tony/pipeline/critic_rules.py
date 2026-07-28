@@ -91,6 +91,7 @@ _TRIGGER_PHRASES_RULE2 = (
     "adapts its attack pattern",
     "adapts in real time",
     "adapts to the player in real time",
+    "adapts to the player at runtime",
     "generates attacks dynamically",
     "dynamically generates",
     "calls an ai model",
@@ -111,36 +112,132 @@ _TRIGGER_PHRASES_RULE2 = (
     "least anticipated",
     "predicts the player's habits",
     "studies the player's behavior",
+    "adaptive selection",
+    # Added per Assignment #04 audit fix (2026-07-28, second revision): bare
+    # base-form phrasing (no "-s", no "to the player") that a negation like
+    # "does not"/"cannot"/"never" would otherwise leave ungrammatical to
+    # match against the "-s" forms above, e.g. "does not learn from the
+    # player" or "never adapts to the player at runtime" reduced to "adapt
+    # at runtime". Without these, sentences built by negating one of the
+    # phrases above can slip past the critic not because negation was
+    # correctly recognized, but because nothing matched at all.
+    "learn from the player",
+    "adapt at runtime",
+    # Added per Assignment #04 audit fix (2026-07-28, third revision): two
+    # more grammatical forms a modal ("can"/"cannot") or "never" naturally
+    # produces but which weren't yet covered - "predict the player's
+    # habits" (bare, no "-s", after a modal) and "adapts at runtime" (with
+    # "-s" but without "to the player", after a bare subject+verb or after
+    # "never"). Without these, sentences built around them could pass for
+    # lack of a match rather than because negation was actually recognized.
+    "predict the player's habits",
+    "adapts at runtime",
 )
+
+# Index of each trigger phrase's position in the tuple above, used as the
+# deterministic tie-breaker in `_rule2_all_occurrences` below.
+_TRIGGER_TUPLE_INDEX_RULE2 = {
+    phrase: index for index, phrase in enumerate(_TRIGGER_PHRASES_RULE2)
+}
+
+# Added per Assignment #04 audit fix (2026-07-28, revised same day): a
+# canon-correct sentence denying runtime learning necessarily *names* one of
+# the trigger phrases above ("no runtime model calls", "no ... adaptive
+# selection", "never adapts its attacks"). The first cut of this fix scoped
+# negation to the whole comma/semicolon clause, which over-suppressed:
+# unrelated negation earlier in a clause ("does not use random attacks and
+# adapts to the player at runtime") wrongly cleared an affirmative trigger
+# later in the *same* clause.
+#
+# This revision scopes negation to the individual trigger *occurrence*
+# instead. For each trigger phrase found in a clause, only the words between
+# the phrase and the nearest preceding "and"/"but" (or the start of the
+# clause, if there is no such boundary) are searched for a negation cue.
+# "and"/"but" are treated as hard boundaries because in English they start a
+# fresh, independently-true statement - "X does not do A and does B" does
+# not mean "X does not do B". "or"/"nor" are deliberately NOT treated as
+# boundaries, because negation naturally distributes across them - "does
+# not do A or B" means neither A nor B happened - so this is not "blindly
+# splitting on and/or/but"; only and/but ever cut the negation search short.
+_NEGATION_RE_RULE2 = re.compile(r"\b(no|not|never|cannot|nothing)\b|n't", re.IGNORECASE)
+_HARD_BOUNDARY_RE_RULE2 = re.compile(r"\b(?:and|but)\b", re.IGNORECASE)
+
+
+def _rule2_local_negation_window(clause, phrase_start):
+    """Return the slice of `clause` that governs negation for a trigger
+    phrase starting at `phrase_start`: everything since the nearest
+    preceding 'and'/'but', or since the start of the clause if there is
+    none."""
+    boundaries = list(_HARD_BOUNDARY_RE_RULE2.finditer(clause, 0, phrase_start))
+    window_start = boundaries[-1].end() if boundaries else 0
+    return clause[window_start:phrase_start]
+
+
+def _rule2_all_occurrences(clause):
+    """Return every (start_index, phrase) occurrence of every Rule 2 trigger
+    phrase in `clause`, in textual (left-to-right) order.
+
+    clause.find() alone only ever reports the *first* occurrence of a
+    phrase, which would miss a later, affirmative repeat of a phrase whose
+    first occurrence was negated (e.g. "never adapts ... but later adapts
+    ..."). This scans every trigger phrase for every occurrence via a
+    repeated find(), then sorts the combined list by (start_index,
+    trigger-tuple-index). Distinct trigger phrases genuinely can share a
+    start index - e.g. one phrase is a prefix of another, or two unrelated
+    phrases both happen to begin where a shared word starts - so the sort
+    key explicitly includes `_TRIGGER_TUPLE_INDEX_RULE2` as the tie-breaker
+    rather than depending on sort stability plus phrase-append order to get
+    the same effect implicitly."""
+    occurrences = []
+    for phrase in _TRIGGER_PHRASES_RULE2:
+        start = clause.find(phrase)
+        while start != -1:
+            occurrences.append((start, phrase))
+            start = clause.find(phrase, start + 1)
+    occurrences.sort(key=lambda occurrence: (occurrence[0], _TRIGGER_TUPLE_INDEX_RULE2[occurrence[1]]))
+    return occurrences
+
+
+def _rule2_unnegated_hit(sentence):
+    """Return the first Rule 2 trigger occurrence in `sentence` (checked
+    clause by clause, and within a clause in textual order) whose own local
+    negation window (see `_rule2_local_negation_window`) has no negation
+    cue, or None if every occurrence in the sentence is directly negated (or
+    there is no occurrence at all)."""
+    for clause in re.split(r"[,;]", sentence.lower()):
+        for phrase_start, phrase in _rule2_all_occurrences(clause):
+            window = _rule2_local_negation_window(clause, phrase_start)
+            if _NEGATION_RE_RULE2.search(window):
+                continue  # this specific occurrence is directly negated
+            return phrase
+    return None
 
 
 def check_rule_2_runtime_learning(text):
-    lowered_full = text.lower()
-    hit = _contains_any(lowered_full, _TRIGGER_PHRASES_RULE2)
-    if not hit:
-        return None
     for sentence in _split_sentences(text):
-        if hit in sentence.lower():
-            return Violation(
-                rule_number=2,
-                rule_name="Runtime-learning or runtime-LLM behavior implied",
-                matched_sentence=sentence,
-                explanation=(
-                    "Text implies runtime learning/adaptive/model-driven behavior "
-                    "via the phrase '{}'. The shipped game makes no runtime "
-                    "AI-model calls; Crimson Vanguard is deterministic authored "
-                    "logic.".format(hit)
-                ),
-                citation="core-canon.md, \"Hard constraint\"",
-                correction_instruction=(
-                    "Rewrite so any 'intelligence' language is reframed as "
-                    "authored/deterministic (e.g. an authored state machine "
-                    "selects among four fixed attacks), removing any implication "
-                    "of learning, adaptation, or a runtime model call. Keep the "
-                    "sentence's original topic/length."
-                ),
-            )
-    return None  # defensive - the phrase hit implies a sentence-level match
+        hit = _rule2_unnegated_hit(sentence)
+        if hit is None:
+            continue
+        return Violation(
+            rule_number=2,
+            rule_name="Runtime-learning or runtime-LLM behavior implied",
+            matched_sentence=sentence,
+            explanation=(
+                "Text implies runtime learning/adaptive/model-driven behavior "
+                "via the phrase '{}'. The shipped game makes no runtime "
+                "AI-model calls; Crimson Vanguard is deterministic authored "
+                "logic.".format(hit)
+            ),
+            citation="core-canon.md, \"Hard constraint\"",
+            correction_instruction=(
+                "Rewrite so any 'intelligence' language is reframed as "
+                "authored/deterministic (e.g. an authored state machine "
+                "selects among four fixed attacks), removing any implication "
+                "of learning, adaptation, or a runtime model call. Keep the "
+                "sentence's original topic/length."
+            ),
+        )
+    return None
 
 
 # ---------------------------------------------------------------------------
