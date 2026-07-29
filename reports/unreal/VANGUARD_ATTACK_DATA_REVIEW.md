@@ -3,19 +3,20 @@
 **Reviewer:** vanguard-attack-data-reviewer (agents/unreal/vanguard-attack-data-reviewer.md)
 **Date:** 2026-07-29 (re-review after correction pass)
 **Reviewed CSV:** `data/unreal/DT_VanguardAttacks.csv`
-(working-tree state, **uncommitted** — corrected on top of repo HEAD
-`dbde5aa`; the CSV's last committed version is `d9cc113` "Add Unreal Vanguard attack DataTable source," which is the version the **first** review pass
-covered and found FAIL. This re-review is against the corrected,
-not-yet-committed content on disk.)
+(as corrected and committed in `9282c78` "Fix Vanguard attack data
+validation findings" — the commit that sits directly on top of `dbde5aa`
+"Add Vanguard attack data review," the commit that carried the **first**
+review pass's FAIL verdict. This re-review covers the corrected CSV content
+as committed in `9282c78`.)
 **Reviewed contract:** `docs/unreal/VANGUARD_ATTACK_ROW_CONTRACT.md` (no
 separate version number — file path is the version reference; contract
 text itself is unchanged since the first review)
 **Deterministic validator status:** `tools/validate_vanguard_attack_csv.py`
-reports `PASS` on this CSV. Unlike the first review pass, the validator
-(working-tree, uncommitted) now also enforces the row contract's per-field
-**max length** rule via a `MAX_LENGTHS` table checked against every
-`CONTRACT_HEADERS` field — confirmed by reading the current script — so a
-validator PASS now covers length as well as the checks it already ran.
+reports `PASS` on this CSV. Unlike the first review pass, the validator —
+also corrected and committed in `9282c78` — now enforces the row
+contract's per-field **max length** rule via a `MAX_LENGTHS` table checked
+against every `CONTRACT_HEADERS` field, so a validator PASS now covers
+length as well as the checks it already ran.
 
 ---
 
@@ -25,10 +26,12 @@ Every row and field traces cleanly to an approved source, obeys the row
 contract's type/length/allowed-values rules, contradicts nothing in core
 canon, and no critic rule fires. This corrects the **FAIL** verdict from the
 prior review pass (`reports/unreal/VANGUARD_ATTACK_DATA_REVIEW.md`, first
-version): every finding raised there has been resolved on disk, and no new
-issue was found in this pass.
+version, reviewed against commit `dbde5aa`): every finding raised there has
+been resolved and committed in `9282c78` "Fix Vanguard attack data
+validation findings," and no new issue was found in this pass.
 
-**What changed since the FAIL verdict, confirmed resolved:**
+**What changed since the FAIL verdict, confirmed resolved (committed in
+`9282c78`):**
 - Row_A `RecoveryRequirement` no longer contains "the longest recovery
   window of the four attacks per the design brief" — the unsupported,
   source-contradicting cross-attack comparison is gone. Field now reads

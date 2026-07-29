@@ -97,6 +97,21 @@ clearest next action** (see "Exact next Unreal action" below is not this —
 see the immediately following section for the actual next repository
 action, which precedes any Unreal step).
 
+**Follow-up — 2026-07-29 (later, after this overnight session):** the
+`vanguard-attack-data-reviewer` agent described above was subsequently run.
+Its first pass found a **FAIL** — an unsupported cross-attack recovery-time
+claim in Row_A and several fields exceeding the row contract's per-field
+max-length limits. Those findings were corrected, and a deterministic
+per-field max-length check (`MAX_LENGTHS`) was added to
+`tools/validate_vanguard_attack_csv.py` and covered with new tests so the
+same class of length violation cannot silently recur. The reviewer was then
+re-run against the corrected CSV and validator and returned a **PASS**, with
+no findings and no critic-rule fires. The corrected CSV, the corrected
+validator and its tests, and the final PASS review report are all committed
+together in `9282c78` ("Fix Vanguard attack data validation findings"). The
+"single clearest next action" called out above is therefore **complete** —
+see "Exact next Unreal action" below for what remains.
+
 ---
 
 ## Assumptions made this session
@@ -145,8 +160,10 @@ Everything in `VANGUARD_ATTACK_DATA_APPROVAL.md` §3, restated compactly:
    approve for this sprint?
 3. Is `VANGUARD_ATTACK_ROW_CONTRACT.md` approved as the schema to build the
    eventual Unreal struct/DataTable against?
-4. Should the agent reviewer run before or after this approval — as a gate
-   or as a parallel confirmation?
+4. ~~Should the agent reviewer run before or after this approval — as a gate
+   or as a parallel confirmation?~~ **Resolved** — see the 2026-07-29
+   follow-up above: it already ran, against the corrected CSV/validator, and
+   returned PASS.
 5. Any other correction needed to the CSV/contract/audit before Unreal
    import prep proceeds?
 
@@ -161,10 +178,13 @@ but both remain open for when Attack A's numbers are actually set.
 ## Human decisions required before the next step
 
 1. **Sign or reject `VANGUARD_ATTACK_DATA_APPROVAL.md`.** Nothing past that
-   signature may proceed (no reviewer run treated as a gate-passer, no
-   Unreal import).
-2. **Decide whether to run the `vanguard-attack-data-reviewer` agent before
-   or alongside signing** (approval question 4).
+   signature may proceed (no Unreal import).
+2. ~~Decide whether to run the `vanguard-attack-data-reviewer` agent before
+   or alongside signing (approval question 4).~~ **Resolved** by the
+   2026-07-29 follow-up above: the reviewer already ran and passed
+   (`reports/unreal/VANGUARD_ATTACK_DATA_REVIEW.md`, committed in
+   `9282c78`). Approval question 4 in `VANGUARD_ATTACK_DATA_APPROVAL.md` now
+   records this instead of asking it.
 3. **Confirm the working-name question (approval question 1)** before
    anyone reads `DisplayWorkingName` as more than a placeholder.
 
@@ -173,10 +193,13 @@ but both remain open for when Attack A's numbers are actually set.
 ## Exact next Unreal action
 
 **None yet — and none is authorized.** The literal next action is entirely
-inside this repository: **run the `vanguard-attack-data-reviewer` agent
-against the approved-pending CSV/contract/audit and produce
-`reports/unreal/VANGUARD_ATTACK_DATA_REVIEW.md`**, then bring that report
-plus `VANGUARD_ATTACK_DATA_APPROVAL.md` to the designer for signature.
+inside this repository, and it is no longer running the reviewer — that
+completed and passed (see the 2026-07-29 follow-up above; report and
+corrections are committed in `9282c78`). The current next action is
+**human review of `docs/unreal/VANGUARD_ATTACK_DATA_APPROVAL.md`**: bring
+that approval packet, together with its cited
+`reports/unreal/VANGUARD_ATTACK_DATA_REVIEW.md` PASS report, to the
+designer for signature.
 
 Only **after** that signature does any Unreal-side action become
 authorized, and it is exactly Step 1 of

@@ -11,10 +11,12 @@ question for the human designer, not a default.
 **CSV reviewed:** `data/unreal/DT_VanguardAttacks.csv`
 **Validator status at time of writing:** PASS (`py -3
 tools/validate_vanguard_attack_csv.py`)
-**Agent review status:** NOT YET RUN — `agents/unreal/vanguard-attack-data-reviewer.md`
-defines the reviewer contract; running it and producing
-`reports/unreal/VANGUARD_ATTACK_DATA_REVIEW.md` is a pending next action
-(see the morning review report for the exact next step).
+**Agent review status:** **PASS** — `agents/unreal/vanguard-attack-data-reviewer.md`
+was run against the CSV and validator as corrected and committed in
+`9282c78` ("Fix Vanguard attack data validation findings"). Its report,
+`reports/unreal/VANGUARD_ATTACK_DATA_REVIEW.md`, records a PASS verdict
+with no outstanding findings. Human approval below (§4) is now the only
+remaining gate before the manual Unreal import steps.
 
 ---
 
@@ -72,11 +74,12 @@ They are **not** GDD facts — see question 1 below.
    - [ ] Approve
    - [ ] Reject — needs a schema change (specify below)
 
-4. **Do you want the agent reviewer** (`agents/unreal/vanguard-attack-data-reviewer.md`)
-   **run before or after this approval?** (It performs no repository
-   changes to reviewed files; its own report is the only file it writes.)
-   - [ ] Run it before I sign — hold this approval open until its report exists
-   - [ ] Approve now; run the reviewer as a parallel confirmation, not a gate
+4. **Agent reviewer status.** `agents/unreal/vanguard-attack-data-reviewer.md`
+   has already run against the corrected CSV and validator (committed in
+   `9282c78`) and returned a **PASS** verdict with no outstanding findings —
+   see `reports/unreal/VANGUARD_ATTACK_DATA_REVIEW.md`. There is no longer a
+   before-or-after-approval choice to make here; your signature in §4 below
+   is now the only remaining gate before the manual Unreal import steps.
 
 5. **Any other correction needed to the CSV, the row contract, or the source
    audit before this proceeds to Unreal import prep** (Task 7's checklist)?
