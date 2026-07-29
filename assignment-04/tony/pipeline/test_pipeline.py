@@ -772,6 +772,300 @@ class CriticRuleTests(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(result.rule_number, 2)
 
+    # -- 2026-07-28 audit fix (list-level governing-negation revision): a
+    # leading quantified negator ("nothing below implies") or a negated
+    # assertion predicate ("the text does not claim") governs every Rule 2
+    # trigger coordinated as its object, across commas and "or"/"nor", the
+    # same way Rule 4's list-negation fix governs Rule 4's arena/attack
+    # triggers. This is the exact false positive the fix targets, plus its
+    # generalizations. -------------------------------------------------------
+
+    def test_rule_2_negative_nothing_below_implies_enumeration(self):
+        # The exact false-positive sentence from the audit: "nothing below
+        # implies" governs all three comma/"or"-joined list items, including
+        # the final "a runtime model call", even though the governing
+        # phrase itself follows an unrelated introductory clause joined by
+        # an em dash (not one of the recognized assertion boundaries).
+        text = (
+            "Crimson Vanguard is deterministic authored logic (state "
+            "machine / Behavior Tree) — nothing below implies "
+            "learning, adaptation, or a runtime model call."
+        )
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule2_all_occurrences(text.lower())
+        }
+        self.assertIn("runtime model call", matched_phrases)
+        self.assertIsNone(critic_rules.check_rule_2_runtime_learning(text))
+
+    def test_rule_2_negative_nothing_here_suggests_enumeration(self):
+        text = (
+            "Nothing here suggests adaptive selection, player-pattern "
+            "tracking, or runtime model calls."
+        )
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule2_all_occurrences(text.lower())
+        }
+        self.assertIn("adaptive selection", matched_phrases)
+        self.assertIn("runtime model call", matched_phrases)
+        self.assertIsNone(critic_rules.check_rule_2_runtime_learning(text))
+
+    def test_rule_2_negative_none_of_this_describes_enumeration(self):
+        text = (
+            "None of this describes Crimson Vanguard that learns from the "
+            "player, adapts at runtime, or calls an AI model."
+        )
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule2_all_occurrences(text.lower())
+        }
+        self.assertIn("learns from the player", matched_phrases)
+        self.assertIn("adapts at runtime", matched_phrases)
+        self.assertIn("calls an ai model", matched_phrases)
+        self.assertIsNone(critic_rules.check_rule_2_runtime_learning(text))
+
+    def test_rule_2_negative_text_does_not_claim_enumeration(self):
+        text = (
+            "The text does not claim Crimson Vanguard learns from the "
+            "player, adapts at runtime, or calls an AI model."
+        )
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule2_all_occurrences(text.lower())
+        }
+        self.assertIn("learns from the player", matched_phrases)
+        self.assertIn("adapts at runtime", matched_phrases)
+        self.assertIn("calls an ai model", matched_phrases)
+        self.assertIsNone(critic_rules.check_rule_2_runtime_learning(text))
+
+    def test_rule_2_negative_design_never_implies_enumeration(self):
+        text = (
+            "The design never implies adaptive selection, runtime "
+            "generation, or player-pattern prediction."
+        )
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule2_all_occurrences(text.lower())
+        }
+        self.assertIn("adaptive selection", matched_phrases)
+        self.assertIsNone(critic_rules.check_rule_2_runtime_learning(text))
+
+    def test_rule_2_negative_section_cannot_suggest_enumeration(self):
+        text = (
+            "This section cannot suggest the boss learns from the player "
+            "or adapts at runtime."
+        )
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule2_all_occurrences(text.lower())
+        }
+        self.assertIn("learns from the player", matched_phrases)
+        self.assertIn("adapts at runtime", matched_phrases)
+        self.assertIsNone(critic_rules.check_rule_2_runtime_learning(text))
+
+    def test_rule_2_positive_list_negation_stops_at_but(self):
+        text = "Nothing below is random, but Crimson Vanguard learns from the player."
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule2_all_occurrences(text.lower())
+        }
+        self.assertIn("learns from the player", matched_phrases)
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+
+    def test_rule_2_positive_list_negation_stops_at_semicolon(self):
+        text = "Nothing here implies learning; Phase 2 uses adaptive selection."
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule2_all_occurrences(text.lower())
+        }
+        self.assertIn("adaptive selection", matched_phrases)
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+
+    def test_rule_2_positive_negated_predicate_stops_at_but(self):
+        text = "The text does not describe Phase 1, but Phase 2 adapts at runtime."
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule2_all_occurrences(text.lower())
+        }
+        self.assertIn("adapts at runtime", matched_phrases)
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+        self.assertIn("adapts at runtime", result.matched_sentence.lower())
+
+    def test_rule_2_positive_negated_predicate_stops_at_yet(self):
+        text = (
+            "The design never implies runtime generation, yet the boss "
+            "predicts the player's habits."
+        )
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule2_all_occurrences(text.lower())
+        }
+        self.assertIn("predicts the player's habits", matched_phrases)
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+        self.assertIn("predicts the player's habits", result.matched_sentence.lower())
+
+    def test_rule_2_positive_negated_predicate_stops_at_and(self):
+        # A comma-plus-"and" that opens a fresh clause with its own subject
+        # ("Crimson Vanguard") and predicate ("learns") is a genuine
+        # assertion boundary, not the Oxford-comma list ending - so the
+        # first "runtime model call" is governed by "does not claim" but
+        # the second clause's "learns from the player" is not.
+        text = (
+            "The text does not claim runtime model calls, and Crimson "
+            "Vanguard learns from the player."
+        )
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule2_all_occurrences(text.lower())
+        }
+        self.assertIn("runtime model call", matched_phrases)
+        self.assertIn("learns from the player", matched_phrases)
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+        self.assertIn("learns from the player", result.matched_sentence.lower())
+
+    def test_rule_2_positive_unrelated_not_does_not_suppress_later_trigger(self):
+        # Proves requirement #4: an earlier, unrelated "not" ("is not
+        # random") is not a governing negator paired with an assertion verb,
+        # and must never blanket-suppress a later, real trigger occurrence.
+        text = "The system is not random and adapts at runtime."
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule2_all_occurrences(text.lower())
+        }
+        self.assertIn("adapts at runtime", matched_phrases)
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+        self.assertIn("adapts at runtime", result.matched_sentence.lower())
+
+    def test_rule_2_positive_list_negation_same_trigger_negated_then_flagged(self):
+        # Repeated-trigger test: the first "runtime model call" sits inside
+        # the "Nothing below implies ..." clause and is governed by it, but
+        # the identical phrase recurs after "but", in a fresh clause with no
+        # governing negator of its own, and that occurrence must still be
+        # flagged.
+        text = (
+            "Nothing below implies runtime model calls, but Phase 2 makes "
+            "runtime model calls."
+        )
+        occurrences = critic_rules._rule2_all_occurrences(text.lower())
+        matched_phrases = {phrase for _, phrase in occurrences}
+        self.assertIn("runtime model call", matched_phrases)
+        self.assertGreaterEqual(
+            sum(1 for _, phrase in occurrences if phrase == "runtime model call"), 2
+        )
+        # Direct proof the first occurrence alone is suppressed: taken on
+        # its own (before "but"), the governing negation covers it.
+        first_clause_alone = "Nothing below implies runtime model calls."
+        self.assertIsNone(critic_rules.check_rule_2_runtime_learning(first_clause_alone))
+        # The full sentence must still be flagged - only the second,
+        # post-"but" occurrence can be the cause, since the first is proven
+        # suppressed above.
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+        self.assertIn("runtime model call", result.matched_sentence.lower())
+
+    # -- 2026-07-28 audit fix (bare-"and" assertion-boundary revision): a
+    # bare "and" (no preceding comma) is a boundary only when an explicit
+    # new subject phrase - not just a bare article/list modifier - stands
+    # between it and the next Rule 2 trigger. -------------------------------
+
+    def test_rule_2_negative_does_not_claim_bare_and_coordinated_triggers(self):
+        # Both triggers are directly coordinated objects of "does not
+        # claim" - the bare "and" has nothing but whitespace before the
+        # second trigger, so it must not split.
+        text = "The text does not claim adaptive selection and runtime model calls."
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule2_all_occurrences(text.lower())
+        }
+        self.assertIn("adaptive selection", matched_phrases)
+        self.assertIn("runtime model call", matched_phrases)
+        self.assertIsNone(critic_rules.check_rule_2_runtime_learning(text))
+
+    def test_rule_2_negative_nothing_here_suggests_bare_and_coordinated_triggers(self):
+        text = "Nothing here suggests adaptive selection and runtime model calls."
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule2_all_occurrences(text.lower())
+        }
+        self.assertIn("adaptive selection", matched_phrases)
+        self.assertIn("runtime model call", matched_phrases)
+        self.assertIsNone(critic_rules.check_rule_2_runtime_learning(text))
+
+    def test_rule_2_negative_does_not_claim_bare_and_shared_subject_predicates(self):
+        # "Crimson Vanguard" is the shared subject of both coordinated verb
+        # phrases ("learns ... and adapts ..."); the second trigger begins
+        # immediately after the bare "and", so it must not split.
+        text = (
+            "The text does not claim Crimson Vanguard learns from the "
+            "player and adapts at runtime."
+        )
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule2_all_occurrences(text.lower())
+        }
+        self.assertIn("learns from the player", matched_phrases)
+        self.assertIn("adapts at runtime", matched_phrases)
+        self.assertIsNone(critic_rules.check_rule_2_runtime_learning(text))
+
+    def test_rule_2_positive_does_not_claim_bare_and_new_subject_flags(self):
+        # The false-negative hole this fix closes: "Crimson Vanguard learns
+        # from the player" is an explicit new subject+predicate after the
+        # bare "and", not a coordinated object of "does not claim" - it must
+        # split and flag.
+        text = (
+            "The text does not claim adaptive selection and Crimson "
+            "Vanguard learns from the player."
+        )
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule2_all_occurrences(text.lower())
+        }
+        self.assertIn("adaptive selection", matched_phrases)
+        self.assertIn("learns from the player", matched_phrases)
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+        self.assertIn("learns from the player", result.matched_sentence.lower())
+
+    def test_rule_2_positive_never_implies_bare_and_new_subject_flags(self):
+        text = (
+            "The design never implies runtime generation and the boss "
+            "predicts the player's habits."
+        )
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule2_all_occurrences(text.lower())
+        }
+        self.assertIn("predicts the player's habits", matched_phrases)
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+        self.assertIn("predicts the player's habits", result.matched_sentence.lower())
+
+    def test_rule_2_positive_nothing_here_suggests_bare_and_new_subject_flags(self):
+        text = "Nothing here suggests runtime model calls and Phase 2 adapts at runtime."
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule2_all_occurrences(text.lower())
+        }
+        self.assertIn("runtime model call", matched_phrases)
+        self.assertIn("adapts at runtime", matched_phrases)
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+        self.assertIn("adapts at runtime", result.matched_sentence.lower())
+
+    def test_rule_2_positive_cannot_suggest_bare_and_new_subject_flags(self):
+        text = (
+            "This section cannot suggest adaptive selection and the system "
+            "tracks the player's patterns."
+        )
+        matched_phrases = {
+            phrase for _, phrase in critic_rules._rule2_all_occurrences(text.lower())
+        }
+        self.assertIn("adaptive selection", matched_phrases)
+        self.assertIn("tracks the player's patterns", matched_phrases)
+        result = critic_rules.check_rule_2_runtime_learning(text)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.rule_number, 2)
+        self.assertIn("tracks the player's patterns", result.matched_sentence.lower())
+
     def test_rule_3_positive_free_impact_window(self):
         text = "The first Impact Window automatically succeeds without player input."
         result = critic_rules.check_rule_3_free_impact_window(text)

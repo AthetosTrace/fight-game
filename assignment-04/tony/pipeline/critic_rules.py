@@ -173,6 +173,186 @@ def _rule2_local_negation_window(clause, phrase_start):
     return clause[window_start:phrase_start]
 
 
+# Added per Assignment #04 audit fix (2026-07-28, list-level governing-
+# negation revision): a leading quantified negator ("nothing below implies",
+# "nothing here suggests", "none of this describes") or a negated assertion
+# predicate ("the text does not claim", "the design never implies", "this
+# section cannot suggest") governs every Rule 2 trigger phrase coordinated as
+# its object - across commas and "or"/"nor" - the same way Rule 4's list-
+# negation fix (`_rule4_segment_is_list_negated` /
+# `_rule4_segment_has_negated_governing_predicate`, above) governs Rule 4's
+# arena/attack triggers. This mirrors that fix's structure exactly, adapted
+# to the verbs a Rule 2 denial sentence actually uses (imply/suggest/
+# describe/claim/state/indicate/mean) instead of Rule 4's
+# describe/add/introduce/create/open.
+#
+# This is a *pattern* (a quantifier or a negator, paired with one of these
+# assertion verbs), not a hardcoded phrase: it fires for "nothing below
+# implies", "nothing here suggests", "none of this describes", "the text
+# does not claim", "the design never implies", "this section cannot
+# suggest", and their close grammatical variants alike - no single wording
+# is special-cased. It is also intentionally narrow: only a negator paired
+# with one of these specific assertion verbs counts, so a generic "not"/
+# "never"/"nothing" elsewhere in the sentence, paired with an unrelated verb
+# ("is not random", "does not use", "never adapts"), never matches this
+# pattern and can never suppress an unrelated, later trigger - that would be
+# exactly the blanket "any negation anywhere suppresses everything" rule
+# this fix must not become.
+_ASSERTION_VERBS_RULE2 = r"impl(?:y|ies)|suggests?|describes?|claims?|states?|indicates?|means?"
+
+# "nothing below implies", "nothing here suggests", "none of this
+# describes": a bare quantifier ("nothing"/"none"/"neither"), optionally
+# followed by up to four filler words (an intervening adverb like "below"/
+# "here", or a short phrase like "of this"), then one of the assertion verbs
+# above. Unlike Rule 4's leading-quantifier check, this is unanchored (no
+# `^`) and searched anywhere in the segment via `.search()`, since the
+# governing phrase need not open the segment - the exact false-positive
+# sentence this fix targets has it follow an unrelated introductory clause
+# ("Crimson Vanguard is deterministic authored logic ... - nothing below
+# implies ..."), joined by an em dash rather than any of the recognized
+# assertion boundaries below.
+_LEADING_LIST_NEGATOR_RE_RULE2 = re.compile(
+    r"\b(?:nothing|none|neither)\b(?:\s+\w+){0,4}?\s+(?:" + _ASSERTION_VERBS_RULE2 + r")\b",
+    re.IGNORECASE,
+)
+
+# "the text does not claim", "the design never implies", "this section
+# cannot suggest": up to four filler (subject) words, then a negator ("does
+# not"/"never"/"cannot"/...), then one of the assertion verbs above.
+_NEGATED_GOVERNING_PREDICATE_RE_RULE2 = re.compile(
+    r"(?:\w+\s+){0,4}"
+    r"(?:does\s+not|doesn't|do\s+not|did\s+not|never|cannot|can\s+not|can't|is\s+not|isn't)\s+"
+    r"(?:" + _ASSERTION_VERBS_RULE2 + r")\b",
+    re.IGNORECASE,
+)
+
+# The list-negation scope must not become a second way to blindly suppress
+# the rest of the sentence, so it is bounded to one assertion segment,
+# mirroring Rule 4's `_rule4_split_into_assertion_segments` exactly: split on
+# "but"/"however"/"yet"/"instead", a semicolon, or a comma immediately
+# followed by "and" that opens a fresh clause with its own subject and
+# predicate. A comma-plus-"and" that merely closes a coordinated object list
+# (an Oxford-comma ending running straight into a Rule 2 trigger phrase and
+# then the end of the segment/sentence) is deliberately NOT a boundary - see
+# `_OXFORD_LIST_ENDING_RE_RULE2` below.
+_KEYWORD_BOUNDARY_RE_RULE2 = re.compile(r"\b(?:but|however|yet|instead)\b|;", re.IGNORECASE)
+_COMMA_AND_RE_RULE2 = re.compile(r",\s*\band\b", re.IGNORECASE)
+_TRIGGER_PHRASES_ALT_RULE2 = "|".join(re.escape(p) for p in _TRIGGER_PHRASES_RULE2)
+_OXFORD_LIST_ENDING_RE_RULE2 = re.compile(
+    r",\s*and\s+(?:a|an|the)?\s*(?:" + _TRIGGER_PHRASES_ALT_RULE2 + r")\b\s*[.!?]?\s*$",
+    re.IGNORECASE,
+)
+
+# Added per Assignment #04 audit fix (2026-07-28, bare-"and" assertion-
+# boundary revision): a *bare* "and" (no preceding comma) coordinates two
+# objects of the same governed verb/negator - not a boundary - only when
+# nothing but the coordinated list stands between it and the next trigger.
+# When a genuine new subject phrase intervenes ("... and Crimson Vanguard
+# learns from the player"), the "and" opens a fresh, independently-true
+# clause that the governing negation upstream does NOT cover, and this must
+# split there. This is the mirror image of the comma-plus-"and" check above:
+# that one asks "is this an Oxford-list ending, not a new clause?"; this one
+# asks "is this genuinely just a coordinated list continuation, not a new
+# clause?" - structurally the same question, answered by inspecting what
+# stands between the "and" and the next Rule 2 trigger rather than by a
+# fixed phrase list.
+_BARE_AND_RE_RULE2 = re.compile(r"\band\b", re.IGNORECASE)
+
+# The only prefixes between a bare "and" and the next trigger that do NOT
+# signal a new subject: nothing at all (the trigger begins immediately
+# after "and"), or exactly one bare article/list modifier with no
+# additional word. "one more" is the sole two-word member of this set.
+# Anything else between "and" and the trigger - a noun, a name, a pronoun,
+# an extra modifier - is itself evidence of an explicit subject phrase, so
+# it counts as a new assertion. This is a general structural test (does a
+# subject-shaped prefix exist?), not a per-subject exception: it says
+# nothing about "Crimson Vanguard" or "the boss" specifically, only about
+# how many/which words sit between "and" and the trigger.
+_BARE_AND_SINGLE_WORD_FILLERS_RULE2 = frozenset(
+    {"a", "an", "the", "another", "any", "additional"}
+)
+_BARE_AND_TWO_WORD_FILLER_RULE2 = ("one", "more")
+
+
+def _rule2_bare_and_boundary_spans(sentence_lower):
+    """Return the (start, end) spans of bare "and" occurrences in
+    `sentence_lower` that act as assertion boundaries: the earliest Rule 2
+    trigger occurrence after the "and" is preceded by more than a bare
+    article/list modifier, i.e. by an explicit new subject phrase.
+
+    Bare "and" occurrences that are actually the tail of a comma-plus-"and"
+    match (already handled above, Oxford-exemption included) are skipped
+    here so they are never double-processed."""
+    comma_and_starts = {
+        match.end() - len("and") for match in _COMMA_AND_RE_RULE2.finditer(sentence_lower)
+    }
+    all_occurrences = _rule2_all_occurrences(sentence_lower)
+    spans = []
+    for match in _BARE_AND_RE_RULE2.finditer(sentence_lower):
+        if match.start() in comma_and_starts:
+            continue  # tail of a comma-plus-"and" match, handled above
+        trigger_start = next(
+            (start for start, _ in all_occurrences if start >= match.end()), None
+        )
+        if trigger_start is None:
+            continue  # no trigger follows this "and"; nothing to gate
+        prefix_words = sentence_lower[match.end():trigger_start].split()
+        if not prefix_words:
+            continue  # trigger begins immediately after "and"
+        if len(prefix_words) == 1 and prefix_words[0] in _BARE_AND_SINGLE_WORD_FILLERS_RULE2:
+            continue  # a bare article/list modifier, same coordinated list
+        if tuple(prefix_words) == _BARE_AND_TWO_WORD_FILLER_RULE2:
+            continue  # "one more", same coordinated list
+        spans.append(match.span())
+    return spans
+
+
+def _rule2_split_into_assertion_segments(sentence_lower):
+    """Split `sentence_lower` (already lowercased) into assertion segments
+    on true assertion boundaries - identical in spirit to
+    `_rule4_split_into_assertion_segments`, using Rule 2's own trigger-
+    phrase list for the Oxford-comma-ending exception, plus a bare-"and"
+    check (see `_rule2_bare_and_boundary_spans`) that Rule 4 does not need
+    (Rule 4's own bare-"and" tests are satisfied by its coordinated-object
+    reasoning alone)."""
+    boundaries = [match.span() for match in _KEYWORD_BOUNDARY_RE_RULE2.finditer(sentence_lower)]
+    for match in _COMMA_AND_RE_RULE2.finditer(sentence_lower):
+        if _OXFORD_LIST_ENDING_RE_RULE2.match(sentence_lower, match.start()):
+            continue  # Oxford-comma list ending, not a new assertion
+        boundaries.append(match.span())
+    boundaries.extend(_rule2_bare_and_boundary_spans(sentence_lower))
+    boundaries.sort()
+
+    segments = []
+    cursor = 0
+    for start, end in boundaries:
+        segments.append(sentence_lower[cursor:start])
+        cursor = end
+    segments.append(sentence_lower[cursor:])
+    return segments
+
+
+def _rule2_segment_governing_negation_end(segment):
+    """Return the end index (within `segment`) of the earliest governing
+    negation match - a leading list negator or a negated governing
+    predicate, whichever starts first - or None if neither is present.
+
+    Every Rule 2 trigger occurrence starting at or after this index is
+    governed (denied) by that negation, no matter how many commas or
+    "or"/"nor" sit between it and the occurrence."""
+    matches = []
+    leading = _LEADING_LIST_NEGATOR_RE_RULE2.search(segment)
+    if leading:
+        matches.append(leading)
+    predicate = _NEGATED_GOVERNING_PREDICATE_RE_RULE2.search(segment)
+    if predicate:
+        matches.append(predicate)
+    if not matches:
+        return None
+    earliest = min(matches, key=lambda match: match.start())
+    return earliest.end()
+
+
 def _rule2_all_occurrences(clause):
     """Return every (start_index, phrase) occurrence of every Rule 2 trigger
     phrase in `clause`, in textual (left-to-right) order.
@@ -199,17 +379,39 @@ def _rule2_all_occurrences(clause):
 
 
 def _rule2_unnegated_hit(sentence):
-    """Return the first Rule 2 trigger occurrence in `sentence` (checked
-    clause by clause, and within a clause in textual order) whose own local
-    negation window (see `_rule2_local_negation_window`) has no negation
-    cue, or None if every occurrence in the sentence is directly negated (or
-    there is no occurrence at all)."""
-    for clause in re.split(r"[,;]", sentence.lower()):
-        for phrase_start, phrase in _rule2_all_occurrences(clause):
-            window = _rule2_local_negation_window(clause, phrase_start)
-            if _NEGATION_RE_RULE2.search(window):
-                continue  # this specific occurrence is directly negated
-            return phrase
+    """Return the first Rule 2 trigger occurrence in `sentence` whose own
+    local negation window (see `_rule2_local_negation_window`) has no
+    negation cue, or None if every occurrence in the sentence is governed
+    by a list-level negation or directly negated (or there is no occurrence
+    at all).
+
+    Scanned in two nested passes, both left-to-right so overall occurrence
+    order is preserved:
+
+    1. The sentence is split into assertion segments on true assertion
+       boundaries (see `_rule2_split_into_assertion_segments`). Within a
+       segment, every occurrence at or after the end of that segment's
+       governing negation (see `_rule2_segment_governing_negation_end`) -
+       if any - is skipped outright: it is governed by that negator/
+       predicate, no matter how many commas or "or"/"nor" sit between it
+       and the occurrence.
+    2. An occurrence not governed by (1) falls back to the pre-existing
+       trigger-local check, unchanged from before this fix: split the
+       segment into clauses on commas/semicolons, and within a clause check
+       the occurrence's own local negation window.
+    """
+    for segment in _rule2_split_into_assertion_segments(sentence.lower()):
+        governing_end = _rule2_segment_governing_negation_end(segment)
+        offset = 0
+        for clause in re.split(r"[,;]", segment):
+            for phrase_start, phrase in _rule2_all_occurrences(clause):
+                if governing_end is not None and offset + phrase_start >= governing_end:
+                    continue  # governed by this segment's list-level negation
+                window = _rule2_local_negation_window(clause, phrase_start)
+                if _NEGATION_RE_RULE2.search(window):
+                    continue  # this specific occurrence is directly negated
+                return phrase
+            offset += len(clause) + 1
     return None
 
 
