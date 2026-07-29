@@ -1,42 +1,82 @@
 # Vanguard Attack Data Review
 
 **Reviewer:** vanguard-attack-data-reviewer (agents/unreal/vanguard-attack-data-reviewer.md)
-**Date:** 2026-07-29
+**Date:** 2026-07-29 (re-review after correction pass)
 **Reviewed CSV:** `data/unreal/DT_VanguardAttacks.csv`
-(last modified in commit `d9cc113` "Add Vanguard attack data..."; repo HEAD at
-review time: `caec94e`, branch `planning/unreal-attack-a-integration`)
+(working-tree state, **uncommitted** — corrected on top of repo HEAD
+`dbde5aa`; the CSV's last committed version is `d9cc113` "Add Unreal Vanguard attack DataTable source," which is the version the **first** review pass
+covered and found FAIL. This re-review is against the corrected,
+not-yet-committed content on disk.)
 **Reviewed contract:** `docs/unreal/VANGUARD_ATTACK_ROW_CONTRACT.md` (no
-separate version number — file path is the version reference)
+separate version number — file path is the version reference; contract
+text itself is unchanged since the first review)
 **Deterministic validator status:** `tools/validate_vanguard_attack_csv.py`
-reports `PASS` on this CSV. Note: that validator does not check the row
-contract's per-field **max length** rule at all (confirmed by reading
-`tools/validate_vanguard_attack_csv.py` — it has no length check of any
-kind), so a validator PASS does not clear the length findings below.
+reports `PASS` on this CSV. Unlike the first review pass, the validator
+(working-tree, uncommitted) now also enforces the row contract's per-field
+**max length** rule via a `MAX_LENGTHS` table checked against every
+`CONTRACT_HEADERS` field — confirmed by reading the current script — so a
+validator PASS now covers length as well as the checks it already ran.
 
 ---
 
-## Overall verdict: **FAIL**
+## Overall verdict: **PASS**
 
-At least one row/field violates the row contract and one critic rule fires
-(see tables below).
+Every row and field traces cleanly to an approved source, obeys the row
+contract's type/length/allowed-values rules, contradicts nothing in core
+canon, and no critic rule fires. This corrects the **FAIL** verdict from the
+prior review pass (`reports/unreal/VANGUARD_ATTACK_DATA_REVIEW.md`, first
+version): every finding raised there has been resolved on disk, and no new
+issue was found in this pass.
+
+**What changed since the FAIL verdict, confirmed resolved:**
+- Row_A `RecoveryRequirement` no longer contains "the longest recovery
+  window of the four attacks per the design brief" — the unsupported,
+  source-contradicting cross-attack comparison is gone. Field now reads
+  "Deliberate exposed opening after the committed strike" (53 chars, under
+  the 100-char limit), with no per-attack timing claim of any kind.
+- `DisplayWorkingName` on all four rows is now 21–25 characters (`"Fault
+  Line (proposed)"`, `"Advance Line (proposed)"`, `"Bulwark Reach
+  (proposed)"`, `"Thruster Snap (proposed)"`), within the 40-char limit. The
+  pending-designer-approval caveat still lives in the row contract's §2
+  Notes column (which the contract explicitly permits — "caveated elsewhere
+  (this contract, the CSV header comment, and the approval packet)"), so the
+  shortened cell text does not present the name as finalized GDD canon.
+- `Phase2Usage` on all four rows now reads "Same attack, re-timed via Phase
+  2 parameters - no new moveset" (61 chars, under the 80-char limit) — the
+  row contract's own suggested standard phrase (§2, `Phase2Usage` row).
+- Row_B `TrackingRule` is now "Body/tracking locks at a fixed point once
+  active begins; cannot curve to follow the player" (90 chars, under the
+  100-char limit), preserving the same `ANS_TrackingLock` meaning as before
+  in fewer words.
 
 ---
 
 ## Per-finding table
 
-| Row | Field | Source violated | Required correction |
-|---|---|---|---|
-| Row_A | RecoveryRequirement | `design-brief.md` §5.1 ("you can literally see that attack C's recovery is longer than attack A's"); `docs/unreal/ATTACK_DATA_SOURCE_AUDIT.md` §3–§4 (Q25: "the per-attack figure inside each range is OPEN... No exact per-attack timing number may be invented for the CSV") | Remove the clause "the longest recovery window of the four attacks per the design brief." No source establishes Attack A as having the longest recovery of the four; the cited design-brief line (§5.1, row A) says `ANS_Recover` is the longest **notify window on Attack A's own montage** (an intra-attack comparison against A's own Telegraph/Active/etc.), not the longest recovery **across the four attacks**. A separate design-brief line (§5.1, "you can literally see that attack C's recovery is longer than attack A's") directly contradicts the CSV's claim. Leave the per-attack recovery comparison out entirely — it is OPEN per Q25. |
-| Row_A | RecoveryRequirement | `docs/unreal/VANGUARD_ATTACK_ROW_CONTRACT.md` §2, `RecoveryRequirement` row (max length 100) | Field is 123 characters, 23 over the 100-character limit. Shorten to fit within 100 characters (removing the invented cross-attack comparison per the finding above will also resolve most of the overage). |
-| Row_A | DisplayWorkingName | `docs/unreal/VANGUARD_ATTACK_ROW_CONTRACT.md` §2, `DisplayWorkingName` row (max length 40) | Field is 61 characters ("Fault Line (proposed working name, pending designer approval)"), 21 over the 40-character limit. The contract states the pending-approval caveat may live "elsewhere (this contract, the CSV header comment, and the approval packet)" rather than inside the cell — shorten the cell value (e.g., to the bare working name) and rely on the contract/approval packet for the caveat, or otherwise bring the value under 40 characters. |
-| Row_B | DisplayWorkingName | `docs/unreal/VANGUARD_ATTACK_ROW_CONTRACT.md` §2, `DisplayWorkingName` row (max length 40) | Field is 63 characters ("Advance Line (proposed working name, pending designer approval)"), 23 over the 40-character limit. Same correction as Row_A. |
-| Row_C | DisplayWorkingName | `docs/unreal/VANGUARD_ATTACK_ROW_CONTRACT.md` §2, `DisplayWorkingName` row (max length 40) | Field is 64 characters ("Bulwark Reach (proposed working name, pending designer approval)"), 24 over the 40-character limit. Same correction as Row_A. |
-| Row_D | DisplayWorkingName | `docs/unreal/VANGUARD_ATTACK_ROW_CONTRACT.md` §2, `DisplayWorkingName` row (max length 40) | Field is 64 characters ("Thruster Snap (proposed working name, pending designer approval)"), 24 over the 40-character limit. Same correction as Row_A. |
-| Row_A | Phase2Usage | `docs/unreal/VANGUARD_ATTACK_ROW_CONTRACT.md` §2, `Phase2Usage` row (max length 80) | Field is 160 characters, 80 over the 80-character limit. Shorten to the contract's own suggested standard phrasing ("Same attack, re-timed via Phase 2 parameters — no new moveset," ~62 characters) or an equivalent faithful phrase that fits within 80 characters; move the extra detail about which windows scale (Select/Telegraph/Recover, Reposition delay) and the "Active Attack duration unchanged" note to `Notes` if it needs to be kept. |
-| Row_B | Phase2Usage | `docs/unreal/VANGUARD_ATTACK_ROW_CONTRACT.md` §2, `Phase2Usage` row (max length 80) | Field is 109 characters, 29 over the 80-character limit. Shorten to the contract's suggested standard phrase or move the "Active Attack duration unchanged across phases" clause to `Notes`. |
-| Row_C | Phase2Usage | `docs/unreal/VANGUARD_ATTACK_ROW_CONTRACT.md` §2, `Phase2Usage` row (max length 80) | Field is 109 characters, 29 over the 80-character limit. Same correction as Row_B. |
-| Row_D | Phase2Usage | `docs/unreal/VANGUARD_ATTACK_ROW_CONTRACT.md` §2, `Phase2Usage` row (max length 80) | Field is 109 characters, 29 over the 80-character limit. Same correction as Row_B. |
-| Row_B | TrackingRule | `docs/unreal/VANGUARD_ATTACK_ROW_CONTRACT.md` §2, `TrackingRule` row (max length 100) | Field is 141 characters, 41 over the 100-character limit. Shorten while preserving the "locks at a fixed point / cannot curve to follow the player" content, e.g. by moving elaboration to `Notes`. |
+No findings. Every populated field in every row traces to an approved fact
+in `ATTACK_DATA_SOURCE_AUDIT.md` or `vanguard-telegraphs.md`, stays within
+its `VANGUARD_ATTACK_ROW_CONTRACT.md` §2 max length, and introduces no
+number, asset path, or fact the audit did not approve:
+
+- `IntendedRange` / `GameplayPurpose` (all rows) restate the GDD's combined
+  "Range / purpose" phrase for each attack verbatim, per
+  `ATTACK_DATA_SOURCE_AUDIT.md` §2.
+- `TelegraphRequirement` (all rows) restates the GDD's readability
+  requirement per the same table.
+- `TrackingRule` is populated only for Attacks B and C and blank for A and D,
+  per the row contract (§2, `TrackingRule` row) and `design-brief.md` §5.1.
+- `ActiveDescription` and `RecoveryRequirement` (all rows) are qualitative,
+  contain no invented timing number, and (after correction) contain no
+  invented per-attack comparison either.
+- `Phase2Usage` (all rows) states the attack is reused unchanged in Phase 2,
+  per the row contract's required standard phrasing.
+- `MontageAsset`, `TelegraphVfxAsset`, `TelegraphAudioAsset`, `HitTraceSocket`
+  remain blank on all four rows, per `ATTACK_DATA_SOURCE_AUDIT.md` §5.
+- `ImplementationStatus` / `EnabledForSelection` match the audit's binding
+  facts exactly: Attack A `Prototype`/`true`; B, C, D `Planned`/`false`.
+- Row count is exactly 4; `AttackId` set is exactly `{A, B, C, D}`; `Name`
+  values are exactly `{Row_A, Row_B, Row_C, Row_D}`; CSV is UTF-8 with no
+  BOM and LF line endings — all per the row contract §3 and §5.
 
 ---
 
@@ -48,7 +88,7 @@ At least one row/field violates the row contract and one critic rule fires
 | 2 | Runtime-learning or runtime-LLM behavior implied | PASS | — (no learning/adaptation/model-call language found in any field) |
 | 3 | Automatic or free Impact Window success | PASS | — (the CSV does not describe Impact Windows at all) |
 | 4 | Extra arenas or a fifth/altered rival attack | PASS | — (exactly 4 rows, `AttackId` set is exactly `{A, B, C, D}`, no fifth attack or arena language) |
-| 5 | Altered governed numbers | **FAIL** | Row_A `RecoveryRequirement`: *"the longest recovery window of the four attacks per the design brief"* — presents an OPEN, per-attack timing comparison (Q25) as an established fact, and contradicts `design-brief.md` §5.1's own statement that "attack C's recovery is longer than attack A's." |
+| 5 | Altered governed numbers | PASS | — (the previously-flagged Row_A `RecoveryRequirement` cross-attack recovery-length claim has been removed; no field states or implies a per-attack timing number or comparison anywhere) |
 | 6 | Cinematic sequences that fail to restore gameplay | PASS | — (not applicable; the CSV does not describe any cinematic/Impact Window restoration sequence) |
 | 7 | Scope expansion beyond the single duel | PASS | — (no PvP, multiplayer, additional fighters/arenas, or other deferred-scope language found) |
 
@@ -57,6 +97,6 @@ At least one row/field violates the row contract and one critic rule fires
 ## Closing statement
 
 No automatic file edit occurred — this report is the sole output of this
-review, and every finding above awaits human review and correction per the
-Human Review Queue stage of the Generate → Deterministic Validate → Agent
-Review → Human Review Queue pipeline.
+review, and its PASS verdict awaits human review and approval per the Human
+Review Queue stage of the Generate → Deterministic Validate → Agent Review
+→ Human Review Queue pipeline before any Unreal import proceeds.

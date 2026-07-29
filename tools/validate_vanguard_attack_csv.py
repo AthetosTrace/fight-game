@@ -52,6 +52,28 @@ MUST_BE_BLANK_FIELDS = [
     "HitTraceSocket",
 ]
 
+# Per-field max character length, from VANGUARD_ATTACK_ROW_CONTRACT.md §2
+# ("Max length" column). Every contract header must have an entry here.
+MAX_LENGTHS = {
+    "Name": 40,
+    "AttackId": 1,
+    "DisplayWorkingName": 40,
+    "ImplementationStatus": 12,
+    "EnabledForSelection": 5,
+    "IntendedRange": 80,
+    "GameplayPurpose": 80,
+    "TelegraphRequirement": 120,
+    "TrackingRule": 100,
+    "ActiveDescription": 120,
+    "RecoveryRequirement": 100,
+    "Phase2Usage": 80,
+    "MontageAsset": 200,
+    "TelegraphVfxAsset": 200,
+    "TelegraphAudioAsset": 200,
+    "HitTraceSocket": 40,
+    "Notes": 300,
+}
+
 # Free-text fields that must never carry an invented numeric game value
 # (damage, range in cm, cooldown, travel cap, exact timing) in this pass.
 # Phase2Usage is intentionally excluded: it is required to state that the
@@ -187,6 +209,16 @@ def validate(path):
         for field in REQUIRED_FIELDS:
             if not row.get(field, "").strip():
                 errors.append(f"{row_label}: required field '{field}' is blank")
+
+        # Per-field max length, from VANGUARD_ATTACK_ROW_CONTRACT.md §2.
+        for field in CONTRACT_HEADERS:
+            value = row.get(field, "")
+            limit = MAX_LENGTHS.get(field)
+            if limit is not None and len(value) > limit:
+                errors.append(
+                    f"{row_label}: field '{field}' exceeds max length {limit} "
+                    f"(found length {len(value)}: '{value}')"
+                )
 
         # AttackId validity.
         attack_id = row.get("AttackId", "").strip()

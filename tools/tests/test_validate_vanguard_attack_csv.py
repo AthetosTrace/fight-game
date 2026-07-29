@@ -24,7 +24,7 @@ HEADER = validator.CONTRACT_HEADERS
 def _row(
     name="Row_A",
     attack_id="A",
-    display_working_name="Fault Line (proposed working name, pending designer approval)",
+    display_working_name="Fault Line (proposed)",
     status="Prototype",
     enabled="true",
     intended_range="Close-range committed gauntlet force",
@@ -67,7 +67,7 @@ def _valid_rows():
         _row(
             name="Row_B",
             attack_id="B",
-            display_working_name="Advance Line (proposed working name, pending designer approval)",
+            display_working_name="Advance Line (proposed)",
             status="Planned",
             enabled="false",
             intended_range="Committed forward-pressure sequence",
@@ -80,7 +80,7 @@ def _valid_rows():
         _row(
             name="Row_C",
             attack_id="C",
-            display_working_name="Bulwark Reach (proposed working name, pending designer approval)",
+            display_working_name="Bulwark Reach (proposed)",
             status="Planned",
             enabled="false",
             intended_range="Armored reach and space control",
@@ -93,7 +93,7 @@ def _valid_rows():
         _row(
             name="Row_D",
             attack_id="D",
-            display_working_name="Thruster Snap (proposed working name, pending designer approval)",
+            display_working_name="Thruster Snap (proposed)",
             status="Planned",
             enabled="false",
             intended_range="Short propulsion-assisted approach",
@@ -280,6 +280,115 @@ class TestNegativeFixtures(TempCsvTestCase):
         self.assertTrue(
             any("MontageAsset" in e and "must remain blank" in e for e in errors)
         )
+
+
+class TestMaxLengthEnforcement(TempCsvTestCase):
+    """Proves every field in VANGUARD_ATTACK_ROW_CONTRACT.md §2 has its max
+    length enforced by validator.MAX_LENGTHS, per row contract."""
+
+    def test_display_working_name_over_limit_fails(self):
+        rows = _valid_rows()
+        rows[0]["DisplayWorkingName"] = "X" * (
+            validator.MAX_LENGTHS["DisplayWorkingName"] + 1
+        )
+        self.write(rows)
+        errors = validator.validate(self.path)
+        self.assertTrue(
+            any(
+                "DisplayWorkingName" in e and "exceeds max length" in e
+                for e in errors
+            ),
+            msg=f"Expected a DisplayWorkingName length violation, got: {errors}",
+        )
+
+    def test_phase2usage_over_limit_fails(self):
+        rows = _valid_rows()
+        rows[1]["Phase2Usage"] = "X" * (validator.MAX_LENGTHS["Phase2Usage"] + 1)
+        self.write(rows)
+        errors = validator.validate(self.path)
+        self.assertTrue(
+            any("Phase2Usage" in e and "exceeds max length" in e for e in errors),
+            msg=f"Expected a Phase2Usage length violation, got: {errors}",
+        )
+
+    def test_recovery_requirement_over_limit_fails(self):
+        rows = _valid_rows()
+        rows[0]["RecoveryRequirement"] = "X" * (
+            validator.MAX_LENGTHS["RecoveryRequirement"] + 1
+        )
+        self.write(rows)
+        errors = validator.validate(self.path)
+        self.assertTrue(
+            any(
+                "RecoveryRequirement" in e and "exceeds max length" in e
+                for e in errors
+            ),
+            msg=f"Expected a RecoveryRequirement length violation, got: {errors}",
+        )
+
+    def test_tracking_rule_over_limit_fails(self):
+        rows = _valid_rows()
+        rows[1]["TrackingRule"] = "X" * (validator.MAX_LENGTHS["TrackingRule"] + 1)
+        self.write(rows)
+        errors = validator.validate(self.path)
+        self.assertTrue(
+            any("TrackingRule" in e and "exceeds max length" in e for e in errors),
+            msg=f"Expected a TrackingRule length violation, got: {errors}",
+        )
+
+    def test_every_contract_field_enforces_its_max_length(self):
+        # One field over its limit at a time, across every column the
+        # contract defines a max length for — not just the fields the
+        # review report happened to catch.
+        for field, limit in validator.MAX_LENGTHS.items():
+            with self.subTest(field=field):
+                rows = _valid_rows()
+                rows[0][field] = "X" * (limit + 1)
+                path = os.path.join(self._tmpdir.name, f"over_{field}.csv")
+                _write_csv(rows, path)
+                errors = validator.validate(path)
+                self.assertTrue(
+                    any(
+                        f"'{field}'" in e and "exceeds max length" in e
+                        for e in errors
+                    ),
+                    msg=f"Expected a max-length violation for {field}, got: {errors}",
+                )
+
+    def test_free_text_field_at_exact_limit_does_not_trip_length_check(self):
+        # Fields constrained to exact enum/id/boolean values or forced blank
+        # can't be padded to their character limit without also failing an
+        # unrelated rule, so this boundary check is scoped to genuine
+        # free-text fields.
+        free_text_fields = [
+            "DisplayWorkingName",
+            "IntendedRange",
+            "GameplayPurpose",
+            "TelegraphRequirement",
+            "TrackingRule",
+            "ActiveDescription",
+            "RecoveryRequirement",
+            "Phase2Usage",
+            "Notes",
+        ]
+        for field in free_text_fields:
+            with self.subTest(field=field):
+                limit = validator.MAX_LENGTHS[field]
+                rows = _valid_rows()
+                rows[0][field] = "X" * limit
+                path = os.path.join(self._tmpdir.name, f"exact_{field}.csv")
+                _write_csv(rows, path)
+                errors = validator.validate(path)
+                self.assertFalse(
+                    any(
+                        f"'{field}'" in e and "exceeds max length" in e
+                        for e in errors
+                    ),
+                    msg=(
+                        f"Field {field} at exactly its limit ({limit}) was "
+                        f"incorrectly flagged: {errors}"
+                    ),
+                )
 
 
 if __name__ == "__main__":
