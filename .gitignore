@@ -1,0 +1,20 @@
+# Unreal Engine generated directories
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Generated directories inside plugins
+Plugins/**/Binaries/
+Plugins/**/Intermediate/
+
+# Visual Studio and IDE-generated files
+.vs/
+.idea/
+*.sln
+*.suo
+*.sdf
+*.opensdf
+*.VC.db
+*.VC.opendb
+*.code-workspace
