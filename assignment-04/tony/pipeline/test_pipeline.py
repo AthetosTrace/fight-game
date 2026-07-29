@@ -395,6 +395,111 @@ class VanguardPromptGroundingTests(unittest.TestCase):
         self.assertIn("Never write the word 'countertext'", prompt)
 
 
+class AuditGroundingPromptConstraintTests(unittest.TestCase):
+    """2026-07-28 human grounding audit (post-generation review): three
+    generated sentences overreached what the retrieved context supports -
+    an invented armor weak point, an overly broad 'never reactive' claim
+    for Crimson Vanguard, and burst-duration wording that implied the
+    player controls how long the burst lasts. These tests prove the
+    generation prompts now carry general grounding rules against that
+    class of drift, not just a ban on the exact flagged sentences."""
+
+    def _impact_prompt(self):
+        output_cfg = knowledge_base.get_output("impact-window-beat-pack")
+        result = knowledge_base.retrieve(
+            slug=output_cfg["slug"],
+            query=output_cfg["query"],
+            eligible_files=output_cfg["eligible_files"],
+            required_chunks=output_cfg.get("required_chunks", ()),
+        )
+        return pipeline.build_generation_prompt(output_cfg, result)
+
+    def _vanguard_prompt(self):
+        output_cfg = knowledge_base.get_output("vanguard-telegraph-pack")
+        result = knowledge_base.retrieve(
+            slug=output_cfg["slug"],
+            query=output_cfg["query"],
+            eligible_files=output_cfg["eligible_files"],
+            required_chunks=output_cfg.get("required_chunks", ()),
+        )
+        return pipeline.build_generation_prompt(output_cfg, result)
+
+    def test_both_task_prompts_carry_the_new_semantic_constraints(self):
+        impact_prompt = self._impact_prompt()
+        vanguard_prompt = self._vanguard_prompt()
+        self.assertIn("GROUNDING AUDIT CONSTRAINTS", impact_prompt)
+        self.assertIn("GROUNDING AUDIT CONSTRAINTS", vanguard_prompt)
+        # And each output's block is specific to its own drift, not a
+        # copy-pasted shared block.
+        self.assertIn("armor weak point", impact_prompt.lower())
+        self.assertNotIn("armor weak point", vanguard_prompt.lower())
+        self.assertIn("never reactive", vanguard_prompt.lower())
+        self.assertNotIn("never reactive", impact_prompt.lower())
+
+    def test_impact_prompt_distinguishes_earning_burst_from_controlling_duration(self):
+        prompt = self._impact_prompt()
+        self.assertIn("succeeds at the impact window input", prompt.lower())
+        self.assertIn("earns the burst", prompt.lower())
+        self.assertIn(
+            "determines, controls, sets, or varies", prompt.lower()
+        )
+        self.assertIn("how long the burst lasts", prompt.lower())
+
+    def test_impact_prompt_forbids_weak_points_but_allows_earned_opening_language(self):
+        prompt = self._impact_prompt()
+        for forbidden in (
+            "armor weak point", "vulnerable armor location",
+            "damage multiplier", "exposed component",
+            "momentary structural weakness",
+        ):
+            self.assertIn(forbidden, prompt.lower())
+        # The forbidding language must be paired with an explicit permission
+        # for grounded phrasing - not a blanket ban on describing openings.
+        self.assertIn("earned opening", prompt.lower())
+        self.assertIn("punishable recovery", prompt.lower())
+        self.assertIn("clean strike line", prompt.lower())
+        self.assertIn(
+            "none of that implies or requires an armor weak point",
+            prompt.lower(),
+        )
+
+    def test_impact_prompt_preserves_governed_values_alongside_new_constraints(self):
+        # The new constraints must be additive - the pre-existing
+        # response-time/meter-gain/equipment/restoration-gap guardrails stay
+        # in the prompt unchanged.
+        prompt = self._impact_prompt()
+        self.assertIn("0.75", prompt)
+        self.assertIn("still marked OPEN", prompt)
+        self.assertIn("weapon", prompt.lower())
+        self.assertIn("gear", prompt.lower())
+
+    def test_vanguard_prompt_distinguishes_deterministic_response_from_learning(self):
+        prompt = self._vanguard_prompt()
+        self.assertIn("deterministic", prompt.lower())
+        self.assertIn("range and cooldown", prompt.lower())
+        self.assertIn("not learning", prompt.lower())
+        self.assertIn("player-pattern adaptation", prompt.lower())
+        self.assertIn("runtime-model behavior", prompt.lower())
+
+    def test_vanguard_prompt_forbids_never_reactive_style_wording(self):
+        prompt = self._vanguard_prompt()
+        self.assertIn("never reactive", prompt.lower())
+        self.assertIn("non-reactive", prompt.lower())
+        self.assertIn("does not respond to combat conditions", prompt.lower())
+        # Named only as forbidden phrasing, paired with the reason it's false.
+        self.assertIn("those claims are false", prompt.lower())
+
+    def test_vanguard_prompt_preserves_existing_constraints_alongside_new_ones(self):
+        # The new deterministic-response constraints must be additive - the
+        # pre-existing proposed-name, playtest-shorthand, dialogue, scope,
+        # and timing constraints stay in the prompt unchanged.
+        prompt = self._vanguard_prompt()
+        self.assertIn("proposed working name", prompt)
+        self.assertIn("Playtest readability shorthand", prompt)
+        self.assertIn("announcer system", prompt)
+        self.assertIn("countertext", prompt)
+
+
 class ShatteredRingRequiredChunkIntegrationTests(unittest.TestCase):
     """Verifies the real pipeline config for shattered-ring-reaction-pack
     pins the 'Build-side notes' chunk the 2026-07-28 grounding pass found

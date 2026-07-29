@@ -61,6 +61,56 @@ _SELECTION_REASON_LABELS = {
 }
 
 
+# ---------------------------------------------------------------------------
+# 2026-07-28 human grounding audit: prompt-side reinforcement.
+#
+# Distinct from knowledge_base.OUTPUTS' per-output "extra_constraints" (which
+# encode what the retrieved chunks do and don't support), these are general
+# grounding rules the generator drifted on across drafts - keyed by slug so
+# they attach to the output where the drift actually happened, but phrased
+# as standing rules rather than as a ban on the exact sentences that were
+# caught. Applied in build_generation_prompt() regardless of what
+# knowledge_base.py declares for a given output.
+# ---------------------------------------------------------------------------
+_AUDIT_GROUNDING_CONSTRAINTS = {
+    "impact-window-beat-pack": (
+        "Do not invent an armor weak point, a vulnerable armor location, a "
+        "damage multiplier, an exposed component, or any momentary "
+        "structural weakness for Crimson Vanguard, unless that exact detail "
+        "is explicitly present in the grounding context above - the "
+        "retrieved canon establishes armor, a readable opening, and a "
+        "punishable recovery, never a weak point or a momentary "
+        "vulnerability.",
+        "Grounded wording is fine and encouraged here: you may describe "
+        "striking during an earned opening, a punishable recovery, or a "
+        "clean strike line - none of that implies or requires an armor "
+        "weak point.",
+        "State plainly that the 1-3 second burst occurs after the player "
+        "succeeds at the Impact Window input - success earns the burst.",
+        "Never write or imply that the player's input determines, "
+        "controls, sets, or varies how long the burst lasts - earning the "
+        "burst and sizing its duration are not the same thing, and only "
+        "the former is true.",
+    ),
+    "vanguard-telegraph-pack": (
+        "Describe Crimson Vanguard's attack selection as deterministic, "
+        "authored, non-learning, and never runtime-adaptive.",
+        "Explicitly acknowledge that this same authored selection logic "
+        "may respond deterministically to range and cooldown - reacting to "
+        "range/cooldown by a fixed, authored rule is conditional authored "
+        "logic, not learning, and must not be denied.",
+        "Never write broad claims that Crimson Vanguard is 'never "
+        "reactive', 'non-reactive', or does not respond to combat "
+        "conditions - those claims are false, since it does react, "
+        "deterministically, to range and cooldown.",
+        "Keep the distinction explicit: authored conditional behavior "
+        "(fixed rules reacting to range/cooldown) is not the same as "
+        "learning, player-pattern adaptation, or runtime-model behavior - "
+        "only the latter three are forbidden.",
+    ),
+}
+
+
 def render_retrieval_evidence(result):
     lines = []
     lines.append("# Retrieval evidence — {}".format(result.slug))
@@ -125,6 +175,14 @@ def build_generation_prompt(output_cfg, retrieval_result):
             "- {}".format(item) for item in extra_constraints
         )
 
+    audit_constraints = _AUDIT_GROUNDING_CONSTRAINTS.get(output_cfg["slug"], ())
+    audit_block = ""
+    if audit_constraints:
+        audit_block = (
+            "\n\nGROUNDING AUDIT CONSTRAINTS (human review, 2026-07-28):\n"
+            + "\n".join("- {}".format(item) for item in audit_constraints)
+        )
+
     return (
         "You are drafting a short piece of authored game content for the Unreal "
         "Engine 5.8 action fighter Ascendant Impact, for use as offline design "
@@ -133,7 +191,7 @@ def build_generation_prompt(output_cfg, retrieval_result):
         "GROUNDING CONTEXT (retrieved from the approved knowledge base — treat as "
         "fact, do not contradict it):\n{grounding}\n\n"
         "YOU MAY CREATE:\n{allowed}\n\n"
-        "YOU MUST NEVER INVENT:\n{forbidden}{extra}\n\n"
+        "YOU MUST NEVER INVENT:\n{forbidden}{extra}{audit}\n\n"
         "Every timing/tuning number is provisional and belongs to the human "
         "designer — quote governed numbers verbatim if you reference them at "
         "all, never alter or round them. Crimson Vanguard is deterministic "
@@ -142,7 +200,7 @@ def build_generation_prompt(output_cfg, retrieval_result):
         "as plain prose/markdown, with no meta-commentary about these "
         "instructions.".format(
             title=output_cfg["title"], grounding=grounding, allowed=allowed,
-            forbidden=forbidden, extra=extra_block,
+            forbidden=forbidden, extra=extra_block, audit=audit_block,
         )
     )
 
