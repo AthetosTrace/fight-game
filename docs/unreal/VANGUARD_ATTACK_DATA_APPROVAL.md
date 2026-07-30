@@ -58,20 +58,20 @@ They are **not** GDD facts — see question 1 below.
    Bulwark Reach / Thruster Snap) be used in `DisplayWorkingName` as
    placeholder labels, or should that field stay blank until you name the
    attacks directly?**
-   - [ ] Approve using the proposed names as placeholders
+   - [x] Approve using the proposed names as placeholders
    - [ ] Reject — leave `DisplayWorkingName` blank until I provide names
    - [ ] Approve a different set of names (specify below)
 
 2. **Is Attack A alone being `Prototype`/enabled and B–D `Planned`/disabled
    the correct rollout for this sprint** (matching design-brief.md §1.2's
    "M2 (one attack) → M4 (all four)" sequencing)?
-   - [ ] Approve
+   - [x] Approve
    - [ ] Reject (explain below)
 
 3. **Do you approve the row contract itself** (`docs/unreal/VANGUARD_ATTACK_ROW_CONTRACT.md`)
    as the schema to build the eventual Unreal `F`-struct and DataTable
    against?
-   - [ ] Approve
+   - [x] Approve
    - [ ] Reject — needs a schema change (specify below)
 
 4. **Agent reviewer status.** `agents/unreal/vanguard-attack-data-reviewer.md`
@@ -83,14 +83,14 @@ They are **not** GDD facts — see question 1 below.
 
 5. **Any other correction needed to the CSV, the row contract, or the source
    audit before this proceeds to Unreal import prep** (Task 7's checklist)?
-   - [ ] None
+   - [x] None
    - [ ] Yes (specify below)
 
 ---
 
 ## 4. Approval
 
-- [ ] **APPROVED** — the CSV, row contract, and source audit as they stand
+- [x] **APPROVED** — the CSV, row contract, and source audit as they stand
   on this branch/commit are approved for the manual Unreal import steps
   described in `UNREAL_VANGUARD_DATA_IMPORT_CHECKLIST.md`. No Unreal
   changes may occur until this box is checked and dated.
@@ -106,8 +106,8 @@ They are **not** GDD facts — see question 1 below.
 **Signature / date:**
 
 ```
-Name: _______________________________
-Date: _______________________________
+Name: _____Tony Travieso__________________________
+Date: ____2026-07-29___________________________
 ```
 
 ---
