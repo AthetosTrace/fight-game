@@ -180,6 +180,74 @@ Beyond that, the next-smallest slice toward the Sunday goal is **M2 from `ATTACK
 
 ---
 
+## 10. Milestone 2 — Crimson Vanguard Attack A data prep
+
+**Scope of this run (per the active `/goal`):** verify the approved Attack A data, create the smallest Blueprint-friendly struct + `DataTable` for exactly four Vanguard attacks (A enabled, B–D disabled placeholders), and stop — no Behavior Tree, no AI Controller, no damage-to-player logic, no extra attacks. This is a data-prep step only.
+
+### 10.1 Approved source verified
+
+Read from `C:\Users\Tonys ProArt\Documents\fight-game` (not guessed):
+
+- `docs/unreal/ATTACK_DATA_SOURCE_AUDIT.md` — establishes that only the four attacks' qualitative range/purpose/readability facts are GDD-governed; every numeric value (damage, min/max range, cooldown, Attack D max travel distance) and every asset reference (montage, VFX, audio, hit-trace socket) is explicitly **OPEN** and must stay blank — inventing any of them is forbidden.
+- `docs/unreal/VANGUARD_ATTACK_DATA_APPROVAL.md` — **signed**: "APPROVED" checked, Tony Travieso, 2026-07-29. This authorizes exactly one thing: proceeding to the manual/CSV-driven Unreal DataTable import steps in `UNREAL_VANGUARD_DATA_IMPORT_CHECKLIST.md`. It does **not** authorize the Behavior Tree, damage-to-player logic, or resolving any OPEN value.
+- `docs/unreal/VANGUARD_ATTACK_ROW_CONTRACT.md` — the approved schema (question 3 of the approval packet explicitly approves this contract, not `design-brief.md` §5.3's more speculative numeric struct). 17 columns; the first (`Name`) is the DataTable's row-name key, not a struct field.
+- `data/unreal/DT_VanguardAttacks.csv` — the actual approved data: exactly 4 rows (`Row_A/B/C/D`), `AttackId` A–D, only `Row_A.EnabledForSelection = true` (`Prototype`), `Row_B/C/D.EnabledForSelection = false` (`Planned`). `MontageAsset`/`TelegraphVfxAsset`/`TelegraphAudioAsset`/`HitTraceSocket` are blank on every row, exactly as required.
+- `design-brief.md` §5.3's `S_VanguardAttackDef` (with numeric `MinRange`/`Damage`/`Cooldown`/`Phase1`/`Phase2` tuning fields) is the **later**, forward-looking gameplay struct for once those numbers are actually approved — it is explicitly not what's approved for import right now (every one of those numeric fields is listed OPEN in the source audit). Building it now would mean inventing values. **Not built this pass — noted as future work in §10.4.**
+
+### 10.2 Existing-asset inventory (nothing to reuse)
+
+Confirmed via `AssetTools.find_assets` and `DataTableTools.search_row_structs` — none of the following exist anywhere in the project: `S_VanguardAttackDef` (or any struct matching `*Vanguard*`), `DT_VanguardAttacks`, `BT_CrimsonVanguard`, `BB_CrimsonVanguard`, or any `E_VanguardAttackID`/`E_VanguardState` enum. The only pre-existing `*Vanguard*` asset is `BP_VanguardProxy` (the gray-box proxy Character from the combat checkpoint, §4 — unrelated to attack data, not touched this run). Created `/Game/AscendantImpact/Data/` (the folder `design-brief.md` §2 specifies for this content) — empty, ready to receive the struct and table.
+
+### 10.3 Genuine manual blocker — creating the row struct
+
+**No tool in any available MCP toolset can create a new `UserDefinedStruct` (Blueprint Structure) or a new `UserDefinedEnum` asset.** Confirmed by reviewing every registered toolset (`list_toolsets` — no struct/enum toolset exists) and every tool on the closest candidates:
+- `DataTableTools.create` / `.import_file` both **require** an existing struct asset as their `schema` argument — they cannot create one.
+- `BlueprintTools.add_variable`/`add_struct_variable` add a variable *to a Blueprint*, not a field *inside* a struct asset — `add_variable`'s `blueprint` argument is typed to `/Script/Engine.Blueprint`, which a `UserDefinedStruct` is not.
+- `DataAssetTools.create` makes `DataAsset` instances from an existing class, not struct definitions.
+- `search_row_structs` confirms no existing struct (native or user-defined) matches; only irrelevant engine structs exist (`GameplayTagTableRow`, `MirrorTableRow`, etc.).
+
+A `UserDefinedStruct`'s field list lives in editor-only data (`FStructureEditorUtils`) that isn't exposed as a plain settable property, so `ObjectTools.set_properties` cannot touch it either. The only way to author one is the editor's own Blueprint Structure editor UI. I deliberately did **not** attempt this through `SlateInspectorToolset`'s low-level UI-automation — reliably adding 16 typed fields through raw Slate click/type events has a high chance of an unreliable, hard-to-verify result for a lot of tool calls, which is exactly the kind of rabbit hole the operating rules say to stop and ask about rather than push through. This is a genuine one-time manual gate, not a failure of implementation effort — everything downstream (the `DataTable` itself, the CSV import, row verification, compile) is fully scriptable via MCP once the struct exists, and will be done in the very next pass.
+
+Per the "smallest Blueprint-friendly structure" instruction, the struct is intentionally flat — no `E_VanguardAttackID` enum, no nested `S_AttackPhaseTuning` (those are `design-brief.md`'s later, numeric-tuning-bearing design; premature here since every number they'd carry is OPEN). `AttackId` is a plain string, matching the row contract's own description of it as an "enum-like string" checked by exact string comparison, not a native enum. The three asset-reference fields (`MontageAsset`/`TelegraphVfxAsset`/`TelegraphAudioAsset`) are typed as plain `String` rather than typed Soft Object References for the same reason — they are guaranteed blank in every row this pass, so the stronger typing has zero present value and only adds friction to the one-time manual step; §10.4 flags upgrading them once real assets exist.
+
+**Manual step required — create exactly this struct, then hand back to continue:**
+
+1. In the Content Browser, navigate to `/Game/AscendantImpact/Data/` (already created).
+2. Right-click → search "Blueprint Structure" (some UE versions file it under **Miscellaneous**, some under **Blueprints** — the create-asset menu's search box finds it either way) → create it.
+3. Name it exactly **`S_VanguardAttackDef`**.
+4. Open it and add exactly these 16 variables (name, type — in this order, matching `VANGUARD_ATTACK_ROW_CONTRACT.md` §2 minus its `Name` row-key column):
+
+   | # | Field name | Type |
+   |---|---|---|
+   | 1 | `AttackId` | String |
+   | 2 | `DisplayWorkingName` | String |
+   | 3 | `ImplementationStatus` | String |
+   | 4 | `EnabledForSelection` | Boolean |
+   | 5 | `IntendedRange` | String |
+   | 6 | `GameplayPurpose` | String |
+   | 7 | `TelegraphRequirement` | String |
+   | 8 | `TrackingRule` | String |
+   | 9 | `ActiveDescription` | String |
+   | 10 | `RecoveryRequirement` | String |
+   | 11 | `Phase2Usage` | String |
+   | 12 | `MontageAsset` | String |
+   | 13 | `TelegraphVfxAsset` | String |
+   | 14 | `TelegraphAudioAsset` | String |
+   | 15 | `HitTraceSocket` | Name |
+   | 16 | `Notes` | String |
+
+5. Save (`Ctrl+S`) the struct asset.
+6. Report back — the next pass will create `DT_VanguardAttacks` against this struct, import the approved CSV (`data/unreal/DT_VanguardAttacks.csv`) verbatim (no hand-retyping), verify all four rows and that only `Row_A` is enabled, and compile/validate.
+
+### 10.4 Deferred / future work (not this pass)
+
+- Upgrade `MontageAsset`/`TelegraphVfxAsset`/`TelegraphAudioAsset` from `String` to proper typed Soft Object References once real assets are chosen and these fields actually get populated.
+- The numeric gameplay-tuning struct (`design-brief.md` §5.3's fuller `S_VanguardAttackDef` with `MinRange`/`Damage`/`Cooldown`/`Phase1`/`Phase2`) once the designer resolves the OPEN values (§14 Q3/Q10/Q12/Q13/Q25) — this bridge struct is deliberately not that struct.
+- `E_VanguardAttackID` / `E_VanguardState` enums, `BB_CrimsonVanguard`, `BT_CrimsonVanguard`, `BP_VanguardController` — all explicitly out of scope for this pass; tracked in `ATTACK_A_IMPLEMENTATION_PLAN.md` M2.
+- No combat-checkpoint asset (`BP_ThirdPersonCharacter`, `BP_VanguardProxy`, `IMC_Default`, `IA_Attack`) was touched this run.
+
+---
+
 ## Manual PIE test instructions (retest #3, after fixes in §7b)
 
 1. In the already-open Unreal Editor, press **Play** (Alt+P) to start PIE in the `Lvl_ThirdPerson` map.
