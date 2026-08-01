@@ -1,0 +1,202 @@
+# Ascendant Impact — Gray-box Combat Prototype Blackboard
+
+Branch: `feature/graybox-combat-sandbox`
+Scope for this run: smallest playable punch-and-damage checkpoint (per the active `/goal`), **not** the full approved Attack A AI plan (`ATTACK_A_IMPLEMENTATION_PLAN.md`), which requires `DT_VanguardAttacks` import + human sign-off (`VANGUARD_ATTACK_DATA_APPROVAL.md`) before it may begin. That plan is untouched and still gated.
+
+## 1. Current project state (before this run)
+
+Read from the live project via Unreal MCP:
+
+- Third Person template foundation present and functional: `BP_ThirdPersonCharacter`, `BP_ThirdPersonPlayerController`, `BP_ThirdPersonGameMode`, Enhanced Input (`IMC_Default`, `IA_Move`, `IA_Look`, `IA_MouseLook`, `IA_Jump`).
+- Manny (`SKM_Manny_Simple`) and Quinn (`SKM_Quinn_Simple`) meshes present; player character (`BP_ThirdPersonCharacter`) uses Quinn + `ABP_Unarmed`.
+- `ABP_Unarmed` anim graph already contains an `AnimGraphNode_Slot 'DefaultSlot'` feeding into the ControlRig/output chain — confirmed by inspecting the AnimGraph node list, not assumed.
+- Unarmed attack animations (`MM_Attack_01/02/03`, `MM_ChargedAttack`), dash (`MM_Dash`), death (`MM_Death_*`), and Rifle hit-react animations (`MM_HitReact_*`) exist as plain `AnimSequence` assets — no notifies authored, no Montage assets exist yet.
+- Approved feedback assets present under `/Game/Variant_Combat/`: `UI_LifeBar` (exposes `SetLifePercentage(Percent)` and `SetBarColor(Color)` custom events), `NS_Damage` (Niagara System), `BP_CameraShake_Hit_Enemy`, `BP_CameraShake_Hit_Player`.
+- No Vanguard proxy, no health/combat component, and no HUD wiring existed anywhere in the project (`HUDClass` on the GameMode was still the base engine `HUD`).
+- `DT_VanguardAttacks`, `BT_CrimsonVanguard`, `BB_CrimsonVanguard` — none exist yet (full Attack A plan precondition, correctly out of scope here).
+
+## 2. Missing-feature inventory and priority scoring
+
+Scored on: dependency importance / Sunday-prototype value / how much is already built / implementation risk / scope penalty (higher total = do first).
+
+| Feature | Dependency | Prototype value | Already built | Risk | Scope penalty | Priority |
+|---|---|---|---|---|---|---|
+| Light-attack input + animation | High | High | Input system present, just needs 1 action | Low | None (explicitly in scope) | **Selected — done** |
+| Vanguard proxy + health + damage feedback | High | High | Nothing built | Low-Med (needs new BP) | None (explicitly in scope) | **Selected — done** |
+| Hit detection (attack → damage once) | High | High | Nothing built | Med (array-pin/latent-node DSL quirks, resolved) | None | **Selected — done** |
+| Vanguard AI state machine / Attack A telegraph loop | High (for full duel) | Low for *this* checkpoint (explicitly deferred) | Nothing built | High (BT + DataTable + notifies) | Large — explicitly out of scope this run | Deferred to next run |
+| Impact Windows / Ascension Meter / Final Clash | Med | None for this checkpoint | Nothing built | High | Large — explicitly out of scope | Deferred |
+| Dodge / counter | Med | None for this checkpoint | Nothing built | Med | Explicitly out of scope | Deferred |
+
+Selection: the three "Selected" rows form one coherent smallest slice — a working input→animation→hit→damage→feedback loop — and were built together since they are mutually dependent (an attack with no target, or a target with no attack, proves nothing).
+
+## 3. Why this feature first
+
+The GDD's own vertical-slice definition (design-brief M1/M2 lineage) and this run's explicit target both name "one player defensive/offensive action landing on a proxy rival with visible health feedback" as the proof-of-concept that everything else (AI telegraph loops, Impact Windows, Ascension Meter) builds on top of. Building the Vanguard AI state machine first would have nothing to react to; building the attack first would have nothing to hit. They had to land in the same checkpoint.
+
+## 4. Assets created or modified
+
+**Created:**
+- `/Game/Input/Actions/IA_Attack` — duplicated from `IA_Jump` (same Digital/bool `ValueType`).
+- `/Game/Variant_Combat/Blueprints/BP_VanguardProxy` — `Character` Blueprint, mesh = `SKM_Manny_Simple`, `AnimClass` = `ABP_Unarmed` (visually distinct from the Quinn-skinned player, shares the same skeleton/DefaultSlot so hit-react montages work).
+- `docs/agent/PROTOTYPE_BLACKBOARD.md` (this file).
+
+**Modified:**
+- `/Game/Input/IMC_Default` — added a mapping: `IA_Attack` → Left Mouse Button.
+- `/Game/ThirdPerson/Blueprints/BP_ThirdPersonCharacter` — added `bIsAttacking` (bool) variable; added an `EnhancedInputActionIA_Attack` event (its `Triggered` exec pin wired directly into the attack logic — see §6 for why a Custom-Event indirection was abandoned) that:
+  1. Guards against re-trigger while already attacking.
+  2. Plays `MM_Attack_01` via `PlaySlotAnimationAsDynamicMontage` on the mesh's AnimInstance, slot `DefaultSlot` (no Montage asset had to be authored).
+  3. Waits 0.3 s (approximating the swing's impact frame), then does a single `SphereOverlapActors` (110 cm radius, 120 cm in front of the actor, Pawn channel, class-filtered to `BP_VanguardProxy_C`).
+  4. Calls native `ApplyDamage` (10.0, `/Script/Engine.DamageType`) on every actor found — since the overlap only fires once per attack and the array is built once, damage cannot double-apply within one swing.
+  5. Waits an additional 0.5 s then clears the attacking flag.
+- Vanguard proxy `EventGraph`:
+  - `EventBeginPlay`: calls `EnsureHealthBarWidget()` then, if `LifeBarWidget` is valid, initializes the bar to 100%. (Originally this called `CreateWidget`+`AddToViewport` directly, then later a one-shot `GetUserWidgetObject`+cast — both superseded, see §7a and §7d.)
+  - `ReceiveAnyDamage` (found via `list_events`, added via `add_event`, populated as `Game|Damage|EventAnyDamage` in the DSL): subtracts damage from `Health` (floored at 0 via `Math|Float|Max`), prints `"Vanguard Health: <value>"` to screen/log, spawns `NS_Damage` at chest height, plays `BP_CameraShake_Hit_Enemy` on the local player controller (still gated inside the `Damage > 0.0` branch), plays `MM_HitReact_Front_Med_01` via dynamic montage on `DefaultSlot`, then calls `EnsureHealthBarWidget()` again and updates the life bar under an `IsValid` guard (see §7d).
+  - **`EnsureHealthBarWidget`** (new plain Function, added in §7d): if `LifeBarWidget` isn't valid, explicitly creates a `UI_LifeBar` widget, assigns it to the `HealthBarWidget` component via `SetWidget`, casts it, and stores the reference — a no-op if `LifeBarWidget` is already valid.
+  - `Health` (float) default = 100 set on the class default object.
+  - **`HealthBarWidget`** — new `WidgetComponent` (added after the first failed PIE test, see §7a): `Space = World`, `WidgetClass = UI_LifeBar_C`, `DrawSize = (200, 24)`, `RelativeScale3D = (0.5, 0.5, 0.5)` (≈100×12 cm physical size), `RelativeLocation = (0, 0, 220)` (attached to the capsule root, above the head), parent = `CollisionCylinder`.
+- Player Blueprint: added a `Development|PrintString "Attack Triggered"` node spliced between the attack Branch's `then` pin and the `SetIsAttacking true` node (temporary debug aid, per request).
+- **Level `Lvl_ThirdPerson`**: `BP_VanguardProxy` instance repositioned twice after the first failed test (see §7a) — now at `(350, 0, 288)`, facing the player start (yaw 180°). Ground height at that X was measured with `SceneTools.trace_world` (200 world units, not 210 as at the player start — the arena has a gentle staircase after roughly X=400) and the actor's Z was set to `groundZ + CapsuleHalfHeight(88)`. **This placement is still live in the open editor session only — see §7, it has not persisted to disk.**
+
+## 5. Compile / validation results
+
+- `BP_ThirdPersonCharacter`: `compile_blueprint(warnings_as_errors=true)` → clean, no errors or warnings.
+- `BP_VanguardProxy`: `compile_blueprint(warnings_as_errors=true)` → clean, no errors or warnings.
+- Confirmed via `LogBlueprint` output log entries: the two most recent compiles for both Blueprints have no `Warning:`/`Error:` lines following them (earlier lines in the log are from mid-session mistakes that were fixed — see §6).
+- Assets saved to disk and confirmed via `git status` / file mtimes: `IA_Attack.uasset` (new), `IMC_Default.uasset` (modified), `BP_ThirdPersonCharacter.uasset` (modified), `BP_VanguardProxy.uasset` (new).
+- After the §7a fixes: both Blueprints recompiled with `warnings_as_errors=true` a second time — still clean, zero errors/warnings. Re-saved `BP_ThirdPersonCharacter` and `BP_VanguardProxy` to disk.
+- After the §7b fixes: `BP_VanguardProxy` recompiled a third time with `warnings_as_errors=true` — clean, zero errors/warnings. Re-saved to disk. `BP_ThirdPersonCharacter` untouched this round.
+- After the §7d fix (LifeBarWidget Accessed-None): `BP_VanguardProxy` recompiled a fourth time with `warnings_as_errors=true` — clean, zero errors/warnings. Only `BP_VanguardProxy` saved; `BP_ThirdPersonCharacter` untouched.
+- No dedicated "asset validation" MCP tool was found in the available toolsets (`list_toolsets`/`describe_toolset` surveyed); compile-with-warnings-as-errors plus the output-log check is the evidence substitute. This gap is worth a human validating with **Editor → Tools → Validate Assets** before the checkpoint is considered fully closed.
+
+## 6. Failures and fixes (for Assignment #5 evidence)
+
+- **`AddEvent|EnhancedInputActionIA_Attack` / `AddEvent|ReceiveAnyDamage` do not exist**: `write_graph_dsl`'s `(event Name ...)` sugar only resolves names through an internal `AddEvent|...` registry keyed by the *exact* DSL-friendly alias, and that registry does **not** include Enhanced-Input-action nodes or plain custom events already placed in the graph. Fix: use `add_event`/`create_node` to place the actual node first (discovering the enhanced-input node's real type id, `Input|EnhancedActionEvents|IA_Attack`, via `find_node_types`), then either match it in the DSL by its exact reflected name (worked for the native override `ReceiveAnyDamage`, whose reflected DSL name turned out to be `Game|Damage|EventAnyDamage`) or, when the DSL still refuses to match (true for the Enhanced Input node), fall back to wiring pins by hand with `connect_pins`.
+- **Custom events cannot host latent nodes if attempted as plain Function graphs**: first attempt put the attack logic in an `add_function_graph` because a Custom Event created via the DSL wasn't matchable. That failed to compile — Blueprint Function graphs cannot contain `Delay` (latent nodes require an Event-graph-rooted context). Fix: removed the function graph, used a Custom Event instead (which does support latent nodes), then discovered Custom Events aren't discoverable as `CallFunction|Name` node types either — so the final wiring skips the Custom Event indirection entirely and connects the Enhanced Input node's `Triggered` exec pin straight into the logic chain's first node.
+- **Bool member variables strip their `b` prefix in generated accessor names**: `bIsAttacking`'s getter/setter are `Variables|Default|GetIsAttacking`/`SetIsAttacking`, not `GetbIsAttacking`. Found by probing `find_node_types` with a narrower filter after the first guess failed.
+- **Array-typed pins (`SphereOverlapActors`'s `ObjectTypes`) reject literal/default-value assignment outright**: compiling reported *"Array inputs...must have an input wired into them (try connecting a MakeArray node)"*. Fix: explicitly created a `Utilities|Array|MakeArray` node, connected its output to the `ObjectTypes` pin, then set the single array element's value to `ObjectTypeQuery3` (the project's default Pawn object-type channel) via `set_pin_value`.
+- **Stray/duplicate nodes from abandoned attempts**: two dead-end custom-event nodes were created and left in `BP_ThirdPersonCharacter`'s EventGraph during iteration; both were found via `find_nodes`/`get_node_infos` and removed with `delete_node` before the final compile.
+- **Git `dubious ownership` on every `git` invocation**: this repo's `.git` is owned by a different Windows user than the current session. Worked around per-invocation with `git -c safe.directory=... status` rather than touching global git config (per operating rules, global config is never modified).
+
+## 7a. Failed manual PIE test #1 and fixes applied
+
+The human ran the checkpoint in PIE and rejected it. Observed problems and root causes, found by inspecting the live Blueprint/UMG state via MCP (not by re-guessing):
+
+1. **"A giant solid red rounded UI shape fills nearly the entire screen."** Root cause, confirmed via `UMGToolSet.GetWidgets` on `UI_LifeBar`: its root widget is an `Overlay` containing a `Border` (background) wrapping the `ProgressBar`. `EventBeginPlay` was calling `CreateWidget` + `AddToViewport` directly — `AddToViewport`'s default `CanvasPanelSlot` anchors span the full screen (0,0)–(1,1), and the `Border`'s default fill alignment stretches to match, so the widget's background rendered as a full-screen block. **Fix:** removed `CreateWidget`/`AddToViewport` from `EventBeginPlay` entirely. Added a `WidgetComponent` (`HealthBarWidget`) instead — world-space, small draw size, mounted above the Vanguard's head (see §4). `EventBeginPlay` now only fetches that component's auto-created widget instance via `GetUserWidgetObject` + `CastToUI_LifeBar` and stores the reference; nothing is ever added to the player's screen-space viewport.
+2. **"The camera jumps/collides strangely while moving."** Root cause: the Vanguard proxy was originally placed only 200 cm from the player start. Capsule radii (35 + 34 = 69 cm) left very little real clearance, and the player's `CameraBoom` (`TargetArmLength = 400`, `bDoCollisionTest = true`) reacts to any nearby blocking capsule — at that distance the boom's collision probe was interacting with the Vanguard's capsule almost immediately on spawn/approach. **Fix:** moved the Vanguard to 350 cm away (see §4), clear of immediate spawn-time interference while still a short, obvious walk for testing. (Camera-boom adjustment *while standing next to the Vanguard to actually land a punch* is expected, normal SpringArm behavior, not a bug — it will still visibly react at true melee range, which is correct.)
+3. **"The Vanguard proxy appears extremely close to the PlayerStart."** Same root cause and fix as #2.
+4. **"Left-click does not produce an observable successful attack/damage result."** Most likely explained by #1 — a full-screen UMG widget sitting over the game viewport captures mouse focus/clicks in many UMG configurations, which would prevent `IA_Attack` (bound to Left Mouse Button) from ever reaching the game input stack. Verified independently that the input path itself is intact and unrelated to this bug:
+   - `IMC_Default.defaultKeyMappings` still contains the `IA_Attack → LeftMouseButton` entry (re-checked via `ObjectTools.get_properties` after all edits — unchanged since it was added).
+   - `BP_ThirdPersonPlayerController`'s `EventBeginPlay` calls `Input|AddMappingContext` on `IMC_Default` whenever `IsLocalPlayerController()` is true — confirmed present and untouched via `read_graph_dsl`, so `IA_Attack` is active at runtime through the same path as the working `IA_Move`/`IA_Jump` mappings.
+   - Added a `Development|PrintString "Attack Triggered"` node on the player's attack Branch (fires the instant the input is accepted, before the montage/hit-check) so the human can now see in the PIE screen/log whether the click is reaching Blueprint logic at all, isolating "input never arrived" from "input arrived but the hit trace/damage failed."
+
+**Diagnostic note:** I attempted to visually confirm the fix myself by starting PIE and using `EditorAppToolset.CaptureViewport`, but two capture attempts (once with an empty `captureTransform`, once with a manually-computed "behind the player" transform) both produced renders that didn't match the expected in-game view (one appeared to originate from world origin looking up through the floor; the other appeared to be extremely close to/inside a large green-highlighted capsule, with editor actor icons visible despite `bShowUI: false`). Per the two-strikes failure policy this screenshot-verification path was abandoned rather than iterated further — it looks like `CaptureViewport`'s manual `captureTransform` does not behave as simple "camera at this world pose" during `PlayMode_InViewPort` PIE, and/or still renders editor-only actor icons and selection highlights. The structural fixes above were instead verified by directly reading back the Blueprint graphs/widget tree/component properties (all confirmed in place, all Blueprints compile clean), not by trusting these screenshots. **A real human PIE pass is still required to confirm the visual/input fixes actually resolve the reported symptoms.**
+
+## 7b. Manual PIE retest #2 (partial pass) and fixes
+
+The human retested after §7a's fixes. **Confirmed working:** no full-screen overlay, movement fine, "Attack Triggered" prints on click, punch animation plays, "Vanguard Damaged" printed on confirmed close-range hits — i.e. the whole input → attack → overlap → `ApplyDamage` → `ReceiveAnyDamage` chain is proven functional end to end.
+
+**Remaining issues and fixes, found by inspecting live component properties via MCP:**
+
+1. **Spring-arm camera clips into the player at melee range.** Root cause, confirmed via `ObjectTools.get_properties`: `CameraBoom`'s `ProbeChannel` is `ECC_Camera`. The Vanguard's `CollisionCylinder` (capsule) was on the `Pawn` collision profile with only `Visibility` overridden to Ignore — `Camera` still fell back to the profile default (`Block`), so the camera probe treated the Vanguard's capsule as solid geometry once the player got close enough to attack. Its `CharacterMesh0` was on the `CharacterMesh` profile (overrides: `Pawn`/`Visibility`/`Vehicle` all Ignore) — `Camera` was **not** overridden there either, and that profile's default for `Camera` is also `Block`, so the mesh itself would still clip the camera even after fixing the capsule. **Fix:** added a `Camera → ECR_Ignore` response override to both `CollisionCylinder.bodyInstance.collisionResponses` and `CharacterMesh0.bodyInstance.collisionResponses`, keeping every other channel/response (and the `Pawn`/`CharacterMesh` profiles themselves) untouched. Pawn-vs-pawn blocking (movement collision) and the attack's `SphereOverlapActors` (which queries the `Pawn` **object type**, unrelated to trace-channel responses) are both unaffected — verified by re-reading the full `bodyInstance` back after the edit.
+2. **Health bar not clearly visible/readable.** The `HealthBarWidget` `WidgetComponent` was `Space = World` at `DrawSize 200×24` scaled to `0.5` (≈100×12 world cm) — small and, since it doesn't billboard, often edge-on or foreshortened relative to the camera. **Fix:** switched `Space` to `Screen` (still a `WidgetComponent`, never `AddToViewport` — it projects only at the actor's own screen position, not full-screen) and reset `DrawSize` to `150×20` px / `RelativeScale3D` to `(1,1,1)` (screen-space widgets size in screen pixels, not world units, so the old world-space scale hack no longer applies). It stays anchored above the Vanguard's head (`RelativeLocation.Z = 220`, unchanged) and now always faces the camera by construction.
+3. **Damage debug output didn't show the actual number.** `EventAnyDamage`'s `PrintString` said `"Vanguard Damaged"`. **Fix:** rewrote it to build `"Vanguard Health: " + ToString(newHealth)` via `Utilities|String|Append` + `Utilities|String|ToString(Float)`, so each landed hit now prints the exact resulting health value (e.g. `"Vanguard Health: 90.0"`), giving direct visible proof of the exact −10-per-swing decrement.
+4. **`NS_Damage` spawn point too low/obscured.** It was spawning at `GetActorLocation()` — the capsule's own origin, which sits low on the body. **Fix:** now spawns at `GetActorLocation() + (0, 0, 80)`, roughly chest height, clear of the lower body/ground clutter.
+5. **Hit-reaction montage slot check.** Re-confirmed (not changed in logic) that `ABP_Unarmed`'s `AnimGraph` has a real `AnimGraphNode_Slot 'DefaultSlot'` feeding the output chain (same check as §1's original finding — the Vanguard uses this same AnimBP), and that `PlaySlotAnimationAsDynamicMontage(..., SlotNodeName="DefaultSlot", ...)` is still called unconditionally inside the `Damage > 0.0` branch, immediately after the camera shake. Tightened `BlendInTime` from `0.1` → `0.05` so the reaction reads a little snappier/more visible.
+
+Only `BP_VanguardProxy` was touched this round (no changes needed in `BP_ThirdPersonCharacter`). Recompiled with `warnings_as_errors=true` — clean, zero errors/warnings. Re-saved to disk.
+
+## 7c. Manual PIE retest #3 (passed, with two follow-ups) and level-save blocker resolved
+
+The human ran retest #3 after the §7b fixes.
+
+**Confirmed working:**
+- Normal movement and camera.
+- Camera remains stable at melee range (the §7b `Camera → Ignore` collision-response fix holds).
+- Left-click triggers the punch animation.
+- Vanguard receives exactly 10 damage per landed swing.
+- Debug health values visibly progressed 90 → 80 → 70 and continued down to 0 (direct, exact confirmation of the per-swing damage amount and that it never double-applies).
+- Chest-height `NS_Damage` VFX and the Vanguard hit-reaction animation were visible.
+- The Vanguard proxy's level placement is now **persisted to disk** — the human pressed Ctrl+S per the standing instruction, and `git status` now shows a new untracked external-actor package (`Content/__ExternalActors__/ThirdPerson/Lvl_ThirdPerson/3/I5/`) alongside the (still-unchanged) `Lvl_ThirdPerson.umap`, exactly the OFPA behavior anticipated in this section. **The manual save blocker below is therefore resolved as of this retest — no more Ctrl+S reminder is needed for this actor.**
+
+**Not yet confirmed (carried forward as open items, not failures of this checkpoint):**
+1. **Health-bar widget visibility.** The screen-space `HealthBarWidget` from §7b was not clearly visible in the human's recording, despite the exact health values being independently confirmed via the debug `PrintString`. This needs a follow-up pass (e.g. checking actual screen position/anchor behavior of a `Screen`-space `WidgetComponent`, contrast/size, or whether it's being drawn behind other UI) before the life bar itself can be called "confirmed working" — the *data* driving it (`Health`, `SetLifePercentage`) is proven correct even though the *readable on-screen bar* is not yet proven visible.
+2. **Vanguard death behavior at 0 health.** Not implemented — this was explicitly out of scope for this checkpoint (see the original `/goal` scope: only "Vanguard health visibly decreases," not defeat/death handling). Health correctly floors at 0 (confirmed by the debug progression reaching 0) but nothing currently happens when it gets there (no death animation, no disabling collision, no win condition). This is expected, correctly-deferred behavior, not a bug — it belongs with a later milestone (win/loss handling).
+
+No Unreal assets, Blueprints, or debug nodes were touched to produce this update — this section only records the human's retest #3 report.
+
+## 7d. Runtime error found in Message Log and fix (LifeBarWidget Accessed-None)
+
+After retest #3, the Unreal Message Log showed a repeated runtime error during PIE:
+
+> `Accessed None trying to read property LifeBarWidget` — Blueprint: `BP_VanguardProxy`, Node: `Set Life Percentage`
+
+**Diagnosis (root cause, confirmed by reading the actual graph back, not guessed):** `EventBeginPlay` computed `LifeBarWidget` in one shot — `GetUserWidgetObject` on the `HealthBarWidget` component, cast to `UI_LifeBar_C`, store — with no failure handling. `UWidgetComponent::GetUserWidgetObject()` only returns a non-null widget if the component has already internally initialized one; it does **not** lazily create it on demand. If that internal initialization hadn't happened yet at the moment the actor's own `EventBeginPlay` ran (component initialization order isn't guaranteed to have completed a full widget construction by then), `GetUserWidgetObject` silently returned `None`, `CastToUI_LifeBar(None)` silently returned `None` too (casting `None` never fails loudly, it just produces `None`), and `LifeBarWidget` was permanently set to `None` for the rest of the actor's life — every subsequent `ReceiveAnyDamage` then called `SetLifePercentage` on a `None` object, producing this error on **every landed hit**, which matches what the Message Log showed (repeated, not one-off).
+
+**Fix — explicit initialization instead of relying on lazy auto-creation, plus a safe reacquire/guard:**
+- Added a new plain Blueprint function, **`EnsureHealthBarWidget`** (no latent nodes, so — unlike the very first attempt in §6 — a plain Function graph is fine here): if `LifeBarWidget` is not valid, it explicitly calls `CreateWidget(Class=UI_LifeBar_C, OwningPlayer=GetPlayerController(0))`, casts the result to `UI_LifeBar_C`, calls `HealthBarWidget.SetWidget(...)` to explicitly assign that exact widget instance to the component (this is the "explicitly initialize the WidgetComponent" step — it no longer depends on the component's own implicit lazy-init timing at all), and stores the cast result in `LifeBarWidget`. If `LifeBarWidget` is already valid, the function is a no-op.
+- `EventBeginPlay` now just calls `EnsureHealthBarWidget()`, then an `IsValid` guard around the initial `SetLifePercentage(1.0)` call.
+- `ReceiveAnyDamage` now calls `EnsureHealthBarWidget()` again right before updating the bar (the "reacquire it safely" requirement — if `LifeBarWidget` somehow went invalid or was never set, this call fixes it in place before use, at negligible cost when it's already valid), and the `SetLifePercentage` call for the damage update is itself wrapped in an `IsValid` guard as a final safety net — if the widget is still somehow invalid after the reacquire attempt, the health-bar update is silently skipped for that one hit instead of throwing an Accessed-None error. All other effects (health value, debug print, VFX, camera shake, hit-reaction montage) do not depend on `LifeBarWidget` and are unaffected either way.
+- `AddToViewport` is still never used anywhere in this Blueprint (confirmed via `read_graph_dsl`); the health bar remains a small, actor-attached, screen-space `WidgetComponent` as established in §7b.
+- Recompiled `BP_VanguardProxy` with `warnings_as_errors=true` — clean, zero errors/warnings. Only `BP_VanguardProxy` was saved; nothing else was touched.
+
+## 7e. Manual PIE retest #4 (LifeBarWidget fix confirmed) and giant-oval health-bar bug
+
+**Confirmed working after the §7d fix:** attacks/damage still function, no more Accessed-None errors — the health widget now successfully calls `SetLifePercentage` every hit, and the human visually confirmed the red fill portion decreasing.
+
+**Remaining bug:** the actor-attached health bar rendered as an enormous red-and-black circular/oval shape covering most of the viewport, instead of a small horizontal bar above the Vanguard's head.
+
+**Diagnosis (found by directly inspecting the live component instance, not guessed):**
+- First checked `UI_LifeBar`'s widget hierarchy via `UMGToolSet.GetWidgetDescription`: `Overlay_0 → Border_0 (RoundedBox, HAlign/VAlign Fill, no SizeBox, no explicit width/height) → Bar (ProgressBar, RoundedBox fill, red)`. **No hardcoded size, anchor, or render-transform issue exists in the widget asset itself** — a `Fill`-aligned `Border` with no `SizeBox` correctly takes on whatever size its container (the `WidgetComponent`'s render target) gives it, which is exactly the desired behavior. `UI_LifeBar` was not modified.
+- Then checked the `HealthBarWidget` **component's class defaults** (`BP_VanguardProxy_C:HealthBarWidget_GEN_VARIABLE`) via `ObjectTools.get_properties`: `Space=Screen`, `DrawSize=(150,20)`, `bDrawAtDesiredSize=false`, `WidgetClass=UI_LifeBar_C` — all correct, exactly as set in §7b.
+- Then checked the **live level actor instance's** `HealthBarWidget` component directly (`.../PersistentLevel.BP_VanguardProxy_C_UAID_...HealthBarWidget`) — and found it was completely stale: `Space=World`, `DrawSize=(500,500)` (Unreal's raw engine default for a brand-new `WidgetComponent`), `WidgetClass=None`, `RelativeLocation=(0,0,0)`. This placed actor had been in the level since *before* the `HealthBarWidget` component was added to the Blueprint class (all the way back in the first checkpoint pass) — its per-instance component data was captured at the moment the component was first added, before any of the §7b/§7c property fixes were ever applied to the class, and that stale snapshot was never refreshed. The giant red/black oval was Unreal's fallback rendering for a `WidgetComponent` with `WidgetClass=None`, rendered at the raw 500×500 default in `World` space at the actor's feet — not `UI_LifeBar` at all.
+- Confirmed this diagnosis directly: `ObjectTools.set_properties` on the live instance only partially applied (`Space`/`RelativeScale3D` took, `DrawSize`/`WidgetClass`/`RelativeLocation` silently reverted back to the stale snapshot on the next read), and `ObjectTools.reset_properties` on the same properties reverted **everything** back to the identical stale snapshot — confirming a frozen per-instance component-data cache was overriding both direct edits and "reset to default," rather than either genuinely re-syncing to the current class archetype.
+
+**Fix:** removed the stale placed actor (`SceneTools.remove_from_scene`) and re-added a fresh `BP_VanguardProxy` instance at the same transform (`SceneTools.add_to_scene_from_asset`, `(350, 0, 288)`, yaw 180°) — a newly-spawned instance has no stale per-instance component cache and inherits the component straight from the (correct) class defaults. Verified immediately: the new instance's `HealthBarWidget` reads `Space=Screen`, `DrawSize=(150,20)`, `bDrawAtDesiredSize=false`, `WidgetClass=UI_LifeBar_C`, `RelativeLocation=(0,0,220)` — exactly the intended small, screen-space, actor-attached, non-full-screen configuration. No changes were made to `UI_LifeBar` or to any Blueprint graph logic this round (the percentage-update logic from §7d is untouched and preserved). `WidgetComponent`s are non-interactive/cannot capture game input by default (they only receive input if explicitly configured for it, which this one never was), and `AddToViewport` is still never used anywhere in the project.
+- `BP_VanguardProxy` recompiled with `warnings_as_errors=true` — clean (no logic changed, this was a pure level-content fix). No Blueprint asset needed saving this round.
+- **Level save note:** the new actor instance has the same OFPA save limitation documented in §7 — `SceneTools.save_actor(...)` on it failed with the same *"Asset does not exist"* error as before, since it's a brand-new external-actor package. **A human Ctrl+S in the editor is required again** to persist this replacement actor (the level in memory is correct right now for PIE testing; only the on-disk copy needs the manual save). The old actor's now-orphaned external-actor package file may remain on disk as an inert leftover until the next proper level save cleans it up — this is expected OFPA behavior, not something to hand-delete.
+
+## 7. Manual actions required — active again (new actor replaced in §7e)
+
+`Lvl_ThirdPerson` uses One-File-Per-Actor (OFPA) — its `__ExternalActors__` folder holds every actor as its own package. Saving a *new* actor to disk has never been possible through the available MCP tools (`AssetTools.save_assets` on the level package is a no-op for new actors; `SceneTools.save_actor` on the actor directly fails with *"Asset does not exist"* for a package that hasn't been created by a full editor "Save Level" pass yet) — this was true for the original placement (resolved once via human Ctrl+S after retest #3) and is true again now that §7e replaced that actor with a fresh instance (new GUID, new external package, never yet saved).
+
+**A human Ctrl+S in the editor is required once more** to persist the current (fixed) Vanguard proxy placement. The actor is correct and live in the currently-open editor session right now, so PIE testing works immediately without this step — it only matters for keeping the placement across an editor restart. The previous placement's now-orphaned external-actor package (`Content/__ExternalActors__/ThirdPerson/Lvl_ThirdPerson/3/I5/...`) may remain on disk as an inert leftover until the next proper level save cleans it up; it is not referenced by the level anymore and was not hand-deleted (per the rule against filesystem-editing `.uasset` files).
+
+## 8. Next recommended step
+
+With the punch-and-damage loop proven (including retest #3's exact-damage confirmation), two small open items from §7c are worth closing before or alongside the next milestone:
+- Make the `HealthBarWidget` reliably visible on screen (its underlying data is already proven correct).
+- Decide, with the human designer, when/how Vanguard death-at-zero-health should be handled — correctly out of scope for this checkpoint, but likely needed before or during the next milestone below.
+
+Beyond that, the next-smallest slice toward the Sunday goal is **M2 from `ATTACK_A_IMPLEMENTATION_PLAN.md`**: the six-state Vanguard state machine (`BT_CrimsonVanguard`/`BB_CrimsonVanguard`) driving Attack A's Telegraph → Active Attack → Recover → Return-to-Neutral loop — but that plan is explicitly gated on the `DT_VanguardAttacks` import and `VANGUARD_ATTACK_DATA_APPROVAL.md` sign-off, neither of which this run touched. Confirm those preconditions with the human designer before starting it.
+
+## 9. Assignment #5 evidence summary
+
+- **Found missing**: everything needed for a punch-and-damage loop — no attack input, no Vanguard proxy/health, no hit detection, no HUD wiring — while the movement/camera/feedback-asset foundation was already solid.
+- **Selected**: the smallest coherent slice that makes "the player can land a hit and see the rival's health drop" true, per the scoring table in §2.
+- **Generated**: 1 new Input Action, 1 modified Input Mapping Context, 1 new Character Blueprint (Vanguard proxy) with health/damage/feedback logic, 1 modified player Blueprint with attack input/animation/hit-detection logic, 1 level actor placement (now persisted to disk, see §7c).
+- **Compiled**: yes — both Blueprints compile with zero errors and zero warnings (`warnings_as_errors=true`).
+- **Human PIE test**: attempt #1 failed (full-screen UI overlay, camera jitter from too-close spawn, no observable attack result — see §7a). Attempt #2 partially passed — the whole input→attack→damage chain proven working, but camera clipping, health-bar readability, VFX placement, and exact-health proof still needed fixes (see §7b). **Attempt #3 passed** — camera stable at melee range, exactly 10 damage per swing directly confirmed via the debug health readout (90→80→70→...→0), chest-height VFX and hit-reaction visible, and the Vanguard's level placement is now persisted to disk (see §7c). Two follow-up items remain open (not failures of this checkpoint): the health-bar widget's on-screen visibility needs a further pass, and Vanguard death-at-zero-health behavior is correctly unimplemented/deferred to a later milestone.
+
+---
+
+## Manual PIE test instructions (retest #3, after fixes in §7b)
+
+1. In the already-open Unreal Editor, press **Play** (Alt+P) to start PIE in the `Lvl_ThirdPerson` map.
+2. Confirm the screen is normal on entering PIE — no full-screen overlay.
+3. Confirm normal Third-Person movement (WASD + mouse look) works smoothly.
+4. Walk toward the Vanguard proxy mannequin and get close enough to throw a punch (melee range). **Confirm the camera no longer clips/goes black or shows interior geometry as you close the distance** — it should stay smoothly behind the player.
+5. Confirm the Vanguard's health readout (small screen-space bar anchored above its head) is clearly visible and readable now that you're close to it.
+6. Left-click (or press the mapped `IA_Attack` key — Left Mouse Button) to throw a light attack. Confirm:
+   - **"Attack Triggered"** prints on click.
+   - The punch animation plays once per click, no spamming mid-swing.
+   - On a confirmed close-range hit: the debug print now reads **"Vanguard Health: 90.0"** (then 80.0, 70.0, ...) — read the exact number each swing to confirm it drops by exactly 10 and never double-applies.
+   - The health bar visibly drops to match.
+   - `NS_Damage` sparks are now visibly at chest height on the Vanguard, not obscured near its feet.
+   - The camera shake fires only at the instant of this confirmed hit (not before, not continuously, not on a miss).
+   - The Vanguard visibly plays its hit-reaction animation on every confirmed hit.
+   - Clicking out of range should show "Attack Triggered" but no health-drop message — that's correct.
+7. Stop PIE (Esc or the Stop button).
+8. **Press Ctrl+S to save the level** if you want the Vanguard proxy placement/component changes to persist after closing the editor (see §7 — this is a required manual step; it is not automated).
+
+The two temporary debug `PrintString` nodes ("Attack Triggered", "Vanguard Health: X") are intentionally left in for this retest so the exact per-swing damage value is directly readable. Remove them once the loop is fully confirmed, on request.
