@@ -635,3 +635,48 @@ At S=1300 steady state: distance 1490 → half-width 776 cm vs. the 700 needed (
 ### 14.6 Git manifest
 
 Modified: `Content/AscendantImpact/Duel/BP_VanguardDuelMover.uasset` (2 new vars + 2 rewritten functions), `Content/AscendantImpact/Camera/BP_DuelCameraRig.uasset` (2 tuning defaults), `docs/agent/PROTOTYPE_BLACKBOARD.md`, `CLAUDE.md`. No level, input, character, controller, or combat assets touched. `Config/DefaultEditorPerProjectUserSettings.ini` untouched/unstaged.
+
+---
+
+## 15. Milestone 7 — Close-contact duel spacing (2026-08-02, branch `feature/duel-close-contact`)
+
+**Problem fixed:** close range felt like an invisible wall — retreat began at 190 cm and `MinimumAxisSeparation` 110 left a ~40 cm air gap between capsule surfaces. Goal: fighting-game near-contact without capsule overlap, pass-through, or side exchange.
+
+### 15.1 Measured collision dimensions (inspected, not assumed)
+
+- `BP_ThirdPersonCharacter` capsule: radius **35**, half-height 90.
+- `BP_VanguardProxy` capsule: radius **34**, half-height 88.
+- Capsule contact therefore occurs at **69 cm** center-to-center.
+
+### 15.2 Tuning changes (all on `BP_VanguardDuelMover` class defaults; one graph edit)
+
+| Value | Old | New | Rationale |
+|---|---|---|---|
+| `MinimumAxisSeparation` | 110 | **78** | 69 cm contact + 9 cm safety margin — meshes read as nearly touching (meshes are inset from capsules), capsules can never overlap |
+| `PreferredDistance` | 240 | **180** | closer readable fighting distance |
+| `RangeDeadZone` | 50 | **45** | retreat now begins under **135 cm** (was 190), advance beyond 225; both exit at 180 |
+| `RetreatSpeedScale` | — (new, Speeds, editable) | **0.5** | retreat runs at half input scale (~150 cm/s vs player 600) so the Vanguard **yields ground under pressure instead of escaping it** |
+
+Graph edit: `ApplyMovementInputs` retreat branch multiplies its input scale by `RetreatSpeedScale` (the CMC analog-input modifier scales max speed, so this genuinely halves retreat speed). Everything else — advance behavior, depth wander + 0.4 combat-jog scale, decision intervals, arena bounds ±650, boundary retreat suppression, `ApplyConstraints` as sole constraint authority, camera values — unchanged.
+
+### 15.3 PIE validation (Lvl_DuelGraybox, runtime evidence)
+
+- **Settle from spawn:** Vanguard approaches and settles at 171 cm (≈ preferred 180) — no more standing at a large gap.
+- **Yield under crowding:** player placed at 100 cm → Vanguard backed off at a measured **83 cm/s** average (vs 300 advance speed), settling at 182.9 — retreat is slow and stops at preferred; it does not flee to the old 240+ gap.
+- **Sustained near-contact under pursuit:** a 10-step chase loop (player re-pressed to 85 cm behind the Vanguard every 0.35 s) locked the gap at a constant **85 cm** for 8 consecutive samples — including after the Vanguard was pushed all the way to the arena bound (x = 650), i.e. the corner-pressure case holds. Minimum gap ever seen 85; the constraint floor is 78; capsule overlap (< 69) **never occurred**; player-left/Vanguard-right ordering held throughout.
+- **Violation recovery:** teleporting the player to a 40 cm gap was corrected within a frame and normal behavior resumed (ordering intact).
+- **Camera at close spacing:** SmoothedDistance 602 at the settled range; at the 78–85 cm contact floor the distance formula gives ~515–520, above the 500 minimum — framing stays readable; roll −5e-08.
+- **Screenshot:** fighters visually near body-contact, no interpenetration, no visible empty gap, both framed, correct sides.
+- **Log:** zero Blueprint runtime / Accessed None errors (only the known 2026-08-01 authoring entries).
+- Compile: `BP_VanguardDuelMover` clean with `warnings_as_errors=true`; asset saved.
+
+### 15.4 PENDING HUMAN PIE
+
+- Whether 78 cm reads as proper fighting-game contact with these meshes in motion (margin can be tightened toward ~72 or widened via the exposed value).
+- Punch → damage → health bar → VFX → hit-react at the new contact distance by hand (structurally unaffected: the attack's overlap sphere is 110 cm radius at 120 cm forward, easily covering an 85 cm gap; no combat logic touched since §12).
+- Whether the slow-yield retreat (0.5 scale) feels like "holding ground under pressure" vs. sluggishness.
+- Static-crowding note: a player who walks to contact and then *stands still* will see the Vanguard slowly back off toward 180 — that is the retreat model working; confirm it reads as intentional spacing behavior.
+
+### 15.5 Git manifest
+
+Modified: `Content/AscendantImpact/Duel/BP_VanguardDuelMover.uasset` (one new var, one function edit, four default changes), `docs/agent/PROTOTYPE_BLACKBOARD.md`. No other assets touched. `Config/DefaultEditorPerProjectUserSettings.ini` untouched/unstaged.
