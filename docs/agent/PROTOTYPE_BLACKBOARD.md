@@ -910,3 +910,24 @@ Created: `Content/AscendantImpact/Duel/BP_DuelKnockoutCoordinator.uasset`. Modif
 **PENDING HUMAN PIE:** overall gait feel and foot-slide quality at 300/150/120 cm/s; hit-reaction visual override and return to locomotion (structurally unchanged; damage path proven); whether walk-speed advance should look more like a combat jog (that would need speed-axis or gameplay-speed tuning — deliberately not done); idle "combat stance" flavor (MM_Idle is a relaxed idle — asset-authoring question, out of scope).
 
 **Git manifest:** NEW `Content/AscendantImpact/Animation/Vanguard/ABP_VanguardLocomotion.uasset`; MODIFIED `Content/Variant_Combat/Blueprints/BP_VanguardProxy.uasset` (mesh animClass), one `Lvl_DuelGraybox` external-actor package (instance animClass), `docs/agent/PROTOTYPE_BLACKBOARD.md`, `CLAUDE.md`. Player ABP untouched. Personal editor config unstaged.
+
+---
+
+## 21. Milestone 13 — Vanguard stature, collision fit, spacing (2026-08-02, branch `feature/vanguard-stature-pass`, from 2a5a631)
+
+**Change:** the Vanguard now reads as a larger opponent via a mesh-only uniform scale. Nothing about the duel mechanics changed.
+
+- **Mesh scale:** `relativeScale3D` (1,1,1) → **(1.1, 1.1, 1.1)** on the SkeletalMeshComponent only — set on the class default AND the placed `Lvl_DuelGraybox` instance (stale-instance gotcha), persisted with the save-all sweep. Actor root, capsule, CharacterMovement, and world transform untouched.
+- **Mesh Z adjustment: none needed (measured, not guessed).** The mesh origin sits at the capsule bottom (`relativeLocation` (0,0,−89), rotation yaw 270 — both unchanged), so component scaling grows the body upward from the feet. Live bounds: feet at −1.1 cm idle / −0.7 cm while walking — identical ground contact to before.
+- **Capsule decision: unchanged** (34 r / 88 hh; player 35 r / 90 hh). The 1.1 torso fits the existing capsule acceptably at graybox close contact; therefore **`MinimumAxisSeparation` stays 78** (35 + 34 + 9 margin — recalculation not triggered because no radius changed).
+- **Attack values: unchanged** (AttackRange 240, offset 100, radius 90, depth tolerance 55, damage 10) — a strike landed normally at scale in validation; fist-vs-hitbox coherence acceptable for graybox.
+- **Telegraph:** `TelegraphHeightOffset` 140 → **160**. Math: head top ≈ 180 × 1.1 + capsule-bottom offset ≈ actor-center +109; the centered world-size-75 "!" at +140 spanned down to ≈ +102 — grazing the taller head. At +160 the glyph bottom clears the head by ~13 cm. Timing/size unchanged.
+- **Camera: unchanged.** Vertical framing math (hFOV 55 → vFOV ≈ 33°) leaves ~1.7 m of headroom above the look target at typical distances; +18 cm of head cannot clip.
+- **World-space health widget (HUD-hidden):** stays at relative Z 220 — still ~20 cm above the new head; untouched.
+- **Locomotion (`ABP_VanguardLocomotion`): untouched and verified at scale** — stable idle, advance ramp with `move` true, feet planted during gait, zero glide-signature samples. Mesh-only scale does not affect the velocity-driven blendspace inputs (movement speeds unchanged by design), so foot skate increases ~10% with the longer legs — accepted graybox cost, PENDING HUMAN.
+
+**Validation (PIE, Lvl_DuelGraybox):** compile clean (`warnings_as_errors=true`) on `BP_VanguardProxy` + `BP_VanguardBasicAttackDriver`. Vanguard mesh 1.1 vs player 1.0 confirmed live; close contact ordering/side rule intact; a real strike landed (attack coherence); knockout → ragdoll simulating at scale with **bounded, non-diverging settle** (limb floor-penetration jitter −25..−73 cm recovering to ≈−63 — template physics-asset quality, present at any scale, no explosion/launch/sink-through); PIE restart restores a standing, grounded (feet −1.0 cm), full-health, non-simulating 1.1 Vanguard with all flags reset. Log: zero new runtime/physics/skeleton warnings (only the §20 pre-guard entries remain historically).
+
+**Known limitations / PENDING HUMAN PIE:** subjective boss presence at 1.1 (exposed as the mesh `relativeScale3D` — trivially tunable); ~10% added foot skate; ragdoll limb-through-floor aesthetics; hit-reaction look at scale; whether the unchanged capsule reads acceptably at the new shoulder width in motion.
+
+**Git manifest:** `Content/Variant_Combat/Blueprints/BP_VanguardProxy.uasset` (mesh template scale), `Content/AscendantImpact/Duel/BP_VanguardBasicAttackDriver.uasset` (telegraph offset), one `Lvl_DuelGraybox` external-actor package (instance mesh scale), `docs/agent/PROTOTYPE_BLACKBOARD.md`. No CLAUDE.md change (no new durable gotcha). Assignment 5 untouched. Personal editor config unstaged.
