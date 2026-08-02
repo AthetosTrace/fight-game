@@ -1,6 +1,6 @@
 # TODO — Ascendant Impact
 
-**51 open items** — **1 closed · 17 PROPOSED · 33 untouched.** Last worked 2026-08-02.
+**50 open items** — **1 closed · 17 PROPOSED · 33 untouched.** Last worked 2026-08-02.
 > Six new items so far (46–51) were found by the dispatches themselves: real gaps in
 > `design-brief.md` §13.2 that have no row and no Q number. The list grew because the
 > work found holes, which is the list working.
@@ -68,7 +68,7 @@ rows 29–57 are Q1–Q29 with no remainder. They are therefore listed once, und
 number, and not double-counted. §13.1 is fully specified by the GDD and contributes no
 open items, with one exception now recorded below (row 28).
 
-**The reverse is not true, and that is the interesting part.** Items 46, 47 and 48 are
+**The reverse is not true, and that is the interesting part.** Items 46–51 are
 values the build needs that §13.2 has **no row for at all**. The table is complete with
 respect to itself and incomplete with respect to the game. Expect more of these as the
 groups run.
