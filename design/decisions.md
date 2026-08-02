@@ -55,6 +55,72 @@ and triggers rule 4.
 
 ## Log
 
+### 2026-08-02 — Group 03 · defensive timing (Q6, Q7, Q8, Q26, Q27, Q28)
+
+- **Status:** **PROPOSED** — all six. The designer decides. **Q7 is BLOCKING.**
+- **Resolves:** TODO items 14 (Q6), 15 (Q7), 16 (Q8), 33 (Q26), 30 (Q27), 13 (Q28) · all KIND B
+- **Dispatch:** group 03 → `design/group-03-defensive-timing.md`
+
+| Q | Proposed | Lives in | Unblocks |
+|---|---|---|---|
+| Q6 | i-frames **0.28 s**, spanning `[0.03, 0.31]` of `AM_Player_Dodge` | `ANS_IFrame` | M1-19 |
+| Q7 | perfect dodge **0.12 s**, `[0.03, 0.15]` — front 43% of the i-frame window | `ANS_PerfectDodge` | M1-19 |
+| Q8 | whiff lockout **0.55 s** | `AM_Player_CounterWhiff` | M1-20 |
+| Q26 | Impact cooldown **7.0 s**, clocked on window *close*, **first window exempt** | `BP_ImpactWindowDirector` | M3-07 |
+| Q27 | recover multiplier **1.0 — no bonus** | `ANS_Recover` | M2-13 |
+| Q28 | combo buffer **0.25 s = 75% of a section**, stated as a ratio | `AM_Player_LightCombo` | M1-18 |
+
+- **Q7 rationale:** 4× SF6's 2-frame Perfect Parry, tighter than Sekiro's 12-frame deflect
+  and SF3's 10-frame parry. **Front-loaded so the player must press late, into the strike.**
+  Playtest protocol given: **start at 0.15 s and tighten**, never the reverse.
+- **Reaction check passes at the hardest legal attack:** against a 0.40 s Phase 2
+  telegraph the perfect-press window `[0.25, 0.37]` opens exactly at the ~250 ms average
+  human reaction time.
+- **Q26 first-window exemption is not optional** — applying the cooldown to the first
+  Impact Window would break the GDD's onboarding rule.
+- **Supersedes GDD:** none. All six fill blanks; every cited range is unchanged.
+
+**Q2 = 1200 SURVIVES.** At Q27 = 1.0 the scalar is unity and group 02's derivation stands
+intact. Better: effective damage becomes `20 × [f×Q27 + (1−f)]`, so **1.0 removes the
+unmeasurable `f` term from the model entirely.** If the designer overrides Q27:
+**1.25 → Q2 ≈ 1410** (outside group 02's 1100–1400 band); **1.5 → Q2 ≈ 1620**, and at
+Q2 = 1200 a strong player reaches the gate at **1:55**, below the GDD's 3-minute floor.
+
+**Five tensions carried forward:**
+1. **Q26 cannot make the meter a real second gate — no value in 3–8 s can.** Group 02's
+   framing is corrected rather than answered: the meter has four faucets and Q26 gates
+   one. With Impact **disabled entirely**, 20 finishers still fill the meter in ~84 s
+   against a health gate at ~173 s. Every route to halving that is closed — gains are
+   GDD-fixed, C1 forbids decay, the 0–100 ceiling is GDD-fixed. **The meter is an
+   anti-passivity floor, not a race.** 7 s still cuts the +20 row's dominance from a
+   ~2.25× speedup to ~1.67×.
+2. **Q8 anti-spam fails against slow Phase 1 telegraphs (0.75–0.95 s).** Closing it needs
+   ~0.95 s of lockout — outside §14's band and unplayable. Accepted as a beginner crutch
+   that dies at Phase 2. **Warning to Q25: do not author all four attacks near 0.95 s.**
+3. **Q27 = 1.0 does not fix group 02's scrappy ~5:24 overshoot.** 1.25 trims ~25 s while
+   also shortening the competent run — net zero. Group 02's own Q2 → 1050–1100 remains
+   the only fix.
+4. **Q7's repeatability is unverified.** The check proves the pocket's *onset* is
+   reachable; it does not prove a human can hit 0.12 s repeatably. Motor-timing precision
+   was out of research budget.
+5. **Q8's magnitude has no prior-art support.** No whiffed-parry recovery frame counts
+   were found in any shipped game. 0.55 s is derived purely from the GDD's own telegraph
+   and recover ranges. **Named as the weakest number in the file.**
+
+**Three defects found in `design-brief.md` §13.2 — now TODO items 46, 47, 48.** The table
+has no row and no Q number for the counter's own success window, for whether a dodge
+cancels the light combo, or for the total length of `AM_Player_Dodge`.
+
+**Developer notes:** `ANS_ActiveHit` and `ANS_ComboLink` overlap on the same section and
+**must not be merged**; `bComboQueued` clears on next-section begin and on any montage
+interruption; a successful counter must **not** play `AM_Player_CounterWhiff`;
+`BP_ImpactWindowDirector` needs a `bFirstWindowConsumed` flag that skips the cooldown
+check; `BP_FinalClashDirector` must never consult that cooldown. **Three separate
+warnings that Q14's `MontagePlayRate` would silently scale Q6 and Q7 into per-fighter
+difficulty — Q28 is the only one of the three that scales correctly.**
+
+*Research note: 15/15 searches, cap reached.*
+
 ### 2026-08-02 — Group 02 · combat economy (Q1, Q2, Q3, Q4, Q5)
 
 - **Status:** **PROPOSED** — all five. The designer decides.

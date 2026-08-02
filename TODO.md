@@ -1,6 +1,9 @@
 # TODO — Ascendant Impact
 
-**44 open items** — **1 closed · 0 PROPOSED · 44 untouched.** Last worked 2026-08-02.
+**47 open items** — **1 closed · 11 PROPOSED · 36 untouched.** Last worked 2026-08-02.
+> Three new items (46, 47, 48) were found by the group 03 dispatch: real gaps in
+> `design-brief.md` §13.2 that have no row and no Q number. The list grew because the
+> work found holes, which is the list working.
 
 > **SETTLED AND BINDING — Q22 (approved 2026-08-02).** The 1 HP floor is **permanent**;
 > `MinHealthFloor = 1` from `BeginPlay`, lowered to `0` only by `ClashSuccess()`.
@@ -18,6 +21,7 @@ build order rather than being rewritten every group.
 | Items | Group | Answer file |
 |---|---|---|
 | 2 (Q1), 3 (Q2), 21 (Q3), 11 (Q4), 12 (Q5) | 02 — combat economy | `design/group-02-combat-economy.md` |
+| 14 (Q6), **15 (Q7 · BLOCKING)**, 16 (Q8), 33 (Q26), 30 (Q27), 13 (Q28) | 03 — defensive timing | `design/group-03-defensive-timing.md` |
 
 ## How this file works
 
@@ -62,6 +66,11 @@ Every row in `design-brief.md` §13.2 that has no number maps to a Q number in �
 rows 29–57 are Q1–Q29 with no remainder. They are therefore listed once, under their Q
 number, and not double-counted. §13.1 is fully specified by the GDD and contributes no
 open items, with one exception now recorded below (row 28).
+
+**The reverse is not true, and that is the interesting part.** Items 46, 47 and 48 are
+values the build needs that §13.2 has **no row for at all**. The table is complete with
+respect to itself and incomplete with respect to the game. Expect more of these as the
+groups run.
 
 ---
 
@@ -148,7 +157,27 @@ Range to consider: **0.08–0.15 s**. Must be strictly narrower than Q6. §14:
 table."** It should be the first thing tuned in playtest and the first thing revisited
 after any Phase 2 pass.
 
+### M1-19 — additional gaps found 2026-08-02
+
+Found by the group 03 dispatch: `design-brief.md` §13.2 has **no row and no Q number**
+for any of these three. They are real holes in the provisional-values table, not
+oversights in this file. Ranges were offered for conversation; **no values proposed.**
+
+**47. Does a dodge cancel `AM_Player_LightCombo`?** · **KIND B**
+Decides whether Q28's 0.25 s buffer is a kindness or a Phase 2 trap — a buffered combo
+input that cannot be dodge-cancelled locks the player into a string during the ~1.28 s
+Phase 2 window.
+
+**48. Total length of `AM_Player_Dodge`.** · **KIND B**
+`ANS_IFrame` (Q6, 0.28 s) and `ANS_PerfectDodge` (Q7, 0.12 s) are both authored *inside*
+this montage. Its length is unspecified, so the windows have no container.
+
 ### M1-20 — Wire the counter input and player counter montages
+
+**46. The counter's own success window has no row and no Q number.** · **KIND B**
+Q7 covers the perfect *dodge*. **Nothing covers the perfect *counter*.** `ANS_CounterWindow`
+exists in the rival's montage spec, but the player-side success window it is judged
+against is unspecified. Found by the group 03 dispatch.
 
 **16. Q8 — Whiffed-counter recovery.** · **KIND B**
 Range to consider: **0.40–0.70 s**. Reason given: must be long enough that spamming
