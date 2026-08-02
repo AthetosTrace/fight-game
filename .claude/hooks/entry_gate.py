@@ -31,10 +31,14 @@ DEPS = {
         {"type": "file", "path": "gdd/ascendant-impact-gdd-v0.4.md"},
     ],
     "developer": [{"type": "leaveoff", "agent": "designer"}],
-    "inspector": [
-        {"type": "leaveoff", "agent": "designer"},
-        {"type": "leaveoff", "agent": "developer"},
-    ],
+    # Designer only, on purpose. Design-only sessions never run the developer, so
+    # depending on the developer here would deny the inspector a spawn it must be
+    # able to make. The gate enforces ORDER (nothing inspects before there is a
+    # design to inspect); COVERAGE is enforced by the agent itself — see
+    # `.claude/agents/inspector.md`, which requires the inspector to also verify
+    # `build-sequence.md` whenever that file exists and has changed since the last
+    # inspection. Do not add the developer back here.
+    "inspector": [{"type": "leaveoff", "agent": "designer"}],
 }
 
 

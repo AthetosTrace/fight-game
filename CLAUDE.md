@@ -141,12 +141,31 @@ Revised, **v0.4, 2026-07-24**, 17 pages — is the **source of truth** for this 
 **superseded** — do not cite it. Its major reversal: Nova was an authored rival in
 v0.1 and is a **selectable player avatar** in v0.4.
 
-**The PDF cannot be opened by the Read tool on this machine** — `pdftoppm`/poppler is
-absent. `pypdf` is installed and works, so the GDD is extracted to
-**`gdd/ascendant-impact-gdd-v0.4.md`**, and that is the copy the read-only agents
-consult. Pages 10–14 are supplied image reference sheets (character scale, arena,
-Echo, Nova, Crimson Vanguard) and carry **no extractable text** — no agent may guess
-at their contents. Re-extract with `pypdf` if the PDF is ever revised.
+**The PDF's pages cannot be rendered by the Read tool on this machine** —
+`pdftoppm`/poppler is absent. `pypdf` is installed and works, and as of **2026-08-02**
+the GDD is fully recovered into **`gdd/`**. Start at **`gdd/INDEX.md`**.
+
+| Path | What it is |
+|---|---|
+| **`gdd/sections/`** | The authored text, **one file per numbered section 01–10** plus front matter, so a citation can be narrower than a page. Text verbatim; only the repeating page header was removed. **Cite this for authored text.** |
+| **`gdd/reference/`** | **Recovers pages 10–14** — the five supplied image reference sheets. **Cite this for anything visual.** |
+| `gdd/ascendant-impact-gdd-v0.4.md` | The original page-1-to-17 dump. Kept because `entry_gate.py` requires it and existing artifacts cite it. **Superseded for new work.** |
+
+**Pages 10–14 are no longer a blind spot.** They are image sheets — character scale,
+arena, Echo, Nova, Crimson Vanguard — with no extractable text, so each page's embedded
+JPEG was pulled from the PDF's `/XObject` resources with `pypdf` and read directly.
+Every file in `gdd/reference/` states at the top that it **describes an image rather
+than quoting authored text**, quotes labels printed inside the art exactly, and marks
+everything unclear as **AMBIGUOUS**. **Authored text outranks any image description, and
+no agent may guess at anything marked ambiguous.**
+
+`gdd/reference/OPEN-QUESTION-IMPACT.md` records what the sheets say about
+`design-brief.md` §14 — including the one value they recover (**Crimson Vanguard is
+208 cm**, a blank in §13.1 row 28), what they only inform, and two possible
+contradictions raised for the designer. It resolves nothing on its own authority.
+
+Re-extract everything with `pypdf` if the PDF is ever revised — sections, page images,
+and the sheet descriptions.
 
 `entry_gate.py` now requires **all three** — `project-brief.md`, the GDD PDF, and the
 extracted markdown — before the **designer** may spawn, so an unanchored crew run is
@@ -221,10 +240,12 @@ flowchart TD
     C[Commander · CLAUDE.md] -->|project-brief.md| D[Designer]
     D -->|design-brief.md| G1{designer complete?}
     G1 -->|no| X1[BLOCKED]
-    G1 -->|yes| V[Developer]
+    G1 -->|yes| BR{design-only pass<br/>or build pass?}
+    BR -->|design-only| I[Inspector]
+    BR -->|build| V[Developer]
     V -->|build-sequence.md| G2{developer complete?}
     G2 -->|no| X2[BLOCKED]
-    G2 -->|yes| I[Inspector]
+    G2 -->|yes| I
     I -->|inspection.md| G3{inspector complete?}
     G3 -->|no| X3[BLOCKED]
     G3 -->|yes| F[Framework Evaluator]
@@ -289,7 +310,7 @@ trail cites them; **`CLAUDE.md` wins on every conflict.**
 |-------|-------------------|----------|----------|
 | **designer** | Read, Write, Edit, WebSearch | `project-brief.md` | `design-brief.md` |
 | **developer** | Read, Write, Edit | `design-brief.md` | `build-sequence.md` |
-| **inspector** | Read, Write | `design-brief.md` + `build-sequence.md` | `inspection.md` |
+| **inspector** | Read, Write | `design-brief.md`, `project-brief.md`, `gdd/`, `combat-integration-plan.md`, everything produced this session, and `build-sequence.md` when present | `inspection.md` |
 
 **Specialist extension — contract-gated, also in `.claude/agents/`:**
 
@@ -311,9 +332,16 @@ brief rather than research a version of its own. The three writing agents have
 capped research. Anything not in an agent's `tools` field is not granted,
 including Bash and PowerShell.
 
-The **inspector** enforces four hard checks: scope lock, no runtime AI-model calls,
-M1→M5 milestone order, and numbers-unchanged. The **cinematic-integration-inspector**
-enforces ten, adding cinematic handoff safety and completion-risk realism.
+The **inspector** enforces the four hard checks — scope lock, no runtime AI-model
+calls, M1→M5 milestone order, numbers-unchanged — **plus a session audit**: every
+answer, value, name, and claim recorded during the session is tested against the GDD,
+against the scope lock, and against the ranges the GDD publishes. §13.1 notes the GDD
+publishes ranges **per state, not per attack**, so any chosen value must fall inside
+its published range, and collapsing a range to a single number on an agent's own
+authority is itself a violation. A value left OPEN is a **pass**, never a gap to fill.
+The inspector has **no `Edit` tool on purpose — it reports, it never repairs.** The
+**cinematic-integration-inspector** enforces ten checks, adding cinematic handoff
+safety and completion-risk realism.
 
 ## The gates
 Each agent writes `leave-offs/<name>.md` when it finishes, with YAML frontmatter
@@ -324,8 +352,15 @@ carrying `status: complete` and `artifact: <path>`. The status line is written
 - **designer** cannot start until `project-brief.md`, the GDD PDF, and
   `gdd/ascendant-impact-gdd-v0.4.md` all exist.
 - **developer** cannot start until `leave-offs/designer.md` says `status: complete`.
-- **inspector** cannot start until both `leave-offs/designer.md` and
-  `leave-offs/developer.md` are complete.
+- **inspector** cannot start until `leave-offs/designer.md` is complete — **the
+  designer only.** A design-only pass never runs the developer, so a developer
+  dependency here would deny the inspector a spawn it must be able to make. The gate
+  enforces **order**; the agent enforces **coverage**:
+  `.claude/agents/inspector.md` requires the inspector to also verify
+  `build-sequence.md` whenever that file exists and has changed since the last
+  inspection, decided by comparing the inspected-inputs manifest recorded in the
+  previous `inspection.md`. Ambiguity resolves toward re-verifying in full.
+  **Do not add the developer back to the inspector's `DEPS`.**
 
 Enforced by Python hooks in `.claude/hooks/`, wired in `.claude/settings.json`:
 - **`check_leaveoff.py`** — the shared check. File exists → carries

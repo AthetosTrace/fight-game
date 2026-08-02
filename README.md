@@ -44,8 +44,17 @@ extension that runs strictly after it.
   produces `build-sequence.md`.
 - **Inspector** — verifies every build step traces back to a decision in the design
   brief, and enforces four hard checks (scope lock, no runtime AI-model calls,
-  milestone order with M5 last, and every number left unchanged) → produces
-  `inspection.md`.
+  milestone order with M5 last, and every number left unchanged). It also audits the
+  session itself: every answer, value, and claim recorded is tested against the GDD,
+  against the scope lock, and against the ranges the GDD publishes per combat state —
+  a value outside its range, or a range collapsed to a single number on an agent's own
+  authority, is a violation. It has **no editing tool: it reports, it never repairs**
+  → produces `inspection.md`.
+
+  Its gate depends on the **designer only**, so a design-only pass can still be
+  inspected without the developer having run. Coverage of `build-sequence.md` is
+  enforced by the agent instead of the gate: whenever that file exists and has changed
+  since the last inspection, the inspector must verify it in full.
 
 ### Tony's three-agent specialist extension
 
@@ -123,10 +132,12 @@ flowchart TD
     C[Commander · CLAUDE.md] -->|project-brief.md| D[Designer]
     D -->|design-brief.md| G1{designer complete?}
     G1 -->|no| X1[BLOCKED]
-    G1 -->|yes| V[Developer]
+    G1 -->|yes| BR{design-only pass<br/>or build pass?}
+    BR -->|design-only| I[Inspector]
+    BR -->|build| V[Developer]
     V -->|build-sequence.md| G2{developer complete?}
     G2 -->|no| X2[BLOCKED]
-    G2 -->|yes| I[Inspector]
+    G2 -->|yes| I
     I -->|inspection.md| G3{inspector complete?}
     G3 -->|no| X3[BLOCKED]
     G3 -->|yes| F[Framework Evaluator]
