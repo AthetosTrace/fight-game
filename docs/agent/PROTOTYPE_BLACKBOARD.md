@@ -680,3 +680,71 @@ Graph edit: `ApplyMovementInputs` retreat branch multiplies its input scale by `
 ### 15.5 Git manifest
 
 Modified: `Content/AscendantImpact/Duel/BP_VanguardDuelMover.uasset` (one new var, one function edit, four default changes), `docs/agent/PROTOTYPE_BLACKBOARD.md`. No other assets touched. `Config/DefaultEditorPerProjectUserSettings.ini` untouched/unstaged.
+
+---
+
+## 16. Milestone 8 — First telegraphed Vanguard strike (2026-08-02, branch `feature/vanguard-basic-strike`)
+
+**Scope delivered:** the first two-sided combat exchange — a single, readable, fair, telegraphed Vanguard punch with one impact check, hit/whiff based on the player's actual position at impact, clean recovery, cooldowns that prevent spam, windup interruption on being hit, and a minimal reversible player damage receiver. This is a **disposable graybox prototype strike**, not the gated Attack A design (which remains untouched and gated).
+
+### 16.1 Architecture
+
+**`/Game/AscendantImpact/Duel/BP_VanguardBasicAttackDriver`** — a separate runtime-spawned logic actor (fourth in the controller's spawn chain: camera rig → mover → attack driver), gated by new instance-editable **`bEnableVanguardBasicAttack`** (default true, nested inside the duel-camera gate). Chosen so `BP_VanguardDuelMover` stays a pure movement controller; the driver coordinates through one tiny interface instead of merging state machines. The driver caches `PlayerFighter`/`VanguardFighter`/`VanguardMover` refs (resolve-only-while-invalid, same pattern as the rig/mover — no repeated global searches). The driver actor doubles as the **telegraph**: it carries a `TelegraphText` TextRenderComponent (big red "!", world size 150, centered), starts hidden, and during wind-up positions itself above the Vanguard's head (+140) facing the camera side (yaw 90).
+
+**Movement-lock interface added to `BP_VanguardDuelMover`:** `bExternalMovementLocked` + `SetExternalMovementLocked(bLocked)`. While locked, `UpdateDuelMovement` skips depth decisions, intent updates, and movement inputs but **still runs `ApplyConstraints`** (bounds/ordering/min-separation/lane stay enforced). The driver locks during wind-up/strike/recovery, unlocks on finish/cancel — one movement system, no competition.
+
+**Player damage receiver in `BP_ThirdPersonCharacter`** (smallest reversible prototype): `MaxHealth` 100 / `CurrentHealth` vars; `InitHealth()` called from a new `BeginPlay` event; `ReceiveAnyDamage` → `HandleDamage(DamageAmount)`: clamps health at 0 (`Max(0, h−d)`), prints "Player Health: N" (orange, 3 s), plays the previously unused **`BP_CameraShake_Hit_Player`**, and plays `MM_HitReact_Front_Med_01` as a dynamic montage on `DefaultSlot` (the project-standard pattern). Events were added by node surgery (add_event + 3 pin connections), not graph rewrite — the attack chain is untouched. No death/respawn/HUD/knockdown/i-frames. The receiver cannot trigger the player's own attack logic (it only touches health/print/shake/montage), and the player's punch cannot self-damage (its overlap is class-filtered to the Vanguard).
+
+### 16.2 Attack state flow (int `AttackState`, no enum asset)
+
+`0 idle` → (cooldown expires → `TryStartAttack`: axis-separation ≤ AttackRange AND vanguard not montage-playing AND ordering intact AND decision roll passes; else retry in `RetryDelay`) → `BeginWindup` (`1`: lock mover, show telegraph, telegraph follows Vanguard each tick; **if the Vanguard's AnimInstance starts playing any montage during wind-up — i.e. its existing hit-react from a player punch — `CancelAttack`** hides the telegraph, unlocks, re-rolls cooldown, applies no damage) → after `WindupDuration` → `BeginStrike` (`2`: hide telegraph, play `MM_Attack_02` via `PlaySlotAnimationAsDynamicMontage` on `DefaultSlot`, blend 0.1/0.2) → at `StrikeImpactDelay` exactly one `PerformImpactCheck` (guarded by `bImpactDone`) → after `StrikeDuration` → `BeginRecovery` (`3`) → after `RecoveryDuration` → `FinishAttack` (`0`, cooldown = random(min,max), unlock mover).
+
+**Impact geometry:** single `SphereOverlapActors` at Vanguard location + forward × `ImpactForwardOffset` (forward = its live facing, which the camera rig keeps aimed at the player), radius `ImpactRadius`, Pawn object type, **class-filtered to `BP_ThirdPersonCharacter_C`**, one `ApplyDamage(10)` per overlap result (the filter makes that at most one). Max reach = offset 100 + radius 90 + player capsule 35 = **225 cm** — deliberately matched to the mover's hold band (below). No hit occurs merely because the attack started in range; position at the impact moment decides.
+
+### 16.3 Provisional values (all instance-editable on the driver)
+
+Attack Conditions: `AttackRange` **240** · `InitialAttackDelay` 1.5 · `AttackCooldownMin` 2.5 / `Max` 4.0 · `AttackDecisionChance` 0.65 · `RetryDelay` 0.6. Timing: `WindupDuration` 0.7 · `StrikeImpactDelay` 0.3 · `StrikeDuration` 0.6 · `RecoveryDuration` 1.0. Impact: `ImpactForwardOffset` 100 · `ImpactRadius` 90 · `AttackDamage` 10. Telegraph: `TelegraphHeightOffset` 140. Animation: **`MM_Attack_02`** (1.0 s, same skeleton/DefaultSlot; visually distinct from the player's `MM_Attack_01`; no Montage asset authored; `ABP_Unarmed` untouched).
+
+### 16.4 Failures and fixes this run (design-relevant)
+
+1. **Attack range vs. mover hold band mismatch** (first PIE): range check originally used 2D distance ≤ 190, but the mover legally holds axis separation up to 225 and wanders ±150 in depth — after the first strike the Vanguard settled at 209 axis / larger 2D and **never attacked again**. Fix: the range gate now uses **combat-axis separation ≤ 240** (covers the whole hold band); hit/whiff still depends on true geometry at the impact moment, and impact reach was retuned to 225 so in-band strikes can connect while depth-dodges still whiff.
+2. **`SetActorHiddenInGame` positional arg silently bound to the `self` pin** — telegraph never toggled (visible "!" parked in the world). Same family as the known own-function positional gotcha: **nodes whose first data pin is `self` need keyword args** (`:bNewHidden true`). All four call sites rewritten.
+3. `Utilities|Array|MakeArray` cannot be typed via DSL for enum-array pins (wildcard mismatch) — created via `create_node`, connected to `ObjectTypes` (wildcard resolves on connect), element set to `ObjectTypeQuery3`. Same-script immediate compile after graph surgery can report stale errors — recompile in a fresh call before trusting a failure.
+4. Paren-containing type ids (`Math|Float|Max(Float)`, `Utilities|String|ToString(Float)`) **do parse** in the DSL (confirmed against the §7 vanguard graph and used in `HandleDamage`) — §11.9's avoidance was over-cautious; both approaches work.
+
+### 16.5 Compile / save / validation evidence
+
+All four touched Blueprints compile clean (`warnings_as_errors=true`) and are saved: driver, mover, character, controller. PIE (Lvl_DuelGraybox), observed via live state sampling:
+
+- Driver spawns, activates, resolves all three refs; telegraph hidden at start; camera and mover activate normally.
+- **Hit cycle:** windup observed (state 1) with telegraph visible and mover locked; player stood ground → exactly **−10 health**, telegraph hidden afterward, mover unlocked, cooldown re-rolled.
+- **Whiff cycle:** on the next windup the player retreated to 500 cm → strike whiffed, **zero damage**.
+- **Re-engage cycle:** subsequent windup after cooldown → hit for exactly −10 again.
+- No spam: attacks separated by the 2.5–4 s cooldown (plus 0.6 s retry rolls); over the long debug session health stepped 100→…→0 in clean −10 increments and **clamped at 0** (no death, as scoped).
+- Vanguard health remained 100 (its damage graph untouched); ordering, arena bounds, depth lane, live camera (rig==camera-manager), and zero roll all verified after the cycles.
+- Log sweep: **zero Accessed None / runtime errors** for the entire session (the pattern including old authoring entries now returns empty because the session log rotated — checked with the full historic pattern too).
+
+### 16.6 PENDING HUMAN PIE
+
+- Telegraph readability (is the red "!" clear enough, 0.7 s windup fair?).
+- **Interruption by hand**: punch the Vanguard during a windup — expect telegraph to vanish, no strike damage, movement resuming after its hit-react (tool-validated only by graph logic: montage-during-windup → cancel; no MCP path can simulate a real punch).
+- Player hit feedback feel (print + `BP_CameraShake_Hit_Player` + hit-react montage under the duel camera).
+- Whiff fairness at various angles/depths; whether reach 225 feels honest.
+- Full punch-loop regression by hand (Vanguard health bar, sparks, shake, hit-react — logic untouched).
+- Strike-phase trades: being punched during the 0.6 s strike (after windup) does NOT cancel the strike — both hits can land ("trade"). Confirm it reads acceptably (documented limitation, montage-signal ambiguity makes clean strike-cancel out of scope).
+
+### 16.7 Known limitations
+
+- Player health has no regen/reset UI — restart PIE to reset (health floors at 0 and further strikes print 0; no death by design).
+- Trades during the strike phase (above). Interruption works only during wind-up.
+- The telegraph "!" yaw is fixed to the +Y camera side (correct for `CameraSideSign=+1`; flip needs the driver's yaw updated — one value in `ActivateDriver`).
+- The Vanguard attacks whenever conditions pass, including while the player punches — no politeness system (out of scope).
+- Player "alive/damageable" gate is trivially true (no death state exists to check).
+
+### 16.8 Human PIE test
+
+1. Open `Lvl_DuelGraybox`, press Play. 2. Stand near the Vanguard; watch for the red "!" above its head. 3. Stay put once: one strike hits, "Player Health: 90" prints with a small shake and player hit-react. 4. On the next "!", dash away (A) or into depth (W/S): the strike whiffs, no damage. 5. Close to contact and pressure it — attacks should come at readable intervals, never back-to-back. 6. Punch (LMB) during a "!" — the attack should cancel with its hit reaction; movement resumes after. 7. Confirm recovery pauses it after each swing. 8. Confirm your punch loop (Vanguard health bar/sparks/reaction) still works. 9. Kill switches: `bEnableVanguardBasicAttack` (controller) removes only the attack; tuning lives on `BP_VanguardBasicAttackDriver` class defaults.
+
+### 16.9 Git manifest
+
+Created: `Content/AscendantImpact/Duel/BP_VanguardBasicAttackDriver.uasset`. Modified: `Content/AscendantImpact/Duel/BP_VanguardDuelMover.uasset` (movement-lock interface), `Content/ThirdPerson/Blueprints/BP_ThirdPersonCharacter.uasset` (health receiver), `Content/ThirdPerson/Blueprints/BP_ThirdPersonPlayerController.uasset` (toggle + spawn chain), `docs/agent/PROTOTYPE_BLACKBOARD.md`, `CLAUDE.md`. Untouched: camera rig, Vanguard proxy, levels, input, animation assets. `Config/DefaultEditorPerProjectUserSettings.ini` untouched/unstaged.
