@@ -43,13 +43,47 @@ and triggers rule 4.
 
 ---
 
+## Status values
+
+- **APPROVED** — a KIND A engineering item. A documented procedure exists and there was
+  nothing to decide. It is settled and its `TODO.md` entry is deleted.
+- **PROPOSED** — a KIND B design item. A designer dispatch researched it and recommends
+  an answer. **It is not decided.** Its `TODO.md` entry stays open, marked PROPOSED,
+  until the human designer approves or changes it. Only then is it deleted.
+
+**Nothing supersedes the GDD yet, so rule 4 has not fired.**
+
 ## Log
 
-**No entries yet.**
+### 2026-08-02 — Q22 · the 1 HP floor is permanent; the Final Clash is the only way to win
 
-Nothing has been decided since this file was created on 2026-08-02, so nothing
-supersedes the GDD and rule 4 has not fired. `TODO.md` records this explicitly under
-"Not yet triggered" so the absence is deliberate rather than an oversight.
+- **Status:** **PROPOSED** — the designer decides. Not settled.
+- **Resolves:** TODO item 4 (Q22) · **BLOCKING** · KIND B
+- **Dispatch:** group 01 → `design/group-01-blocking-q22.md`
+- **Proposed decision:** reading **(b)**, sub-variant **(b2)** — `MinHealthFloor = 1` on
+  the rival's `BP_HealthComponent` from `BeginPlay`, lowered to `0` only by
+  `ClashSuccess()` immediately before it applies lethal damage.
+- **Value lives in:** `HealthComponent.MinHealthFloor` (`design-brief.md` §13.2 row 50)
+- **Unblocks:** M1-08 — Create the shared `BP_HealthComponent`
+- **Why, in short:** the GDD's encounter-flow table lists exactly one win condition
+  (Final Clash success), so reading (a) requires *adding* a win condition the GDD never
+  writes down while (b) only widens the scope of a floor the GDD does state; it makes
+  the double gate meaningful; it makes the meter — and therefore skill — the only route
+  to the ending; and it is the cheapest, least leak-prone build.
+- **Prior art cited:** Sekiro (Deathblow), Metal Gear Rising: Revengeance (Monsoon and
+  Sundowner hard-stop at 10% into a mandatory QTE), Hi-Fi Rush, Sifu, God of War
+  Ragnarök, Furi, Jedi: Fallen Order, Asura's Wrath as the cautionary case. Two claims
+  are explicitly marked unverified in the group file.
+- **Three attached conditions, each itself a question and none of them decided:**
+  **C1** Q9 must resolve to no meter decay, or the tail can become a dead end.
+  **C2** the HUD must show which gate is still locked once the health bar visibly pins.
+  **C3** Q2 should be tuned so ≤25% and meter 100 arrive close together.
+- **Supersedes GDD:** none. This interprets the scope of the GDD's failed-Clash 1 HP
+  floor; it edits no GDD number and contradicts no GDD line.
+- **Developer note:** M1-08 can proceed either way — the clamp is identical. What must
+  wait is the rival instance's default value and whether `BP_DuelDirector` wires a rival
+  `OnDeath → EndDuel(Win)` path at all. Leave both unset rather than let a default
+  silently become the design.
 
 ### Entry format
 

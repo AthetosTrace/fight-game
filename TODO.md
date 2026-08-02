@@ -1,12 +1,18 @@
 # TODO — Ascendant Impact
 
-**45 open items**, as of 2026-08-02.
+**45 open items** — **0 closed · 1 PROPOSED and awaiting approval · 44 untouched.**
+Last worked 2026-08-02.
 
 ## How this file works
 
 - **Completed items are DELETED, not ticked.** This file only ever shows what is
   outstanding. If you want a record of what was decided, that goes in
   [`design/decisions.md`](design/decisions.md), not here.
+- **PROPOSED is not closed.** A KIND B item that a designer dispatch has researched
+  stays here, marked ⏳ PROPOSED, until the human designer approves or changes it. Only
+  an approved item is deleted. KIND A items are APPROVED on delivery and deleted at once.
+- **Item numbers are stable ids, not positions.** Deletions leave gaps. That is correct —
+  a gap means something got finished.
 - **Ranked by build order, not by importance.** Every item names the lowest-numbered
   `build-sequence.md` step that first needs it. Work top-down and you will never be
   blocked by something further down this list.
@@ -69,7 +75,13 @@ satisfying moments.
 
 ### M1-08 — Create the shared `BP_HealthComponent`
 
-**4. Q22 — Is the 1 HP floor permanent or Clash-only?** · **KIND B** · **BLOCKING**
+**4. Q22 — Is the 1 HP floor permanent or Clash-only?** · **KIND B** · **BLOCKING** ·
+**⏳ PROPOSED 2026-08-02 — AWAITING YOUR APPROVAL**
+→ **Proposed: reading (b), variant (b2)** — floor is permanent, the Final Clash is the
+only way to win. Full reasoning, prior art, and three attached conditions in
+[`design/group-01-blocking-q22.md`](design/group-01-blocking-q22.md); summary in
+[`design/decisions.md`](design/decisions.md). **Approve or change it and this entry is
+deleted.** Original question below.
 No range — two readings. **(a)** the floor applies only while a Clash is resolving, so
 ordinary combat damage can kill the rival and win the duel without a Clash; **(b)** the
 floor is permanent once the rival is at low health, making the Final Clash the **only**
