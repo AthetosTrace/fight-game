@@ -57,8 +57,9 @@ and triggers rule 4.
 
 ### 2026-08-02 — Q22 · the 1 HP floor is permanent; the Final Clash is the only way to win
 
-- **Status:** **PROPOSED** — the designer decides. Not settled.
-- **Resolves:** TODO item 4 (Q22) · **BLOCKING** · KIND B
+- **Status:** **APPROVED** — accepted as proposed by the designer of record, 2026-08-02.
+  **This is now settled and binding on every downstream answer.**
+- **Resolves:** TODO item 4 (Q22) · **BLOCKING** · KIND B · entry deleted from `TODO.md`
 - **Dispatch:** group 01 → `design/group-01-blocking-q22.md`
 - **Proposed decision:** reading **(b)**, sub-variant **(b2)** — `MinHealthFloor = 1` on
   the rival's `BP_HealthComponent` from `BeginPlay`, lowered to `0` only by
@@ -74,10 +75,12 @@ and triggers rule 4.
   Sundowner hard-stop at 10% into a mandatory QTE), Hi-Fi Rush, Sifu, God of War
   Ragnarök, Furi, Jedi: Fallen Order, Asura's Wrath as the cautionary case. Two claims
   are explicitly marked unverified in the group file.
-- **Three attached conditions, each itself a question and none of them decided:**
-  **C1** Q9 must resolve to no meter decay, or the tail can become a dead end.
-  **C2** the HUD must show which gate is still locked once the health bar visibly pins.
-  **C3** Q2 should be tuned so ≤25% and meter 100 arrive close together.
+- **Three attached conditions — carried forward as binding constraints on later groups:**
+  **C1** Q9 must resolve to **no meter decay**, or the tail can become a dead end.
+  **C2** the HUD must show **which gate is still locked** once the health bar visibly pins.
+  **C3** Q2 must be tuned so **≤25% and meter 100 arrive close together**.
+  These are not settled answers to Q9, the HUD, or Q2 — they are constraints those
+  answers must satisfy.
 - **Supersedes GDD:** none. This interprets the scope of the GDD's failed-Clash 1 HP
   floor; it edits no GDD number and contradicts no GDD line.
 - **Developer note:** M1-08 can proceed either way — the clamp is identical. What must

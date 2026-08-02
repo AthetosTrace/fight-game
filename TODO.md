@@ -1,7 +1,13 @@
 # TODO — Ascendant Impact
 
-**45 open items** — **0 closed · 1 PROPOSED and awaiting approval · 44 untouched.**
-Last worked 2026-08-02.
+**44 open items** — **1 closed · 0 PROPOSED · 44 untouched.** Last worked 2026-08-02.
+
+> **SETTLED AND BINDING — Q22 (approved 2026-08-02).** The 1 HP floor is **permanent**;
+> `MinHealthFloor = 1` from `BeginPlay`, lowered to `0` only by `ClashSuccess()`.
+> **The Final Clash is the only way to win the duel.** Three constraints follow and bind
+> every answer below: **C1** Q9 must resolve to *no meter decay*; **C2** the HUD must
+> show which gate is still locked once the health bar pins; **C3** Q2 must be tuned so
+> ≤25% rival health and meter 100 arrive close together. See `design/decisions.md`.
 
 ## How this file works
 
@@ -72,25 +78,6 @@ hits kill me" — a 3–5-hit budget is a common readable target for an armored-
 Range to consider: **800–2000**. Reason given: must be tuned against the 3–5 minute
 session target and against the Phase 2 (50%) and Clash (25%) thresholds landing at
 satisfying moments.
-
-### M1-08 — Create the shared `BP_HealthComponent`
-
-**4. Q22 — Is the 1 HP floor permanent or Clash-only?** · **KIND B** · **BLOCKING** ·
-**⏳ PROPOSED 2026-08-02 — AWAITING YOUR APPROVAL**
-→ **Proposed: reading (b), variant (b2)** — floor is permanent, the Final Clash is the
-only way to win. Full reasoning, prior art, and three attached conditions in
-[`design/group-01-blocking-q22.md`](design/group-01-blocking-q22.md); summary in
-[`design/decisions.md`](design/decisions.md). **Approve or change it and this entry is
-deleted.** Original question below.
-No range — two readings. **(a)** the floor applies only while a Clash is resolving, so
-ordinary combat damage can kill the rival and win the duel without a Clash; **(b)** the
-floor is permanent once the rival is at low health, making the Final Clash the **only**
-way to win. Reason given: (b) makes the Clash the climax the GDD describes and makes
-the double gate meaningful; **(a) makes it possible to finish the duel without ever
-seeing the Final Clash, which appears to contradict the encounter flow.** The brief
-recommends (b) and is not permitted to decide it. §14 calls this **"the single most
-consequential open question in the document — it changes what the game is about."**
-*Genuinely blocked:* the component's damage-application logic differs between readings.
 
 ### M1-09 — Create `BP_DuelDirector`
 
