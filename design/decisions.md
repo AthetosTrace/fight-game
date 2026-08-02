@@ -55,6 +55,49 @@ and triggers rule 4.
 
 ## Log
 
+### 2026-08-02 — Group 04 · spacing and arena (Q24, Q10, Q12, Q13, Q11, mezzanine)
+
+- **Status:** **PROPOSED** — all six. The designer decides.
+- **Resolves:** TODO items 17 (Q24), 22 (Q10), 23 (Q12), 24 (Q13), 10 (Q11), 18 (mezzanine) · all KIND B
+- **Dispatch:** group 04 → `design/group-04-spacing-and-arena.md`
+
+| Item | Proposed | Lives in | Unblocks |
+|---|---|---|---|
+| Q24 | playable floor **2400 × 1600 cm (24 × 16 m)**, long axis = doorway axis, four 250 cm 45° chamfers; also stored as `ArenaLongAxisCm`/`ArenaShortAxisCm` so Q13 cannot drift | `L_ShatteredRing` + `DA_TuningGlobals` | M1-21 |
+| Q10 | bands centre-to-centre **A 0–260 · B 90–520 · C 240–420 · D 400–840** cm, identical both phases | `DT_VanguardAttacks` Min/MaxRange | M2-04 |
+| Q12 | P1 **A 3.0 · B 3.5 · C 3.6 · D 3.8 s** / P2 **A 2.5 · B 2.6 · C 2.7 · D 2.8 s**, **relocated into `S_AttackPhaseTuning`** so Phase 2 re-times through the existing data path | `S_AttackPhaseTuning` | M2-04 |
+| Q13 | **600 cm = 0.25 × long axis**, finishing 240 cm from the target | `DT_VanguardAttacks.MaxTravelDistance` | M2-04 |
+| Q11 | acquire **3000 cm**, break **3300 cm**, interp **6.0**, aim socket **140 cm** at **−8°** — both beyond the 2884 cm diagonal so lock never breaks by distance in this arena | `BP_LockOnComponent` | M1-16 |
+| 18 | mezzanine is **set dressing** — no NavMesh, no blocking volume, railings `NoCollision`, underside ignores the `Camera` channel | `L_ShatteredRing` | M1-21 |
+
+- **Footprint:** 2400 × 1600 uu, diagonal ≈ 2884 uu, ~371.5 m² walkable. Stated as **two
+  dimensions**, per the recovered arena sheet showing a rectangular hall.
+- **Band coverage proof delivered:** contiguous over [0, 840] with 80 cm and 120 cm
+  handoff overlaps, depth ≥ 2 across the whole 100–520 cm fight zone. Exactly one
+  zero-coverage region (840–2884 cm) and one depth-1 region (520–840 cm), **both resolved
+  by a required advance rule rather than by accident** — which is the `BTTask_Idle_Reposition`
+  loop bug §14 warned about, closed deliberately.
+- **Starvation check passes in both phases** at the fastest legal cycle; tightest slack
+  **+0.16 s**. Q12's legal window is narrow: **(2.94, 3.96] s in P1**, **(2.315, 2.96] s in P2**.
+- **Supports Q21 (Final Clash group):** separation **1000–1300 cm**, 1300 the guaranteed
+  ceiling, **1200 the comfortable value**, pushed along the long axis rather than the
+  fighters' facing.
+- **Handed to Q25:** author **A and B short (0.55–0.70 s), C and D long (0.75–0.95 s)** —
+  group 03's counter-spam warning made spatial. And **D's Active must sit at 0.40–0.45 s**,
+  or 600 cm in 0.18 s reads as the teleport the GDD forbids.
+- **Supersedes GDD:** none. Prior art from Tekken's published stage sizes (24×24 standard,
+  16×24 *Midnight Siege*). Souls-like arena dimensions and per-attack AI cooldowns were
+  searched for and **cited as not found rather than estimated**.
+
+**Three more gaps with no §13.2 row and no Q number — now TODO items 49, 50, 51.** One of
+them is serious: **the rival's `MaxWalkSpeed` is unspecified, and under the approved Q22
+a rival slower than the player can be kited forever and the duel cannot end.**
+
+**Q12 is the weakest-sourced item in this group** — no shipped game publishes AI attack
+cooldowns, so it is derived purely from the GDD's own state ranges.
+
+*Research note: 10/15 searches.*
+
 ### 2026-08-02 — Group 03 · defensive timing (Q6, Q7, Q8, Q26, Q27, Q28)
 
 - **Status:** **PROPOSED** — all six. The designer decides. **Q7 is BLOCKING.**

@@ -1,7 +1,7 @@
 # TODO — Ascendant Impact
 
-**47 open items** — **1 closed · 11 PROPOSED · 36 untouched.** Last worked 2026-08-02.
-> Three new items (46, 47, 48) were found by the group 03 dispatch: real gaps in
+**51 open items** — **1 closed · 17 PROPOSED · 33 untouched.** Last worked 2026-08-02.
+> Six new items so far (46–51) were found by the dispatches themselves: real gaps in
 > `design-brief.md` §13.2 that have no row and no Q number. The list grew because the
 > work found holes, which is the list working.
 
@@ -22,6 +22,7 @@ build order rather than being rewritten every group.
 |---|---|---|
 | 2 (Q1), 3 (Q2), 21 (Q3), 11 (Q4), 12 (Q5) | 02 — combat economy | `design/group-02-combat-economy.md` |
 | 14 (Q6), **15 (Q7 · BLOCKING)**, 16 (Q8), 33 (Q26), 30 (Q27), 13 (Q28) | 03 — defensive timing | `design/group-03-defensive-timing.md` |
+| 17 (Q24), 22 (Q10), 23 (Q12), 24 (Q13), 10 (Q11), 18 (mezzanine) | 04 — spacing and arena | `design/group-04-spacing-and-arena.md` |
 
 ## How this file works
 
@@ -125,6 +126,26 @@ budget is already heavily spent on presentation — Nova has a 4-swatch palette 
 3, layered jacket vs one-piece suit, thigh pouches, high-tops, a lettered insignia.
 They read as different people before a single scalar moves. See
 `gdd/reference/OPEN-QUESTION-IMPACT.md` §3.
+
+### M1-12 — additional gap found 2026-08-02
+
+**49. Crimson Vanguard's `MaxWalkSpeed` has no row and no Q number.** · **KIND B** ·
+**Potentially BLOCKING — flagged for your attention**
+Found by the group 04 dispatch. §13.2 row 43 covers the *player's* walk speed (Q15);
+nothing covers the rival's. With a 2400 cm long axis and **Q22 making the Final Clash
+the only way to win**, a rival slower than the player **can be kited forever and the duel
+cannot end.** The dispatch refused to assign a value. It also blocks Q21's separation
+arithmetic, which needs a closing speed.
+
+### M2-04 — additional gaps found 2026-08-02
+
+**50. Attack B needs a `MaxTravelDistance`; §13.2 row 41 names only D.** · **KIND B**
+Found by the group 04 dispatch. B advances ~270 cm at its outer edge. Uncapped, it is a
+second gap closer, which changes the four-attack spacing shape. No number proposed.
+
+**51. `SelectionWeight` has no row and no Q number.** · **KIND B**
+Found by the group 04 dispatch. GDD §04 requires Phase 2 to shift attack weighting toward
+"more aggressive close-range and gap-closing selection", but there is no field to shift.
 
 ### M1-16 — Create `BP_LockOnComponent`
 
