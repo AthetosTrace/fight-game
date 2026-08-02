@@ -395,3 +395,121 @@ Two full PIE sessions were started/stopped via `EditorAppToolset.StartPIE/StopPI
 - `SpawnActorFromClass`'s `SpawnTransform` by-ref pin rejects literal defaults — must wire a `MakeTransform` (compile error otherwise; see §11.4).
 - `ProgrammaticToolset` scripts: `dict.get(key, default)` is unsupported (`_StrictDict`), and helper kwargs that shadow positional args raise TypeErrors — use plain `[]` access and dict-style args.
 - `PlayerCameraManager.ViewTarget` and controller `ControlRotation` are not readable via `ObjectTools.get_properties`; proving the active view target was done by comparing the camera manager's actor transform to the rig's (identical ⇒ rig is the view target).
+
+---
+
+## 12. Milestone 4 — Movement-only Vanguard duel behavior (2026-08-02, branch `feature/vanguard-duel-movement`)
+
+**Scope delivered:** the Vanguard now moves like a passive second fighter — approaches when far, retreats when crowded, holds a preferred range, drifts in depth at controlled intervals, pauses while hit-reacting, and can never trade screen sides with the player. No attacks, no damage changes, no Behavior Tree, no combat AI. Movement-and-camera stress test only.
+
+### 12.1 Architecture chosen and why
+
+A **self-contained runtime-spawned actor**, `/Game/AscendantImpact/Duel/BP_VanguardDuelMover`, spawned by `BP_ThirdPersonPlayerController` immediately after the Duel Camera rig, behind its own instance-editable toggle **`bEnableVanguardMover`** (default true, nested inside the `bEnableDuelCamera` branch — camera off implies mover off). Rationale:
+
+- `BP_VanguardProxy`'s combat/feedback graph stays untouched (zero graph edits there — see 12.2 for the one property-default change).
+- Locomotion is driven externally through **`AddMovementInput` on the unpossessed-looking Character** — which works because Character defaults (`AutoPossessAI=PlacedInWorld`, `AIControllerClass=AIController`) mean the placed Vanguard is already possessed by a stock AIController in PIE, so CharacterMovement consumes input normally. No AIController asset or Behavior Tree was added; `ActivateMover` calls `SpawnDefaultController` only as a fallback if no controller exists (e.g. for a runtime-spawned Vanguard).
+- Real CMC-driven movement means real velocity → the locomotion animation plays, capsule collision stays authoritative, and acceleration/braking provide smoothing for free.
+- Facing remains owned solely by `BP_DuelCameraRig` (one facing system, unchanged).
+
+### 12.2 Assets created / modified (exact Git manifest)
+
+**Created:**
+- `Content/AscendantImpact/Duel/BP_VanguardDuelMover.uasset` — Actor Blueprint, logic only (no components beyond the default root).
+
+**Modified:**
+- `Content/ThirdPerson/Blueprints/BP_ThirdPersonPlayerController.uasset` — added `bEnableVanguardMover` (bool, instance-editable, default true) + `VanguardMover` (object ref), category "Duel Camera"; appended `Branch → SpawnActor BP_VanguardDuelMover → Set VanguardMover` after the SetViewTargetWithBlend node inside the existing duel-camera branch. No existing wiring disturbed.
+- `Content/Variant_Combat/Blueprints/BP_VanguardProxy.uasset` — **one class-default change, no graph edits**: `bUseControllerRotationYaw` true → **false**. The raw-Character default (true) let the auto-possessing stock AIController's control rotation drive the actor yaw, silently fighting the Duel Camera's facing writes (invisible until now only because the spawn yaw 180 happened to be the correct facing). False matches the third-person template characters.
+- `docs/agent/PROTOTYPE_BLACKBOARD.md` — this section. `CLAUDE.md` — durable architecture/gotcha updates.
+
+**Not touched:** `BP_ThirdPersonCharacter`, `BP_DuelCameraRig`, level/external actors, all input assets, `UI_LifeBar`/VFX/camera-shake assets, `Config/DefaultEditorPerProjectUserSettings.ini`.
+
+### 12.3 BP_VanguardDuelMover — logic, functions, variables
+
+**Event graph:** `EventTick(DeltaSeconds)` → `ResolveFighters()` → nested IsValid guards (stops safely if either fighter is invalid) → one-shot `ActivateMover()` → `UpdateDuelMovement(DeltaSeconds)`. Same fail-safe pattern as the camera rig; global searches (`GetPlayerPawn`/`GetActorOfClass`) run only while a reference is unresolved. The mover does **not** spawn Vanguards (the camera rig keeps that single authority).
+
+**`ActivateMover()`** (one-shot): stores `OriginalMaxWalkSpeed` (600) / `OriginalMaxAcceleration` (2048) from the Vanguard's CMC for reversibility, then applies `VanguardMoveSpeed` (180) and `VanguardAcceleration` (600); forces `bUseControllerRotationYaw=false` on the Vanguard pawn at runtime (belt-and-braces — the already-loaded level instance does not pick up the new class default this editor session); seeds `CurrentDepthTarget` with the Vanguard's current depth and randomizes the first decision interval; `SpawnDefaultController` only if the Vanguard has no controller.
+
+**`UpdateDuelMovement(DeltaSeconds)`** per tick: runs the depth-decision timer, computes signed combat-axis separation (world X), updates intent, then applies movement inputs **only if no montage is playing on the Vanguard's AnimInstance** (`IsAnyMontagePlaying` — this is the hit-react movement pause, read-only on animation state), and always applies constraints.
+
+**`UpdateMovementIntent(SepAbs)`** — three-state int with hysteresis (no enum asset): `0` hold, `1` advance, `2` retreat. From hold: advance when separation > Preferred+DeadZone (360), retreat when < Preferred−DeadZone (240). Advance/retreat each end only on reaching Preferred (300) — the hysteresis prevents threshold jitter and produces advance → settle → hold behavior.
+
+**`UpdateDepthDecision(DeltaSeconds)`** — accumulates time; every `NextDecisionInterval` (random 1.5–3.5 s) either holds current depth (probability `DepthHoldChance` 0.4) or picks a random depth target within ±`MaxDepthTarget` (150) around `DepthLaneCenter`, then re-randomizes the interval.
+
+**`ApplyMovementInputs()`** — axis: `AddMovementInput(world X, ±1)` toward/away from the player per intent (direction from the *signed* separation, so it stays correct even if geometry ever flips). Depth: if farther than `DepthArriveTolerance` (15) from the depth target, `AddMovementInput(world Y, ±DepthMoveScale)` — scale 0.5 while holding range, ×0.4 further reduction while actively correcting range ("pause depth while aggressively correcting").
+
+**`ApplyConstraints()`** — three gentle position clamps (violations in normal play are ≤ one frame of movement, ~10 cm, so no visible teleporting): Vanguard depth clamped to the same lane the camera uses (±180); Vanguard X clamped to ≥ player X + `MinimumAxisSeparation` (110); player X clamped to ≤ Vanguard X − 110. The last one is the **player-side no-crossing safeguard** — capsule collision alone would let the player circle through the depth lane and swap sides. Ordering (player low-X / Vanguard high-X) matches the P1-left / P2-right screen rule for the current `CameraSideSign=+1`, `CombatAxisYaw=0` setup.
+
+**Exposed tuning variables (instance-editable, ALL PROVISIONAL):**
+
+| Category | Variable | Default |
+|---|---|---|
+| Range | `PreferredDistance` | 300 |
+| Range | `RangeDeadZone` | 60 |
+| Speeds | `VanguardMoveSpeed` | 180 |
+| Speeds | `VanguardAcceleration` | 600 |
+| Speeds | `DepthMoveScale` | 0.5 |
+| Depth | `DepthDecisionIntervalMin` | 1.5 |
+| Depth | `DepthDecisionIntervalMax` | 3.5 |
+| Depth | `MaxDepthTarget` | 150 |
+| Depth | `DepthHoldChance` | 0.4 |
+| Depth | `DepthArriveTolerance` | 15 |
+| Separation | `MinimumAxisSeparation` | 110 |
+| Lane | `DepthLaneCenter` | 0 |
+| Lane | `DepthLaneHalfWidth` | 180 |
+
+Lane values must match `BP_DuelCameraRig`'s (they are duplicated, not shared — see limitations). Internal (not editable): `PlayerFighter`, `VanguardFighter`, `MovementIntent`, `CurrentDepthTarget`, `DepthDecisionTimer`, `NextDecisionInterval`, `bMoverActivated`, `OriginalMaxWalkSpeed`, `OriginalMaxAcceleration`.
+
+### 12.4 Compile & save results
+
+`BP_VanguardDuelMover`, `BP_ThirdPersonPlayerController`, `BP_VanguardProxy` — all `compile_blueprint(warnings_as_errors=true)` → **clean**. All saved via `AssetTools.save_assets`. No MCP asset-validation tool exists; human **Tools → Validate Assets** recommended for sign-off.
+
+### 12.5 Tool-assisted runtime validation (two PIE sessions via MCP)
+
+All numbers read from the live PIE world:
+
+- **Mover spawns and activates:** `bMoverActivated=true`; originals stored (600/2048); Vanguard CMC live values 180/600. Duel Camera unaffected — rig spawned, camera manager tracking it (their transforms differ only by millisecond sampling skew while the camera was actively moving with the fighters, i.e. midpoint/zoom respond to both movers).
+- **Advance:** player teleported to X=−400 → intent flipped to 1, Vanguard walked 350 → −53 → −122 (avg ~161 cm/s vs MaxWalkSpeed 180), stopping at separation 278 (≤ Preferred 300) with intent back to 0. It correctly *followed the player across the world origin* while keeping ordering (player −400 < Vanguard −122).
+- **Retreat:** player teleported to 150 cm away → intent 2, Vanguard backed off to separation 325, intent back to 0.
+- **No pass-through / side swap:** player teleported to 30 cm gap → constraint restored ≥110 immediately; after every teleport stress, player X < Vanguard X held. (Note: a *teleporting* player causes a visible one-time Vanguard shove from the clamp — normal-speed play only ever violates by ~10 cm/frame.)
+- **Depth wander:** `CurrentDepthTarget` observed changing across samples (69 → 22.3 → 19.3 → 22.3, includes hold-rolls); Vanguard Y actually traveled (78.9 → −7.2 → 22.3 → 78.3); all values inside the ±180 lane.
+- **Mutual facing while offset:** with Vanguard at (350.8, 78.3) and player at (23.5, 0), Vanguard yaw −166.55° = the exact look-at bearing; player yaw mid-interpolation toward its matching bearing. The §12.2 yaw-flag fix verified live: `bUseControllerRotationYaw=false` on the PIE instance after activation.
+- **Never attacks:** structurally impossible — the mover's only outputs are `AddMovementInput`/`SetActorLocation`; `BP_VanguardProxy` still contains no attack logic.
+- **No runtime errors:** log sweep for Accessed None / Blueprint runtime errors across both sessions → zero hits.
+- **Screenshots:** `CaptureEditorImage` failed both attempts this session ("Failed to capture any editor windows" — the editor window was likely minimized; it captures the OS desktop window). Validation rests on the runtime numbers; visual confirmation folds into the human PIE pass.
+
+### 12.6 PENDING HUMAN PIE
+
+- Overall movement **feel**: cautious-probing quality, hesitation, no hyperactivity or jitter (all interval/speed/deadzone defaults are provisional).
+- Approach/retreat readability at player-controlled speeds (validation used teleports, not walked approaches).
+- Depth offsets reading as deliberate "circling" rather than drift.
+- The min-separation clamp feel when deliberately shoving into the Vanguard.
+- Hit-react pause: punch the Vanguard and confirm it doesn't slide during the reaction, and that damage/health-bar/VFX/hit-react all still work (logic untouched).
+- Camera framing quality with both fighters moving, near min and max distance.
+- Whether the Vanguard walking backward at 180 cm/s while retreating looks acceptable with the forward-run animation (known cosmetic limit).
+
+### 12.7 Human PIE acceptance test
+
+1. Press Play. Duel camera blends in; player left, Vanguard right.
+2. **Stand still**: Vanguard should settle near ~300 cm and mostly hold, occasionally drifting in depth, never rushing.
+3. **Walk toward it (W is depth — use A/D for axis)**: press **D** to close — it should retreat before you overlap; try to push through — you should be held ~110 cm apart with no side swap.
+4. **Retreat (A)**: it should follow calmly (it is slower than you: 180 vs 600), settling back near preferred range.
+5. **Move in depth (W/S)**: watch for occasional Vanguard depth offsets within the lane.
+6. **Try to run around it** through the depth lane — screen roles must not swap.
+7. **Punch it (LMB)** several times: damage prints, health bar, sparks, hit reaction all as before; Vanguard should pause movement during the reaction and never retaliate.
+8. Toggles: `bEnableVanguardMover=false` on `BP_ThirdPersonPlayerController` restores the static Vanguard; all movement tuning is on `BP_VanguardDuelMover` class defaults.
+
+### 12.8 Known limitations
+
+- Lane bounds and axis assumptions are duplicated between rig and mover (both hard-assume world-X axis / world-Y depth, like the rig's own §11.8 limitation); they must be tuned in tandem.
+- No combat-axis arena bounds: the pair can walk arbitrarily far along X (e.g. onto the staircase area past X≈400, where ground height changes).
+- Backward retreat and sideways depth movement play the forward locomotion animation (no strafe/backpedal blendspace) — accepted cosmetic limit.
+- The hit-react pause stops *input*, not momentum; a tick of residual deceleration slide can remain (braking 2048 stops it in <0.1 s).
+- A teleporting player (debug scenario only) makes the min-separation clamp shove the Vanguard visibly; unreachable in normal play.
+- The mover assumes single-player (player index 0), consistent with the prototype scope.
+
+### 12.9 Failures and fixes this run
+
+- **`BP_VanguardProxy` had `bUseControllerRotationYaw=true`** (raw-Character default; the template characters override it, this BP never did) — combined with auto-possession this could override external facing writes. Fixed at the class default AND enforced at runtime in `ActivateMover`, because the already-loaded level instance kept the old value for the session (same instance-staleness family as §7e, milder form: in-memory instances don't re-sync CDO edits).
+- `Controller` and `ViewTarget` are not readable via `ObjectTools.get_properties` (same family as §11.9's ControlRotation) — possession was proven empirically (CMC consumed `AddMovementInput`, so a controller must exist).
+- `CaptureEditorImage` fails outright when the editor window isn't visible on the desktop ("Failed to capture any editor windows") — new tooling observation.
+- `time.sleep` inside `ProgrammaticToolset` scripts works and enables multi-sample runtime observation during PIE — first use of this technique; very effective for movement validation.
