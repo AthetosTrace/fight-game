@@ -826,3 +826,52 @@ All five touched Blueprints compile clean (`warnings_as_errors=true`): attack dr
 ### 17.8 Git manifest
 
 Created: `Content/AscendantImpact/UI/UI_DuelHUD.uasset`. Modified: `Content/AscendantImpact/Duel/BP_VanguardBasicAttackDriver.uasset` (fairness), `Content/ThirdPerson/Blueprints/BP_ThirdPersonPlayerController.uasset` (HUD toggle/chain), `Content/Variant_Combat/Blueprints/BP_CameraShake_Hit_Player.uasset` (restrained shake), `docs/agent/PROTOTYPE_BLACKBOARD.md`, `CLAUDE.md`. Untouched: mover, camera rig, Vanguard proxy, character, levels, input, anims. `Config/DefaultEditorPerProjectUserSettings.ini` untouched/unstaged.
+
+---
+
+## 18. Milestone 10 — Assignment 5: goal-agent-selected knockout state (2026-08-02, branch `feature/assignment5-knockout`, from checkpoint fbb6487)
+
+**Context:** this milestone was selected by the Assignment 5 goal-oriented coding agent (fight-game repo, `assignment-05/`, branch `assignment/goal-oriented-coding-agent`). The deterministic scanner read the tracked GDD (`gdd/ascendant-impact-gdd-v0.4.md`), design brief, this blackboard, CLAUDE.md, the .uproject, the Git manifest, and an MCP-produced Blueprint inventory; scored nine candidate gaps on six dimensions with penalties; and selected **"Zero-health knockout / visible fight-end state" (score 30/30, no penalties)** — GDD evidence: "one complete duel with win and loss", "Win / Loss … selected fighter health reaches zero — Complete duel loop". Gated candidates (Attack A pipeline, Phase 2) correctly scored negative and were rejected in writing.
+
+### 18.1 Implementation — BP_DuelKnockoutCoordinator
+
+**`/Game/AscendantImpact/Duel/BP_DuelKnockoutCoordinator`** — fifth runtime-spawned actor in the controller chain, gated by new instance-editable **`bEnableKnockout`** (default true). Per tick (with the standard resolve-while-invalid ref pattern for player/vanguard/mover/driver):
+
+- If a fighter's authoritative health (`BP_VanguardProxy.Health` / `BP_ThirdPersonCharacter.CurrentHealth`) reaches ≤ 0 and that fighter is not already KO'd (one-shot flags `bVanguardKO`/`bPlayerKO`):
+  1. `StopDuelSystems()`: attack driver `CancelAttack()` (hides any active telegraph, aborts wind-up/strike state) then `SetActorTickEnabled(false)`; mover `SetActorTickEnabled(false)`. The duel brain stops for good — no more attacks or movement decisions in either KO direction.
+  2. Defeated fighter: `CharacterMovement.DisableMovement` (MOVE_None — player input and mover input both dead at the movement layer); player-KO additionally sets `bIsAttacking=true` so the punch input chain's re-entry guard permanently blocks attacks.
+  3. Fall: `MM_Death_Front_01` via the project-standard `PlaySlotAnimationAsDynamicMontage` on `DefaultSlot` (blend-out 0 so it can't return to idle).
+  4. After `RagdollDelay` (1.4 s, editable): capsule collision → NoCollision, mesh collision profile → Ragdoll, mesh `SetSimulatePhysics(true)` — the fighter crumples from the fall pose and **stays down permanently**; the camera rig's facing writes become invisible on a simulated mesh, and the disabled capsule means no further punch overlaps can hit the corpse (no post-KO damage events).
+
+The camera rig and HUD deliberately keep running: the camera stays framed on both actors; the HUD keeps showing the empty bar. No rounds, rematch, victory UI, respawn, cinematics, or scoring — exactly the packet scope.
+
+**Also modified:** `BP_ThirdPersonPlayerController` (toggle + spawn chain append after the HUD). **Minimal metadata change:** `BP_VanguardProxy.Health` and `BP_ThirdPersonCharacter.CurrentHealth` marked instance-editable — zero graph/behavior changes; needed because `ObjectTools.set_properties` on runtime instances only accepts instance-editable properties (new tooling gotcha), and it doubles as a designer tuning affordance.
+
+### 18.2 Validation evidence (PIE, Lvl_DuelGraybox)
+
+All modified Blueprints compile clean (`warnings_as_errors=true`). Live-state evidence across three PIE sessions:
+
+- **TEST A (Vanguard KO):** health→0 ⇒ `bVanguardKO=true`, driver state 0 with telegraph hidden and tick disabled, Vanguard `MOVE_None`, mesh `bSimulatePhysics=true` after the 1.4 s delay, HUD vanguard bar exactly 0.000, camera roll −5e-08, state unchanged over a 3 s stays-down watch. **Player untouched by the Vanguard's KO** (clean-trace: player `MOVE_Walking`, KO flag false, attack flag false).
+- **TEST B (Player KO):** `bPlayerKO=true`, `bIsAttacking=true` (attack input blocked), `MOVE_None`, ragdolled, HUD player bar 0.000. **Bonus organic validation:** in the long first validation session the player reached 0 purely from real Vanguard strikes and the coordinator KO'd them through the genuine damage path — not only via the test lever.
+- **TEST C (Reset):** PIE restart ⇒ healths reset (player already re-taking real strikes: 100→70 during the sampling window — the duel loop restarts by itself), both fighters `MOVE_Walking`, all four KO/ragdoll flags false, attack flag false. No stale state.
+- **TEST D (Regression):** pre-KO in the same sessions: Vanguard moving (200+ cm sampled), attack cycles running (state/cooldown live), strikes landing for exact −10 steps, HUD tracking, ordering/camera stable.
+- **Log:** zero Accessed None / Blueprint runtime errors across all sessions. Screenshot captured (empty VANGUARD bar, standing player, downed opponent) and copied into the assignment evidence folder.
+- KO detection was triggered via direct health writes (the damage-to-zero path was already proven in §16/§17 and organically in TEST B); punch-driven Vanguard KO by hand is PENDING HUMAN.
+
+### 18.3 PENDING HUMAN PIE
+
+- Visual quality of fall + ragdoll handoff (1.4 s `RagdollDelay` tunable); death-anim choice (`MM_Death_Front_01`) vs. direction of the killing blow.
+- Punch the Vanguard to 0 by hand (10 punches) and confirm the KO fires from real damage; then let the Vanguard win a fresh round.
+- Camera framing feel while one fighter is a ragdoll (midpoint uses capsule positions; the simulated mesh can drift from its capsule).
+- HUD/interrupt/whiff regression sweep by hand.
+
+### 18.4 Known limitations
+
+- The ragdolled mesh may slide slightly from its capsule position; the camera frames capsules (graybox-acceptable).
+- Post-KO the surviving player can still walk/jump/punch the air freely — intentional (no victory state yet).
+- The Vanguard's world-space life bar stays hidden by the HUD as before; at KO the head position is on the ground.
+- Player KO leaves mouse/keyboard live but movement-dead and attack-blocked; Esc/PIE restart is the only reset (by scope).
+
+### 18.5 Git manifest (this milestone)
+
+Created: `Content/AscendantImpact/Duel/BP_DuelKnockoutCoordinator.uasset`. Modified: `Content/ThirdPerson/Blueprints/BP_ThirdPersonPlayerController.uasset` (toggle + chain), `Content/Variant_Combat/Blueprints/BP_VanguardProxy.uasset` + `Content/ThirdPerson/Blueprints/BP_ThirdPersonCharacter.uasset` (instance-editable health metadata only), `docs/agent/PROTOTYPE_BLACKBOARD.md`, `CLAUDE.md`. `Config/DefaultEditorPerProjectUserSettings.ini` untouched/unstaged.
