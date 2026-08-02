@@ -748,3 +748,81 @@ All four touched Blueprints compile clean (`warnings_as_errors=true`) and are sa
 ### 16.9 Git manifest
 
 Created: `Content/AscendantImpact/Duel/BP_VanguardBasicAttackDriver.uasset`. Modified: `Content/AscendantImpact/Duel/BP_VanguardDuelMover.uasset` (movement-lock interface), `Content/ThirdPerson/Blueprints/BP_ThirdPersonCharacter.uasset` (health receiver), `Content/ThirdPerson/Blueprints/BP_ThirdPersonPlayerController.uasset` (toggle + spawn chain), `docs/agent/PROTOTYPE_BLACKBOARD.md`, `CLAUDE.md`. Untouched: camera rig, Vanguard proxy, levels, input, animation assets. `Config/DefaultEditorPerProjectUserSettings.ini` untouched/unstaged.
+
+---
+
+## 17. Milestone 9 — Strike fairness polish + first Duel HUD (2026-08-02, branch `feature/duel-hud-strike-polish`, from checkpoint 7097474)
+
+**Delivered:** a fairer, clearer Vanguard strike (longer telegraph, smaller indicator, pre-impact interrupt window, honest depth dodging, restrained player-hit shake) and the first fighting-game top-screen Duel HUD with both health bars driven by the authoritative health values. Blueprint-only; no blocking/dodging systems, death, rounds, meters, or Attack A.
+
+### 17.1 Strike fairness changes (`BP_VanguardBasicAttackDriver` + telegraph + shake)
+
+| Aspect | Old | New |
+|---|---|---|
+| `WindupDuration` | 0.7 s | **1.1 s** |
+| Telegraph "!" `worldSize` | 150 | **75** (50% smaller, still above the head at +140) |
+| Interrupt window | wind-up only (montage signal) | **any player hit from telegraph start until the impact check fires** — implemented by caching `WindupStartVanguardHealth` at `BeginWindup` and cancelling in states 1 AND 2 (pre-impact) when the Vanguard's `Health` drops below it. Post-impact hits do not retroactively cancel. The montage-based wind-up check was replaced by this strictly more precise health signal. |
+| Depth dodge | 90-radius sphere alone (hits up to ~90 cm depth offset) | sphere kept as candidate detection + **`ImpactDepthTolerance` = 55 cm** gate: damage only if |playerY − vanguardY| ≤ 55 at impact. Meaningful W/S sidesteps whiff; incidental jitter (<55) doesn't grant immunity. |
+| Cooldowns / initial delay / decision chance | unchanged (2.5–4.0 / 1.5 / 0.65) — no spam introduced | same |
+
+Impact geometry final: forward offset 100, sphere radius 90, class-filtered to the player, one check per strike (`bImpactDone`), depth gate 55. Cancelled attacks hide the telegraph, unlock movement (the mover's own montage pause covers the remaining hit-react time), apply no damage, and reroll the full cooldown. **Remaining trade window:** only same-frame punch-vs-impact ordering (~1 frame), documented.
+
+**Player-hit camera shake** (`BP_CameraShake_Hit_Player`, WaveOscillator pattern — asset is independent of the enemy shake, which is untouched): Duration 0.35→**0.18**, BlendOut 0.1→0.08, amplitudes X/Y 1→0.5, Z 3→1.2, Pitch 1→0.6, Yaw 1→0.4, **Roll 1→0** (no roll wobble at all). Frequencies unchanged.
+
+### 17.2 UI_DuelHUD (named per the project's existing `UI_` widget convention, at `/Game/AscendantImpact/UI/`)
+
+**Hierarchy:** `RootCanvas` (CanvasPanel) → `PlayerHealthBar` (ProgressBar, anchors (0,0), pos (40,42), 480×26, green fill, LeftToRight — drains from the center-facing end), `VanguardHealthBar` (ProgressBar, anchors (1,0), alignment (1,0), pos (−40,42), 480×26, red fill, **RightToLeft** — mirrored drain), `PlayerLabel` "PLAYER" (40,12), `VanguardLabel` "VANGUARD" (−40,12, right-justified). Both bars are widget variables.
+
+**Health sources (authoritative, no duplicates):** player = `CurrentHealth / MaxHealth` (the §16 receiver); Vanguard = `Health / 100` (matching `BP_VanguardProxy`'s own hardcoded max — its graph divides by 100 identically).
+
+**Update path:** `Construct → SetTimerByFunctionName("TimerUpdate", 0.05 s, looping)`. `TimerUpdate` → resolve refs (only while invalid — no per-frame global searches after init; on first Vanguard resolve it also hides the world-space bar, see 17.3) → `UpdateHealthBars(WorldDeltaSeconds)`: reads both health values immediately, `FInterpTo`s `DisplayedPlayerPct`/`DisplayedVanguardPct` at `HealthBarInterpSpeed` 8 (~0.3 s visual settle), `SetPercent` on both bars. Values are inherently 0–1 (health floors at 0, caps at max), so bars clamp cleanly.
+
+**Creation:** `BP_ThirdPersonPlayerController` gained `bEnableDuelHUD` (instance-editable, default true) + `DuelHUD` ref; the BeginPlay duel chain (inside the IsLocalPlayerController branch — never for non-local) appends `CreateWidget(UI_DuelHUD, OwningPlayer=self) → AddToPlayerScreen → save ref`. Single creation point, no duplicates.
+
+### 17.3 World-space Vanguard bar
+
+Not deleted, logic untouched: when the HUD resolves the Vanguard it calls `SetVisibility(false)` on the `HealthBarWidget` component — runtime-only and fully reversible (with `bEnableDuelHUD=false` the HUD never spawns, nothing hides the world bar, the §7 checkpoint look returns). Verified live: component `bVisible=false` with HUD on.
+
+### 17.4 Failures and fixes this run (tooling-relevant)
+
+1. **`bEnableDuelHUD` default silently stayed false** — the first wiring script errored (bad anchor search) *before* its set-default step ran; the HUD never spawned in the first validation PIE. Lesson: when a multi-step script dies, explicitly re-run the tail steps.
+2. **`CreateWidget` without `OwningPlayer` → `AddToPlayerScreen` no-ops** (widget existed, ref stored, never on screen). The template's own call passes `self`; wired the chain's existing `K2Node_Self_0` into the pin.
+3. **UMG template ghost nodes:** the widget's stock `Tick`/`Construct` nodes are disabled placeholder ("ghost") nodes — `add_event` returns them, connections compile, but they generate nothing. Even a freshly created Tick event did not fire for this widget (suspected stale `bHasScriptImplementedTick`). **Robust pattern: delete the ghost `Construct`, create it fresh via `add_event`, and drive updates with `SetTimerByFunctionName` looping instead of widget Tick.** Verified firing (marker print observed, then removed).
+4. `Class|ProgressBar|SetPercent`'s data pin is `Percent` (not `InPercent`) — the DSL's pin-name error listing is exact and trustworthy.
+5. Widget component variables live under `Variables|<WidgetName>|Get...` (e.g. `Variables|UI_DuelHUD|GetPlayerHealthBar`), not `Variables|Default|…`.
+
+### 17.5 Compile / save / validation evidence
+
+All five touched Blueprints compile clean (`warnings_as_errors=true`): attack driver, UI_DuelHUD, controller, player-hit shake, (mover untouched this run). Saved. PIE evidence (Lvl_DuelGraybox, live sampling + screenshot):
+
+- **TEST A (hit):** wind-up observed (1.1 s tuning confirmed live), telegraph visible during wind-up, standing in range → exactly −10; top-left bar tracked (displayed 0.800→0.700 after a later hit, always matching health/100).
+- **TEST B (retreat whiff):** retreat during wind-up → zero damage.
+- **TEST C (depth whiff):** 130 cm depth offset at 150 cm axis range → zero damage (tolerance 55 verified live in tuning read).
+- **TEST D (interrupt):** health-drop cancel logic verified by graph readback; runtime interruption requires a real punch — PENDING HUMAN (same MCP limitation as §16).
+- **TEST E (vanguard bar):** right bar reads the proven `Health` value through the identical update path as the player bar (which was validated live); visual confirmation of a punch-driven drain is PENDING HUMAN.
+- **TEST F (zero/reset):** health floors at 0 (§16 evidence stands); fresh PIE resets to 100 → bars full (verified: new session read 100 → stepped −10s; displayed matched exactly).
+- **HUD on screen:** screenshot shows PLAYER (green, ~70%, drained toward center) top-left, VANGUARD (red, full) top-right, labels readable, safe margins, no world-space bar over the Vanguard, fighters/camera/ordering intact.
+- **Regressions:** ordering/bounds/lane/camera checks passed in-session; zero Accessed None / runtime errors in the log across all PIE sessions.
+- Debug scaffolding (marker prints, dead Tick path) removed before commit; final widget event graph is exactly `Construct → timer`.
+
+### 17.6 PENDING HUMAN PIE
+
+- Telegraph readability at the smaller 75 size and 1.1 s pacing.
+- Interrupt-by-hand: punch during the wind-up AND early strike (pre-impact) — both should cancel; a punch after the hit lands should not retro-cancel.
+- Depth-dodge feel (is 55 cm fair?), retreat whiff feel.
+- Player-hit shake: restrained but noticeable?
+- Vanguard bar draining visually on punches; smooth ~0.3 s bar interpolation feel.
+- HUD readability across viewport sizes.
+- Full regression sweep by hand (punch loop, hit-react, sparks, close-contact spacing, boundaries).
+
+### 17.7 Known limitations
+
+- Same-frame punch/impact trade (~1 frame) remains.
+- Vanguard max health hardcoded as 100 in both its own graph and the HUD divisor (single source would need proxy surgery — deferred).
+- No death/round/reset at 0 health (intentional); bars sit empty, fight continues.
+- The world-space bar hide is HUD-driven: disabling the mover/attack but keeping the HUD still hides it (acceptable).
+- Telegraph yaw still fixed to the +Y camera side.
+
+### 17.8 Git manifest
+
+Created: `Content/AscendantImpact/UI/UI_DuelHUD.uasset`. Modified: `Content/AscendantImpact/Duel/BP_VanguardBasicAttackDriver.uasset` (fairness), `Content/ThirdPerson/Blueprints/BP_ThirdPersonPlayerController.uasset` (HUD toggle/chain), `Content/Variant_Combat/Blueprints/BP_CameraShake_Hit_Player.uasset` (restrained shake), `docs/agent/PROTOTYPE_BLACKBOARD.md`, `CLAUDE.md`. Untouched: mover, camera rig, Vanguard proxy, character, levels, input, anims. `Config/DefaultEditorPerProjectUserSettings.ini` untouched/unstaged.
