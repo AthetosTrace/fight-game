@@ -440,3 +440,646 @@ Q14's problem returns through the art pipeline instead of through a data asset.
 | **`TODO` 47, 48** | Both still open and both change what 400 cm feels like. |
 
 ---
+
+## Item 43 — Is Echo's faceplate a visor or a light?
+
+- **Kind:** B · **Status:** PROPOSED
+- **Unblocks build step:** **M5-06** — final character treatment. *(Also read by M5-08, the
+  editorial selection interface, which is the one screen that puts the face on camera.)*
+- **Value lives in:** **there is no §13.2 row for any material or emissive parameter.** The
+  table is complete with respect to itself and has no home for this. Proposed home, for the
+  designer to accept or renumber:
+  - `M_Fighter_Master` (shared master material, both fighters) — vector parameter
+    **`Indicator_EmissiveColor`** and scalar parameter **`Indicator_EmissiveIntensity`**.
+  - `DA_FighterProfile.IndicatorEmissiveColor` (LinearColor), sitting directly beside the
+    existing `AccentColor` field in §4.2's table — so the indicator hue is data, per fighter,
+    on the asset that already exists for exactly this purpose.
+  - **Proposed new §13.2 row, next free number 58** — *"Echo / Nova faceplate treatment and
+    indicator emissive colour."* The designer assigns the number; this file does not edit
+    `design-brief.md`.
+
+### GDD basis
+
+**Read this qualifier first.** GDD pages 12 and 13 are supplied image reference sheets with
+**no extractable authored text** beyond their captions. Everything quoted below is a *callout
+printed inside the artwork*, recovered by extracting the embedded JPEG and viewing it. It is
+not authored GDD prose and **authored GDD text outranks it.**
+
+| Source | Exactly what it says |
+|---|---|
+| Page 12 callout (Echo) | **"Visor or Light"** — the sheet poses the question and does not answer it |
+| Page 12, described | *"a smooth, entirely black full-face helmet… The face area is one continuous dark surface"*, glossy, with a specular highlight — **drawn as a dark plane, not as a lamp** |
+| Page 13 callouts (Nova) | **"Helmet"**, **"Visor liast"** *(printed exactly so — a confirmed typo, intended word unknown)*, **"Light"** — **three separate callouts** |
+| Page 13, described | *"a full-face helmet with a pale light-grey shell cap… and a **dark visor** across the face. A **small yellow-green indicator light** sits at the lower side of the helmet."* |
+| §07 REVISED — COLOR DIRECTION (PDF p.8, authored text) | *"Echo keeps restrained orange accents. Nova's existing black, charcoal, orange, and light-gray costume design is preserved; cyan-white is reserved for combat energy, telegraphs, or selected VFX accents when separation is needed."* |
+| §07 readability targets (authored text) | Echo — *"Exact timing and clear counter intent."* Nova — *"Momentum without visual noise."* |
+| §07 (authored text) | Crimson Vanguard *"reads through red armor, black structure, and **red-orange systems and warning lights**."* |
+
+**Ambiguous, and left ambiguous:**
+
+- Whether Echo's faceplate is see-through or emissive. That is the question.
+- **Nova's indicator hue.** The art shows **yellow-green**; her printed palette has four
+  swatches — Matte Black, Charcoal Grey, Bright Orange, Light Grey (Helmet Cap) — and
+  **yellow-green is not one of them.** Art and palette disagree on this sheet. **Not resolved
+  here.**
+- Echo's palette prints **three** swatches and contains no indicator colour at all.
+- Whether *"Lit Orange"* (Echo) and *"Bright Orange"* (Nova) are genuinely different values.
+
+### Proposed answer
+
+**Resolve it as "visor AND light" for both fighters, not "visor OR light" for Echo.**
+
+| | Echo | Nova |
+|---|---|---|
+| Faceplate | **Dark visor plane.** Matte black, glossy, non-emissive — exactly as page 12 draws it. Nothing changes about the art. | Dark visor across the face, as drawn. Unchanged. |
+| Indicator | **One small discrete emissive element** added at the lower side of the helmet, in the same position Nova's sits | The **"Light"** her sheet already names. Unchanged. |
+| Indicator colour | **"Lit Orange"** — the only accent in Echo's three-swatch palette | **OPEN.** Art says yellow-green; the palette does not list it. **Designer decides.** |
+| Gameplay modulation | **None.** Constant low emissive. Identity only. | **None.** Same. |
+| Cyan-white | **Not used.** Reserved for combat energy, telegraphs, and selected VFX accents | Same |
+
+So the sheet's either/or dissolves: **Nova's board already shows a visor and a light coexisting
+on one helmet**, and page 12's callout is most economically read as naming the same two parts
+rather than offering a choice between them.
+
+**And the faceplate is explicitly *not* a gameplay-state channel.** That job is item 44's, and
+it lives on the back. This item hands the face to identity and takes it out of the readability
+argument on purpose.
+
+### Why
+
+**1. It removes the inconsistency instead of deepening it.** The dispatch's own concern is that
+the two fighters may currently be inconsistent with each other. Making Echo's faceplate a lamp
+while Nova's stays a dark visor *is* the inconsistency, made permanent. Giving both the same
+two-part structure — dark plane plus small light — costs one small emissive element on Echo and
+closes the question.
+
+**2. Camera geometry says the face is almost never on screen during the fight.** GDD §07's
+opening flow requires *"The camera moves behind the selected fighter"*, and `design-brief.md`
+§10.2 carries the arena's **reverse third-person framing** requirement. For the whole three-to-
+five-minute duel the player is looking at the **back** of their own fighter's helmet. The face
+is on camera in exactly four places, and all four are M5 or cinematic:
+
+| Where the face is actually visible | Milestone |
+|---|---|
+| The editorial character-selection interface | M5-08 |
+| The abbreviated arena entrance / `IntroMontage` | M4 (functional) → M5 (treated) |
+| The 1–3 s Impact Window choreographed burst | M3 (functional) → M5 (camera authored) |
+| The Final Clash camera cut, `LS_FinalClash` | M4 (functional) → M5 (choreographed) |
+
+**Spending a readability channel on a surface that is off-camera for the entire duel is spending
+it in the wrong place.** The faceplate is worth exactly what a face is worth: recognition on the
+select screen and presence in the cinematic beats.
+
+**3. A full emissive faceplate would be the largest single emissive area on either fighter, and
+Nova has no equivalent.** Attention in a duel goes to the brightest moving thing. If Echo's face
+is a lamp and Nova's is not, the two fighters are not equally legible to their own player, and
+the asymmetry lands on the *head* — the region players look at first. A small indicator on both
+is symmetric, and symmetric is what SCOPE LOCK asks for.
+
+**4. It protects Nova's readability target without penalising Echo.** *"Momentum without visual
+noise"* is a ceiling on how much Nova may glow. The cheap way to honour it is to lower Nova.
+The correct way is to pick a channel small enough that Echo does not need to be lowered either.
+
+**5. It keeps the player out of the rival's colour lane.** Crimson Vanguard reads through
+*"red-orange systems and warning lights."* A large orange glow on Echo's face at combat distance
+competes with the exact cue the player must read to survive. This produces a rule worth stating
+once and applying to items 43 and 44 together:
+
+> **The rival owns animated emissive. The player owns static or stepped emissive.**
+> Flashing, pulsing, and ramping belong to `ANS_Telegraph` on Crimson Vanguard's montages.
+> The player's on-body emissive holds still, or changes in discrete steps at threshold
+> crossings. **Motion, not hue, is the discriminator** — which survives a colour-blind player
+> and survives the two fighters sharing an orange family with the rival's red-orange.
+
+**6. It is the cheapest thing that answers the question.** One small emissive island in the
+master material and one LinearColor on a data asset that already exists.
+
+### Prior art (real games, named)
+
+- **Dead Space — the RIG.** Visceral put the player's state on Isaac's **back**, not his face:
+  a glowing segmented spine bar for health and *"a circular Stasis bar on his back"* for the
+  second resource. The stated design reason is that the third-person camera looks at the back,
+  so the back is the surface that is always on screen. The face-vs-back question in Ascendant
+  Impact has the same answer for the same reason, and Dead Space is the reference case for it
+  at AAA scale.
+- **Overwatch.** Blizzard's readability doctrine is silhouette first, then a signature colour
+  palette carried across every skin so *"you're never confused about who you're fighting"*, then
+  unique VFX and unique audio **per ability**. Note the split: the *character* is identified by
+  silhouette and palette; the *state* is communicated by ability VFX and sound. Head-region art
+  in Overwatch is a recognition anchor (Lúcio's headphones, D.Va's mech profile), not a state
+  readout. That is exactly the division proposed here.
+- **For Honor — Revenge.** Full-resource state is shown as *"a slight orange-yellow glow"* on
+  the whole body **plus** a shield icon that fills around the edge on the HUD — two channels for
+  one fact — **plus** a shimmering sound, and Ubisoft later shipped explicit colour-blind
+  support for it. Not a face element in any of its three channels.
+
+*(Destiny 2 was searched as a fourth candidate and is **not** cited: the results describe
+super-ready as a HUD readout, with body glow appearing only on specific cosmetic armour
+ornaments. **Unverified as a gameplay-state channel** and not used as evidence.)*
+
+### Milestone placement
+
+**M5-06, entirely.** Faceplate treatment, the indicator element, the emissive island in the
+master material, and the indicator colour are all *final character treatment*, which is the M5
+gate's own wording — and the GDD gates M5 as *"Only after M4 is stable."*
+
+**Note to M1 — and it is a prohibition, not a task.** M1–M4 fighters are Mannequin proxies
+(§12.2, §12.3). A Mannequin has no faceplate. **Do not attempt any faceplate or indicator
+treatment before M5.** Phase 1 fighters carry the flat `AccentColor` that `ApplyFighterProfile`
+already sets in §4.2, and nothing more. That is `design-brief.md` §11.6's line held exactly
+where it is: picking a colour is asset selection, authoring an emissive element is M5.
+
+---
+
+## Item 44 — Are Echo's "Integrated Energy Lines" emissive at runtime?
+
+- **Kind:** B · **Status:** PROPOSED
+- **Unblocks build step:** **M5-06** — final character treatment.
+- **Value lives in:** **again, no §13.2 row exists.** Proposed home:
+  - `M_Fighter_Master` — one scalar parameter **`Ascension01`** (range 0–1) multiplied into the
+    emissive input through a **per-fighter mask**, so the *same parameter* lights *different
+    geometry* on each fighter with no logic difference.
+  - `DA_FighterProfile.AscensionEmissiveCurve` (`CurveFloat` asset) — maps `Ascension01` to
+    emissive intensity. **This is where "how much Nova is allowed to glow" is authored**, as a
+    curve asset, without a single branch anywhere in code.
+  - One function, `BP_AscensionComponent → UpdateAscensionMaterial(NewValue)`, bound to the
+    **already-specified** `OnMeterChanged` delegate (§4.9), calling `Set Scalar Parameter Value`
+    on a **cached** dynamic material instance.
+  - **Proposed new §13.2 rows, next free numbers 59 and 60** — *59: per-fighter Ascension
+    emissive curve; 60: the tier thresholds the curve steps at.* Designer assigns the numbers.
+
+### GDD basis
+
+Same qualifier as item 43: these are **callouts printed inside image reference sheets**, not
+authored GDD prose.
+
+| Source | Exactly what it says |
+|---|---|
+| Page 12 callouts (Echo) | **"Integrated Energy Lines"**, **"Backpack Power Unit Core"** |
+| Page 12, described | *"the rear view shows **thin orange energy lines** tracing up the spine and across the shoulder blades, converging on a **central back unit**… low-profile and integrated, not a worn pack."* |
+| Page 12, ambiguity list | **"AMBIGUOUS: whether the orange energy lines are emissive at runtime or printed trim. They are drawn flat, with no glow or bloom."** |
+| Page 13 (Nova) | **No back unit and no energy lines.** Her back shows *"a large orange shoulder yoke and a charcoal spine panel."* Small **yellow-green indicator strips** sit on the chest and left ribs |
+| §07 (authored) | Echo *"Controlled orange accents"* · Nova *"Cyan-white combat energy or selected telegraphs"* · CV *"Red-orange systems and warning lights"* |
+| §07 REVISED — COLOR DIRECTION (authored) | cyan-white is *"reserved for combat energy, telegraphs, or selected VFX accents"* — **not a costume recolor** |
+| GDD PRESERVED — METER DEFINITION (authored, via `design-brief.md` §4.9) | the meter is *"earned only through active combat decisions. It does not fill from waiting or elapsed time."* |
+| `design/decisions.md` 2026-08-02 — **Q22 APPROVED** | the Final Clash is the **only** way to win; the meter is therefore the only route to the ending. Condition **C2**: the HUD must show which gate is still locked |
+
+**Ambiguous, and left ambiguous:** whether the lines are emissive at all (the question); whether
+Nova's yellow-green strips are a legitimate emissive colour for her given her four-swatch palette
+does not contain yellow-green; whether "Lit Orange" and "Bright Orange" differ.
+
+### Proposed answer
+
+**Yes to both — with four hard constraints that keep it inside the GDD's colour rule, Nova's
+readability target, and SCOPE LOCK.**
+
+**1. Emissive at runtime: yes.** Echo's energy lines and the circular power-unit core are
+authored as an emissive island in `M_Fighter_Master`, masked to Echo's geometry.
+
+**2. Ascension-responsive: yes — and for *both* fighters, through each one's own art.** An
+emissive channel that tells one fighter's player their meter state and leaves the other guessing
+is a per-fighter information advantage, which is a per-fighter advantage. So:
+
+| | Echo's channel | Nova's channel |
+|---|---|---|
+| Geometry | Spine **"Integrated Energy Lines"** + the circular **"Backpack Power Unit Core"** they converge on | Her existing back **orange shoulder yoke**, and the outline edge of the charcoal spine panel |
+| Lit area | Larger — a literal line-and-core "charge" read | **Deliberately smaller.** Same information, less surface |
+| Colour | *"Lit Orange"* — her own accent, intensity only | *"Bright Orange"* — her own accent, intensity only |
+| Hue change | **Never.** Intensity only | **Never.** Intensity only |
+| New geometry | None. It is already on the sheet | **None.** No back unit is added to Nova — see the tension below |
+
+Nova gets the smaller channel *because* her readability target is *"momentum without visual
+noise"*, and that is the entire mechanism by which the target is honoured while parity of
+information is kept. `AscensionEmissiveCurve` is where the difference is authored: two curve
+assets, one code path.
+
+**3. Discrete tiers, not a continuous fill — and the thresholds are numbers the design already
+owns.** No new number is invented here:
+
+| Tier | Meter | Body reads | Where the number comes from |
+|---|---|---|---|
+| **Dim** | 0–49 | Lines dark / barely present | complement of the below |
+| **Lit** | 50–99 | Lines carrying, core warm | **50** is the failed-Clash meter setback — `design-brief.md` §13.1 row 14, a GDD number |
+| **Full** | 100 | Core at full, lines saturated, holds steady | **100** is the Final Clash meter gate — §13.1 row 11, a GDD number |
+
+**The question for the designer** is not the thresholds — those are borrowed rather than
+invented — it is **whether three tiers is the right count, or whether a continuous fill reads
+better.** Three is proposed because a stepped read is glanceable in peripheral vision and a
+continuous fill is not, and because a continuously animating body element is the thing Nova's
+target forbids. **Two, three, four, or continuous are all defensible. Designer decides.**
+
+**4. Four rules that are part of the answer, not commentary:**
+
+- **It is never the only channel.** The `WBP_HUD` meter bar stays authoritative and Q22's
+  condition **C2** — the HUD showing *which* gate is still locked — stays entirely on the HUD.
+  The body says *how charged I am*. It never says *whether the Clash is available*, because
+  that is a two-gate fact and the body has one dimension.
+- **No animation during Telegraph, Active, or Recover.** State changes fire only on a threshold
+  crossing. Any transition flash routes through
+  `BP_PresentationSubsystem → RequestVFX` / `RequestHitStop` (§4.10), so the presentation
+  kill-switch removes it wholesale during diagnosis **without touching the meter value**.
+- **No hue change, ever.** Intensity only, in each fighter's own accent. **Cyan-white is not
+  used for this channel** — it stays reserved for combat energy, telegraphs, and selected VFX
+  accents, and a meter readout is none of those.
+- **It reads state; it never creates state.** No damage, no meter, no timing, no collision.
+  Turning it off changes nothing mechanical, which is what makes it safe to make optional.
+
+**A consequence worth naming because it is free and good:** a failed Final Clash drops the meter
+100 → 50 (§9.4 step 5). On the body that is **Full → Lit**, visible on the player's own back at
+the moment it happens. The single most misreadable rule in the design — *a failed Clash is a
+setback, not a restart* — gets a diegetic statement at zero cost.
+
+### Why
+
+**1. The back is the most on-screen surface in this game, and Echo's sheet already put the art
+there.** GDD §07 requires the camera to move *"behind the selected fighter"*; §10.2 carries
+**reverse third-person framing** as an arena requirement. For the entire duel the player is
+looking at a spine and a shoulder line. Page 12 draws energy lines up that spine converging on a
+circular core. That is not a coincidence to be admired — it is a channel the concept art already
+built and the code has not yet used.
+
+**2. It is genuinely cheap, which is the claim the TODO item makes and it holds.** One scalar
+parameter on a cached MID, set from a delegate that §4.9 already specifies. No Niagara system, no
+new component, no tick. Set against M5's actual VFX list — telegraph energy, thruster plumes,
+warning-light systems, the Ascension language — this is the cheapest item on it by a wide margin.
+
+**3. Under the approved Q22, meter state is the most decision-relevant number in the game.** The
+Final Clash is the only win condition, so the meter is the only route to the ending. Right now
+the player reads it by looking away from the fight to a HUD corner — during a duel whose entire
+premise is *reading the rival's telegraph*. A second channel on the surface the camera is already
+pointed at keeps the eyes where the game needs them.
+
+**4. A hypothesis worth playtesting, offered as a hypothesis.** Group 02's open tension 2 is the
+*"2-hit-and-bail"* player, who never finishes a string, earns no meter, and can reach a pinned
+rival with an empty bar. A body channel that visibly **never lights** may teach that faster than
+a bar the player is not looking at. **This is unproven and is not a reason to approve the item on
+its own** — it is a thing to watch for in the first playtest.
+
+**5. Nova's constraint is satisfied by area and by stillness, not by exclusion.** The wrong answer
+to *"momentum without visual noise"* is to give Nova nothing. The right answer is a channel small
+enough and still enough that it is legible without competing with her own animation.
+
+### Tensions and risks — surfaced, not resolved
+
+| # | Risk | Note |
+|---|---|---|
+| **1** | **Echo's orange vs the rival's red-orange warning lights.** They are neighbours on the wheel, and the rival's telegraph is the one cue the player must not miss. | Mitigated by the rule from item 43: **the rival owns animated emissive; the player owns static or stepped emissive.** Motion is the discriminator, not hue. **This does not eliminate the risk — it makes it testable.** |
+| **2** | **Legibility at duel distance is unproven.** A thin spine line at 300–500 cm through a combat camera may simply not read. | This is the standing criticism of Dead Space's RIG — that diegetic readouts must be *"legible at in-world scale"* and that a back-mounted bar has *"little functional difference from a traditional corner-of-screen health bar."* **Only playtest settles it.** The redundancy rule is what makes a negative result cheap: if it does not read, nothing breaks. |
+| **3** | **Nova has no back unit.** If the designer wants parity of *lit area* rather than parity of *information*, that is a change to Nova's character art. | **Out of scope for this item and for Phase 1.** Named so it is a decision rather than a drift. |
+| **4** | **Nova's yellow-green indicator strips.** They are in the art and not in her printed palette. | This item deliberately does **not** use them as the Ascension channel — it uses her orange back yoke, which *is* in the palette. The yellow-green question stays open on its own. |
+| **5** | **An accessibility toggle makes it non-load-bearing, which is the point.** | Doom Eternal ships its equivalent as player-disableable. Recommend the same, wired to the existing debug/presentation toggle surface rather than a new setting. Because the HUD is authoritative, disabling it removes flavour and no information. |
+
+### Prior art (real games, named)
+
+- **Dead Space — the RIG.** The near-exact precedent, and it maps almost part-for-part. Visceral
+  put a **glowing segmented spine bar** on Isaac's back for health *and* **a circular Stasis bar
+  on the same back** for the second resource. Echo's sheet has **spine lines** and **a circular
+  back core**. Two more details transfer directly: the bar is **segmented** rather than smooth,
+  and it steps through **discrete states** — reported as aqua-blue above 75%, green above 50%,
+  yellow below 50%, blinking red below 25%. That is a stepped, glanceable read, which is the
+  argument for tiers over a continuous fill. The design rationale is stated by the team: the
+  ribbed suit exists partly *to* host a diegetic readout on the back, and the back is where the
+  third-person camera looks. **The known criticism travels with it** and is logged as risk 2.
+- **For Honor — Revenge.** Full-resource state shown as a body glow **and** a HUD shield **and**
+  a sound cue. Three redundant channels for one fact, in a 1v1-focused melee game with heavy
+  read-and-react combat. This is the single closest genre match to Ascendant Impact, and it does
+  not make the body glow the only channel. Ubisoft also shipped colour-blind support for it.
+- **Devil May Cry 5 — Devil Trigger / Sin Devil Trigger.** The Sin Devil Trigger gauge *"starts
+  glowing when fully charged"* on the HUD, and when the state is active the character's **chest
+  and head glow** and the body is wreathed in effects. Same pattern: **full-resource is signalled
+  in both places**, and the on-body version is the loud one reserved for the moment it matters.
+- **Doom Eternal — the stagger flash.** An **orange flash on the enemy body** means a Glory Kill
+  is available and in range; **blue** means staggered but out of range. State communicated by
+  emissive on a character body rather than a HUD element, in a fast game, and **players can
+  disable the flashing glow**. Two lessons: a two-state colour read is enough to carry a real
+  mechanic, and a body-emissive channel is normal to make optional.
+- **Tekken 8 — Heat.** Already cited in the Q14 section above and it cuts both ways: Heat is
+  signalled by a **light-blue aura on the character *and* a bar under the health bar** — the
+  redundancy pattern again — while the community complaint that Tekken 8's effects volume makes
+  animations harder to read is **the direct warning against Nova's target**, *"momentum without
+  visual noise."*
+
+### Milestone placement
+
+**M5-06, entirely.** Material authoring, the emissive masks, the curve assets, the tier
+thresholds, and the transition treatment are all final character treatment, and the GDD gates M5
+as *"Only after M4 is stable."* No part of this is built, authored, or tuned during M1–M4.
+
+**Note to M1 — two lines, and neither of them is M5 work.** These exist so that approving this
+item at M5 does not force a rewrite of code M1 is writing anyway:
+
+1. **`ApplyFighterProfile` (§4.2) already sets a material parameter for `AccentColor`. Make sure
+   it does so through a dynamic material instance created *once* and cached**, not one created
+   per call. This is a correctness fix regardless of item 44 — creating a MID repeatedly leaks a
+   new material object each time, and it is the standard failure mode in this pattern. **One MID
+   per mesh component per material slot, created on `BeginPlay`, stored on the component.**
+2. **`BP_AscensionComponent` already broadcasts `OnMeterChanged` (§4.9).** No new delegate, no new
+   event, no new component is needed at M5. **Bind nothing to it for emissive purposes before
+   M5.**
+
+That is the whole M1 note. **No emissive parameter, no mask, no curve asset, and no glow of any
+kind is authored during M1–M4.** Phase 1 fighters stay at the flat `AccentColor` that
+`design-brief.md` §11.6 already permits as asset selection.
+
+---
+
+## Item 45 — What does "SFN" stand for?
+
+- **Kind:** B · **Status:** PROPOSED — **and the proposal is to leave it open.**
+- **Unblocks build step:** **M5-08** — the editorial character-selection interface. *(A
+  sub-question also touches M5-06; see below.)*
+- **Value lives in:** **no §13.2 row, and this one has no natural home either** — it is a string,
+  not a tunable. Proposed home, following the **Q29 precedent exactly**:
+  - `WBP_CharacterSelect` — an exposed `Text` variable **`FighterUnitLine`**, **left blank by the
+    developer.** §14 Q29 already establishes this discipline for Crimson Vanguard's short HUD
+    label: *"The developer should expose it as a `Text` variable on `WBP_HUD` and leave it blank
+    rather than inventing one."* Same rule, same reason.
+  - **Proposed new §13.2 row, next free number 61** — *"Expansion of the 'SFN' unit insignia (if
+    any)."* Designer assigns the number.
+
+### GDD basis
+
+| Source | Exactly what it says |
+|---|---|
+| Page 13 callout (Nova) | **"Unique 'SFN' Unit Insignia"** |
+| Page 13, described | *"A **circular badge on the upper arm**, orange-outlined, carrying a stylised angular monogram… the only readable lettering identified on either fighter's sheet."* |
+| Page 13, ambiguity list | **"AMBIGUOUS: what 'SFN' stands for. It is nowhere expanded in the GDD."** |
+| Page 12 callout (Echo) | **"Unique Badge"** — and page 12's ambiguity list records: *"the badge carries a device but no readable lettering. Nova's equivalent badge* is *lettered; Echo's is not."* |
+| Everywhere else in the GDD | **Nothing.** No expansion, no unit name, no organisation name appears in any authored section |
+
+### Proposed answer
+
+**It cannot be established from the GDD, and this file does not establish it. Leave it
+unexpanded, and ship M5-08 without needing it.**
+
+Three parts:
+
+**1. The build does not need the expansion.** The insignia is a **circular badge with a stylised
+angular monogram**. A unit mark reads as a unit mark whether or not the letters are expanded —
+that is what unit marks are for. **M5-08 ships the badge as art.** If the editorial selection
+interface wants a unit line under Nova's name, `FighterUnitLine` is exposed and **left blank**,
+and the layout is authored so that a blank line collapses cleanly rather than leaving a hole.
+Nothing in the game is blocked by this question, ever.
+
+**2. Verify the three letters before anyone builds fiction on them.** Page 13 carries at least
+two confirmed print errors — **"Visor liast"** and **"Two-Layer System (Technical Shirt"** with
+an unclosed parenthesis — and the badge is a small, stylised, angular monogram. **A human should
+confirm "SFN" against the PDF by eye before it is treated as established lettering.** This is the
+same discipline `TODO` item 26 applied to the *"plasma-gauntlet weapons"* transcription, and for
+the same reason: the recovered sheets are image descriptions, and a mis-read of three stylised
+glyphs would propagate into every downstream artifact that quoted it.
+
+**3. If the designer does want an expansion, it comes from assignment #04, not from here.** The
+offline content pipeline reads the GDD as its knowledge base, runs a critic agent for lore and
+tone consistency, and terminates in the human approval gate. `CLAUDE.md` already names *"No
+UI/announcer/telegraph strings"* as one of this project's real content gaps, and this is exactly
+that gap. That pipeline is **offline authoring tooling outside the game's SCOPE LOCK**; the
+shipped build still makes no runtime model calls. **Nothing generated there enters the build
+without the designer's explicit approval.**
+
+**A fourth option that is legitimate and costs nothing: declare that "SFN" is never expanded.**
+An unexplained unit designation on a shoulder patch is a normal and effective piece of world
+texture. Choosing *not* to expand it is a real answer, not a deferral, and it is the cheapest one
+on the table.
+
+### The larger question this actually raises
+
+**Is "SFN" Nova's unit, or the organisation both agents serve?**
+
+Nova's badge is lettered. **Echo's is not.** If SFN is a shared unit, Echo's *"Unique Badge"*
+should logically carry the same mark, and that is a **character-art change at M5-06**, not a
+string decision at M5-08. If SFN is Nova's alone, the two agents belong to different units, which
+is a fiction fact the GDD has never stated either way.
+
+There is also a thread to the **undefined "Ascendant operative" fiction** — `CLAUDE.md` lists
+*"'Ascendant operative' and the Ascension fiction are undefined"* as a named content gap. If a
+unit fiction is ever authored, **SFN and "Ascendant" must be reconciled in one pass**, or the
+project ends up with two unrelated organisational names attached to the same two characters.
+
+**Neither of these is resolved here.** Both are handed to the designer.
+
+### Candidate expansions — **INVENTED. NO GDD BASIS. NOT CANON.**
+
+> **Read this label literally.** Every string below was made up by this dispatch. **None of them
+> appears anywhere in the GDD, on either character sheet, or in any authored document in this
+> repository.** They exist only so the designer has something concrete to reject. Approving one
+> would be authoring new canon, and that is the designer's act, not this file's.
+
+| Candidate | Invented | Note |
+|---|---|---|
+| *Special Forces — Nine* | yes | Reads as a military unit designation. Generic; adds no world texture |
+| *Sentinel Field Network* | yes | Fits an operative-dispatch fiction and could plausibly extend to Echo |
+| *Sovereign Frontier Network* | yes | Broader organisational read; would need reconciling with "Ascendant" |
+| *Strike Force Nova* | yes | **Recommended against on structural grounds** — it names the unit after one selectable fighter, which makes Echo the outsider in his own shared framework and breaks any shared-unit reading |
+
+**No research was spent on this item.** The dispatch's own instruction was that research is
+unlikely to help, and it is correct: "SFN" is a three-letter mark invented for this project's
+concept art. There is nothing to look up.
+
+### Milestone placement
+
+**M5-08** for the selection-interface string, which ships **blank** unless and until the designer
+authors an expansion. **M5-06** for the separate badge-parity question — whether Echo's unlettered
+badge should carry the same mark.
+
+**Note to M1:** none. Nothing in M1–M4 displays a unit name. `WBP_CharacterSelect` at M1 is the
+GDD's permitted *"simplified selection screen"* — two portrait buttons, name, one-line identity
+(§10.1) — and **it must not invent a unit line to fill space.**
+
+---
+
+## Answering group 03's MontagePlayRate warning
+
+**For the developer. This is the whole protection, stated as steps you can implement without
+reading the rest of this file.**
+
+Group 03 warned three times that `DA_FighterProfile.MontagePlayRate` would silently scale
+**Q6 (dodge i-frames, 0.28 s)** and **Q7 (perfect dodge, 0.12 s)** into per-fighter difficulty,
+because an Anim Montage's play rate is a time scalar on the entire montage and every Anim Notify
+State on it is therefore scaled with it. Seven measures close it:
+
+1. **The value is `1.000` for Echo and `1.000` for Nova.** Identical. At play rate 1.0 the
+   scaling factor is unity and every notify state on every player montage occupies exactly the
+   wall-clock time it was authored to occupy. **This alone is the answer; measures 2–7 are what
+   stop it drifting.**
+
+2. **The field is renamed `CosmeticMontagePlayRate`**, with a `UPROPERTY` tooltip reading
+   *"Never applied to a montage that carries a gameplay notify window. See design/group-05."*
+
+3. **It may be read by exactly four montages, and this is the complete list:**
+   `AM_Fighter_SelectIdle`, `AM_Fighter_ArenaEntrance`, `AM_Fighter_Victory`,
+   `AM_Fighter_Defeat`. **It is never read by** `AM_Player_LightCombo`, `AM_Player_Dodge`,
+   `AM_Player_Counter`, `AM_Player_CounterWhiff`, any Impact Window burst montage, or any Final
+   Clash montage.
+
+4. **There is one call site.** A `Blueprint Function Library` node,
+   `PlayFighterMontage(Montage, bCosmetic)`, is **the only place in the project** where
+   `Montage_SetPlayRate` — or `Montage Play`'s `In Play Rate` pin — is given a value other than
+   `1.0` on a **player** montage. Every other player montage play passes a literal `1.0`.
+
+5. **The call site self-checks.** When `bCosmetic = true`, `PlayFighterMontage` `ensure()`s that
+   the montage carries **zero** notify states of the gameplay classes `ANS_IFrame`,
+   `ANS_PerfectDodge`, `ANS_ActiveHit`, `ANS_ComboLink`, `ANS_CounterWindow`. Wiring a gameplay
+   montage into the cosmetic path produces an **editor warning**, not a silent balance change.
+
+6. **Displacement never travels through play rate.** Q16's 400 cm dodge distance is delivered by
+   **Motion Warping** — a warp target set from `DodgeDistance` before `Montage_Play`, consumed by
+   a Motion Warping notify on the dodge montage. **Motion Warping changes how far the character
+   moves and leaves the montage timeline untouched.** Q6's `[0.03, 0.31]` and Q7's `[0.03, 0.15]`
+   sit at the same montage times, and therefore the same real times, at any distance.
+
+7. **If a bespoke Nova dodge montage is ever authored**, it must use the **identical montage
+   length with the notify states at identical times**, enforced by an editor validation check
+   that compares the two profiles' dodge montages and **errors** if `ANS_IFrame` or
+   `ANS_PerfectDodge` start or duration differ by more than one frame. Otherwise the problem
+   returns through the art pipeline instead of through a data asset.
+
+**Inspector-checkable statement:** `Montage_SetPlayRate` and any non-`1.0` `In Play Rate` on a
+player montage appear in exactly **one** asset, `PlayFighterMontage`. Anywhere else is a defect.
+
+**One scoping clarification the developer needs, or measure 5 will fire falsely.** This guard
+governs the **player kit only**. The **rival's** montages legitimately use play-rate scaling:
+`design-brief.md` §5.3 and §8.3 implement Phase 2 re-timing through `S_AttackPhaseTuning`'s
+`TelegraphScale` and `RecoverScale`, applied as play rate over the telegraph and recover sections
+of `AM_Vanguard_Attack*`. **That is the intended one data path and must not be "fixed."** Two
+consequences follow, and both are correct rather than bugs:
+
+- Scaling the telegraph section also scales any `ANS_CounterWindow` authored on it. **That is
+  intended** — the counter window should move with the telegraph it is a read on.
+- Because Phase 2 shortens the telegraph (**0.55–0.95 s → 0.40–0.75 s**, GDD), the counter window
+  shortens with it. **That is Phase 2 pressure**, and it lands **identically on Echo and Nova**,
+  which is the entire point of holding the player-side play rate at 1.0.
+
+---
+
+## Differentiation budget
+
+**The question underneath Q14, Q15 and Q16 is not "what values?" — it is "how much difference
+does this game still need to buy?" Here is the ledger.**
+
+### Already bought, at no cost to the framework
+
+The recovered sheets show Echo and Nova reading as **different people before a single scalar
+moves**:
+
+| | Echo (p.12) | Nova (p.13) |
+|---|---|---|
+| Palette | 3 swatches | **4** — adds "Light Grey (Helmet Cap)" |
+| Helmet | Entirely black | Light-grey cap over dark visor |
+| Torso | One-piece **"Segmented Body Suit"** | **"Dual-Layer System (Jacket over Vest)"** |
+| Back | **"Backpack Power Unit Core"** + energy lines | Orange shoulder yoke, no back unit |
+| Legs | Close-fitting, one continuous line | Cargo trousers to below the knee, then close legging |
+| Carry | None | **Two named thigh pouches** |
+| Footwear | Low-profile shoe | High-top **"Designed Light Sneakers"** |
+| Insignia | **"Unique Badge"**, unlettered | Circular, lettered **"SFN"** |
+
+Add the GDD's authored 10 cm height difference and §07's silhouette language — *"lean, upright
+technical striker"* versus *"compact, agile layered profile"* — and the two fighters differ in
+**height, outline, layer count, palette count, carried volume, leg break, footwear mass, and
+insignia**. That is a full differentiation budget, spent, in the channel §02 names first:
+*"animation presentation, stance and movement personality, VFX language, timing flavor."*
+
+### How much *mechanical* differentiation is still needed
+
+**In Phase 1: none. Zero.** The conservative reading is the right call, and it is right for four
+reasons that do not depend on each other.
+
+**1. The GDD sequences it, in its own words.** §10's Provisional Design Decisions, row *Echo /
+Nova timing flavor*: *"Use the same mechanics and balance framework; **approve only
+presentation-level timing flavor at first**."* The load-bearing word is **"at first"** — this is a
+sequence instruction, not a permanent ban. Phase 1 is "first." §02 then names what is deferred by
+category: *"Fully unique move sets, **separate balance systems**, and extensive character-specific
+cinematics are deferred until the base duel is stable."* Q14, Q15 and Q16 split are all separate
+balance systems in miniature: difficulty, mobility, and safety respectively.
+
+**2. All three candidate splits turned out to be balance, not flavour.** That is the finding of
+the three sections above, and it was not the expected result:
+
+| | Looks like | Is |
+|---|---|---|
+| Q14 play rate | animation feel | a **9% swing in Q7**, the game's difficulty dial — plus ~**+10% DPS and meter/s** on the combo |
+| Q15 walk speed | movement personality | a **published balance stat** in every fighting game that has one, and under Q22 the difference between being able to disengage and rebuild meter or not |
+| Q16 dodge distance | dodge feel | a per-fighter **safety** value against attack B's multi-hit sequence |
+
+**There was no cheap flavour split available.** Every one of the three routes into the balance
+layer the GDD defers by name.
+
+**3. The schedule decides ties, and this one is not close.** The GDD's own safeguard requires
+*"Validate both selectable avatars against the same collision, targeting, reach, and
+arena-boundary tests."* At identical scalars, one shared montage set, and one `ABP_Fighter`, that
+is **one test pass**. Split any of the three and the M1 gate, the Q10 range bands, the Q7 window,
+and the Q2 health derivation each need checking twice. With the duel due **1 September** and M4
+targeted functionally complete around 20 August (R7), a second validation pass is not affordable
+and buys nothing the sheets have not already delivered.
+
+**4. Prior art says the split is not what makes characters distinct anyway.** Smash Ultimate's
+Peach and Daisy have identical frame data post-patch and are still unmistakably two characters —
+orange flowers versus pink hearts. Mortal Kombat's ninjas were one digitised sprite, recoloured,
+and became five of the most durable identities in the genre. **Presentation carried both cases.**
+
+### The one asymmetry that cannot be zeroed, and it is already live
+
+**Height. 183 cm versus 173 cm, published in the GDD.** It drives capsule half-height, hurtbox
+volume, attack-trace socket heights, and how the rival's `MinRange`/`MaxRange` bands read in
+practice. The GDD states the requirement directly: *"The height difference must not create unfair
+hidden reach or collision behavior."*
+
+This is precisely the residual Smash could not eliminate either — the one difference that survived
+Daisy's patching was that she is slightly shorter, which changes her hurtbox. And Street Fighter 6
+supplies the sharper warning: **walk speed does not even predict traversal time there**, because
+collision box size interacts with it — Zangief at 3.64 crosses the screen faster than JP at 3.70.
+**In a game whose two avatars already have different capsules, a speed split would not produce the
+clean difference the designer intends.** It would produce a difference nobody can predict.
+
+**So the M1 gate's same-tests requirement is not boilerplate — it is the mitigation for the one
+asymmetry that exists whatever Q14/Q15/Q16 resolve to.**
+
+### Where the differentiation budget is actually spent
+
+Nothing is being withheld. It is being routed:
+
+| Channel | Echo | Nova | Milestone |
+|---|---|---|---|
+| Silhouette, palette, costume, insignia | already authored on p.12 | already authored on p.13 | M5-06 (proxies until then) |
+| Locomotion **cadence** at identical 600 uu/s | longer stride, settle at the end | short, frequent, torso leading | M1 (asset selection) → M5 (tuned) |
+| Dodge **pose content** at identical 400 cm / 0.28 s / 0.12 s | measured step-out, guard reforming | low lateral scramble, recovers leaning in | M1 → M5 |
+| `StanceAdditivePose` (§4.2) | upright / technical | compact / layered | M1 |
+| `AccentColor` | restrained orange | preserved palette; **cyan-white is not a costume recolor** | M1 |
+| `IntroMontage` | abbreviated | abbreviated | M4 → M5 |
+| **Items 43 / 44 emissive channel**, if approved | spine lines + back core | back yoke, smaller area | **M5-06 only** |
+
+**The player will read Nova as quicker.** Apparent speed in third-person action is dominated by
+animation cadence and camera behaviour, not by the movement component's scalar — which is exactly
+why two characters with identical frame data can feel different.
+
+### The honest counterpoint, stated so it is a decision and not a drift
+
+**If the designer's intent is that Echo and Nova *play* differently and not merely look
+differently, Phase 1 as recommended does not deliver that.** Three "identical" recommendations in
+a row add up to a real design position, and it should be accepted explicitly rather than arrived
+at by accumulation. The position is: *in Phase 1 Echo and Nova are one fighter with two
+presentations, and mechanical differentiation is deferred until the base duel is stable* — which
+is what the GDD says to do, and which the recovered sheets make affordable in a way it would not
+have been without them.
+
+**Reopening it is a Phase 2 conversation**, and it will be a better one then: Q7 will have been
+playtested, Q2 will be locked, and a split can be **measured** instead of guessed.
+
+---
+
+*Research note: 10 sources this dispatch, against a 15-source cap. Item 45 was deliberately not
+searched — per the dispatch, and because "SFN" is a mark invented for this project's concept art
+and there is nothing to look up. Destiny 2 was searched as prior art for a body-mounted
+resource-ready channel and is **cited as not usable** rather than stretched: the results describe
+it as a HUD readout with body glow appearing only on specific cosmetic ornaments.*
+
+*Prior art consulted for items 43 and 44: Dead Space (RIG spine + circular Stasis bar, diegetic UI
+design intent and its standing criticism), For Honor (Revenge — body glow + HUD shield + audio,
+plus shipped colour-blind support), Doom Eternal (orange/blue stagger flash, player-disableable),
+Devil May Cry 5 (Sin Devil Trigger gauge glow at full charge; chest and head glow when active),
+Overwatch (silhouette-first readability, signature palette per hero, per-ability VFX and audio),
+Tekken 8 (Heat aura + bar; the effects-volume readability complaint). Unreal-side: cached dynamic
+material instance + `Set Scalar Parameter Value` on a scalar emissive parameter, with the
+create-once-and-cache rule.*
+
+---

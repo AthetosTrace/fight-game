@@ -55,6 +55,62 @@ and triggers rule 4.
 
 ## Log
 
+### 2026-08-02 — Group 05 · fighter feel and presentation (Q14, Q15, Q16, items 43, 44, 45)
+
+- **Status:** **PROPOSED** — all six. The designer decides.
+- **Resolves:** TODO items 7 (Q14), 8 (Q15), 9 (Q16), 43, 44, 45 · all KIND B
+- **Dispatch:** group 05 → `design/group-05-fighter-feel.md`. **Ran in two parts** — the
+  first dispatch was killed mid-run by an API session limit after Q14/Q15/Q16; because
+  the prompt required incremental writes, those three survived on disk and were committed
+  before a fresh dispatch completed items 43–45.
+
+| Item | Proposed | Lives in | Unblocks |
+|---|---|---|---|
+| Q14 | `MontagePlayRate` **1.000 / 1.000, identical** | `DA_FighterProfile` | M1-12 |
+| Q15 | `MaxWalkSpeed` **600 uu/s identical**; locked-on strafe **420**, backpedal **360** | `DA_FighterProfile` | M1-12 |
+| Q16 | `DodgeDistance` **400 cm identical**, delivered by **Motion Warping** | `DA_FighterProfile` | M1-12 |
+| 43 | Echo's faceplate is **"visor AND light", not "visor OR light"** — dark visor plane plus one small indicator in the same helmet position Nova's already occupies. **No gameplay-state modulation.** | `M_Fighter` / helmet material | M5-06 |
+| 44 | Energy lines **emissive and Ascension-responsive, for both fighters** — one `Ascension01` scalar on the shared master material, per-fighter masks, stepped at **50 and 100** (thresholds the design already owns), intensity only, no hue change | shared master material | M5-06 |
+| 45 | **"SFN" cannot be established and is not established here.** Ship the badge as art; expose `FighterUnitLine` **blank**, per the Q29 precedent | `WBP_CharacterSelect` | M5-08 |
+
+- **Q14's answer is structural, not just a value.** Rename the field
+  `CosmeticMontagePlayRate`; restrict consumers to a four-montage allowlist carrying no
+  gameplay notify states; route every `Montage_SetPlayRate` through one library node that
+  `ensure()`s the montage is notify-free. **This is the direct answer to group 03's
+  warning that Q14 would silently scale Q6/Q7 into per-fighter difficulty.**
+- **Scoping catch the guard needs:** the **rival's** `TelegraphScale`/`RecoverScale`
+  legitimately use play rate — that is the Phase 2 one-data-path — so the guard must be
+  scoped to the player kit or it fires falsely.
+- **Q16 uses Motion Warping deliberately:** warping changes displacement without touching
+  the montage timeline Q6 and Q7 sit on. Play rate would move both.
+- **Item 43's reasoning is worth keeping:** under the GDD's reverse third-person framing
+  the face is **off-camera for the entire duel** — it appears only on the select screen,
+  the entrance, the Impact burst, and the Clash. So the faceplate is not a viable
+  readability channel and should not be made one.
+- **Item 44 respects Nova's readability target** — her lit area is deliberately smaller
+  than Echo's, because *"momentum without visual noise"* limits how much may glow. The
+  channel is **never the only channel**; the HUD stays authoritative and keeps C2's gate
+  indicator.
+- **Milestone order held.** All of 43 and 44 is placed in **M5**. The only "Note to M1" is
+  two lines that add no work: cache the dynamic material instance `ApplyFighterProfile`
+  already needs, and bind nothing to `OnMeterChanged` for emissive purposes before M5.
+- **Supersedes GDD:** none. Prior art: Dead Space's RIG spine, For Honor's Revenge, Doom
+  Eternal glory-kill states, Devil May Cry's Devil Trigger, Overwatch/TF2 readability.
+
+**Tensions carried forward:** Echo's orange sits next to the rival's red-orange warning
+lights — mitigated by a rule (**the rival owns animated emissive, the player owns static
+or stepped**) that makes the risk testable, not gone. Thin-spine-line legibility at duel
+distance is unproven and is the standing criticism of the Dead Space RIG it is modelled
+on. **Nova's yellow-green indicator strips appear in the art but not in her printed
+four-swatch palette** — routed around, not resolved. Nova has no back unit, so parity of
+*information* is achievable but parity of *lit area* would be a character-art change,
+declared out of scope. **"SFN" is a stylised monogram on a sheet with two confirmed
+typos — a human should confirm the letters against the PDF before anyone builds fiction
+on them.**
+
+**Two more missing rows — now TODO items 52, 53:** the locked-on **strafe multiplier** and
+**backpedal multiplier** have no §13.2 row and no Q number.
+
 ### 2026-08-02 — Group 04 · spacing and arena (Q24, Q10, Q12, Q13, Q11, mezzanine)
 
 - **Status:** **PROPOSED** — all six. The designer decides.

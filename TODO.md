@@ -1,7 +1,7 @@
 # TODO — Ascendant Impact
 
-**50 open items** — **1 closed · 17 PROPOSED · 33 untouched.** Last worked 2026-08-02.
-> Six new items so far (46–51) were found by the dispatches themselves: real gaps in
+**52 open items** — **1 closed · 23 PROPOSED · 29 untouched.** Last worked 2026-08-02.
+> Eight new items so far (46–53) were found by the dispatches themselves: real gaps in
 > `design-brief.md` §13.2 that have no row and no Q number. The list grew because the
 > work found holes, which is the list working.
 
@@ -23,6 +23,7 @@ build order rather than being rewritten every group.
 | 2 (Q1), 3 (Q2), 21 (Q3), 11 (Q4), 12 (Q5) | 02 — combat economy | `design/group-02-combat-economy.md` |
 | 14 (Q6), **15 (Q7 · BLOCKING)**, 16 (Q8), 33 (Q26), 30 (Q27), 13 (Q28) | 03 — defensive timing | `design/group-03-defensive-timing.md` |
 | 17 (Q24), 22 (Q10), 23 (Q12), 24 (Q13), 10 (Q11), 18 (mezzanine) | 04 — spacing and arena | `design/group-04-spacing-and-arena.md` |
+| 7 (Q14), 8 (Q15), 9 (Q16), 43, 44, 45 | 05 — fighter feel and presentation | `design/group-05-fighter-feel.md` |
 
 ## How this file works
 
@@ -68,7 +69,7 @@ rows 29–57 are Q1–Q29 with no remainder. They are therefore listed once, und
 number, and not double-counted. §13.1 is fully specified by the GDD and contributes no
 open items, with one exception now recorded below (row 28).
 
-**The reverse is not true, and that is the interesting part.** Items 46–51 are
+**The reverse is not true, and that is the interesting part.** Items 46–53 are
 values the build needs that §13.2 has **no row for at all**. The table is complete with
 respect to itself and incomplete with respect to the game. Expect more of these as the
 groups run.
@@ -146,6 +147,19 @@ second gap closer, which changes the four-attack spacing shape. No number propos
 **51. `SelectionWeight` has no row and no Q number.** · **KIND B**
 Found by the group 04 dispatch. GDD §04 requires Phase 2 to shift attack weighting toward
 "more aggressive close-range and gap-closing selection", but there is no field to shift.
+
+### M1-16 — additional gaps found 2026-08-02
+
+Found by the group 05 dispatch while answering Q15. §13.2 row 43 covers free-movement
+walk speed only; a lock-on system that strafes at full run speed feels wrong regardless
+of what Q15 resolves to.
+
+**52. Locked-on strafe speed multiplier has no row and no Q number.** · **KIND B**
+Group 05 used 0.70× (420 uu/s) as a working value and flagged it as a gap rather than
+smuggling it in as an answer.
+
+**53. Locked-on backpedal multiplier has no row and no Q number.** · **KIND B**
+Group 05 used 0.60× (360 uu/s), same caveat.
 
 ### M1-16 — Create `BP_LockOnComponent`
 
