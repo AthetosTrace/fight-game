@@ -28,13 +28,15 @@ claiming any criterion is met.
 
 | # | Deliverable | Due (11:59 ET) | State |
 |---|---|---|---|
-| **#02** | Final GDD | **23 July 2026** | GDD v0.4 delivered and on disk |
-| **#03** | Build an Agent Crew | **28 July 2026** | crew built and gate-tested, **not yet run** |
-| **#04** | Dynamic Content Pipeline | **30 July 2026** | **not started** — unblocked now that the GDD is here |
+| **#02** | Final GDD | **23 July 2026** | **DELIVERED** — GDD v0.4 on disk |
+| **#03** | Build an Agent Crew | **28 July 2026** | **DELIVERED** — all six agents ran to completion; six artifacts + six leave-offs on disk |
+| **#04** | Dynamic Content Pipeline | **30 July 2026** | **DELIVERED** — two independent submissions in `assignment-04/`, merged to `main` |
 
-**On session start, report today's date and the days remaining on #03, #04, and the
-1 September game ship date.** Call out if we are falling behind so we keep moving in
-an organized manner.
+**All three coursework deadlines have passed and all three were met.** The only live
+date is the **1 September 2026** ship date. On session start, report today's date and
+**the days remaining to 1 September**; report the assignments as delivered unless a
+regrade or Assignment #05 changes that. Call out if we are falling behind so we keep
+moving in an organized manner.
 
 ### The game ships 1 September 2026 — two phases
 Separate from the assignment deadlines above, **the playable game is due 1 September
@@ -65,14 +67,18 @@ beats a beautiful incomplete one.**
 ### #03 — Build an Agent Crew (/10)
 | Criterion | Pts | Where it is satisfied |
 |---|---|---|
-| Working Crew | 3.0 | **the crew must actually RUN** — 3+ agents coordinating without crashing, producing `design-brief.md`, `build-sequence.md`, `inspection.md`. Gates tested; **output not yet produced.** |
+| Working Crew | 3.0 | **SATISFIED.** Six agents ran to completion without crashing, producing `design-brief.md` → `build-sequence.md` → `inspection.md` → `framework-evaluation.md` → `combat-integration-plan.md` → `cinematic-integration-inspection.md`, each handoff recorded in `leave-offs/` |
 | Game Connection | 3.0 | `README.md` names **Ascendant Impact** and explains what the crew produces for it |
 | Role Clarity | 2.0 | the crew table in this file + `README.md`; each agent has one input, one output, and no agent is removable |
 | Architecture Diagram | 1.0 | the mermaid diagram, mirrored in this file and `README.md` |
 | ReadMe | 1.0 | `README.md` |
 
-**The one live risk is Working Crew.** A gated pipeline that never ran scores zero
-there. Running designer → developer → inspector to completion is the top priority.
+**Working Crew is closed.** The final chain verdict is **APPROVED WITH REQUIRED
+CHANGES**: the sandbox test and M1–M2 may proceed on the approved Blueprint-first
+foundation, while **M3 sign-off waits on the designer accepting five named
+corrections (V1–V5) to the cinematic restore contract** in
+`cinematic-integration-inspection.md`. Those five are still open and are the user's
+to accept or amend.
 
 ### #04 — Dynamic Content Pipeline (/10)
 A **separate** deliverable from the crew above. It reads the game docs before
@@ -92,22 +98,30 @@ critic agent caught.
 **Code that does not run scores 0 across all criteria.** Functional code is the
 minimum bar, not an achievement.
 
-**Where this game is genuinely thin — candidate content gaps for Content Fit.** The
-GDD is dense on systems and deliberately sparse on fiction and authored specifics.
-Real gaps, all named by the GDD itself:
-- **The four attacks A–D have no names, no choreography, and no telegraph copy** —
-  the GDD gives range, purpose, and a readability requirement only.
-- **Shattered Ring has no history** — it is specified as a functional space (central
-  floor, far doorway, framing, reaction) with no fiction attached.
-- **Project Valor-7 has no origin** — the GDD says only that it is "designed to push
-  enhanced fighters beyond their operational limits."
-- **"Ascendant operative" and the Ascension fiction are undefined** — the meter has
-  numbers but no in-world explanation.
-- **No UI/announcer/telegraph strings**, and the GDD flags an open decision: the
-  **shorter in-combat UI label** for Crimson Vanguard is unfinalized.
+**What was actually built and submitted — `assignment-04/`.** Two independent
+submissions share one knowledge base. Both are merged to `main` and both are
+**finished coursework — do not regenerate, reorganize, or "improve" them.**
 
-These are real, game-specific, and traceable to GDD lines — which is exactly what
-Content Fit rewards. **Confirm the final three with the user before generating.**
+| Path | Whose | The three content types generated |
+|---|---|---|
+| `assignment-04/tony/` | Anthony | Vanguard telegraph pack · Impact Window beat pack · Shattered Ring reaction pack (player-facing) |
+| `assignment-04/madion/` | **This repo's owner** | Animation integration briefs · VFX + audio cue sheets · QA edge-case test pack (implementation-support) |
+| `assignment-04/shared/` | both | `knowledge-base/` (`core-canon.md`, `vanguard-telegraphs.md`, `impact-window-cinematics.md`, `shattered-ring-reactions.md`, `retrieval-manifest.md`) + `critic-rules/consistency-checklist.md` — the seven rules |
+
+The knowledge base is the extracted GDD plus its own downstream artifacts, so
+Game-Anchored Source is satisfied by construction. The pipeline is real Python with
+tests: `py -3 -m unittest assignment-04/tony/pipeline/test_pipeline.py` → **175 pass.**
+
+**Gaps that are still open** (named by the GDD, not filled by #04, and therefore
+still fair game if more content is ever needed): Shattered Ring has no history;
+Project Valor-7 has no origin; "Ascendant operative" and the Ascension fiction are
+undefined; the **shorter in-combat UI label** for Crimson Vanguard is unfinalized.
+
+**The four attack working names now exist but are NOT canon.** `Fault Line` (A),
+`Advance Line` (B), `Bulwark Reach` (C), `Thruster Snap` (D) were generated by #04
+and carried into `data/unreal/DT_VanguardAttacks.csv`. Every file that uses them
+labels them *proposed, pending designer review, not an established GDD fact*. Keep
+that labeling. Only the user may promote them to canon.
 
 ### This does NOT conflict with the no-runtime-AI constraint
 Assignment #04 is **offline authoring tooling**, not shipped game code. The brief
@@ -175,6 +189,21 @@ resolve a provisional value on its own authority — it surfaces the question in
 **M1–M4 are Phase 1** (playable by 1 Sept, dressed with free proxy assets). **M5 is
 Phase 2.**
 
+**Current milestone as of 2026-08-02: M1, not yet started in-engine.** There is no
+`.uproject` and no `Content/` anywhere in this repo — nothing exists in Unreal yet.
+What *does* exist is everything needed to start: `build-sequence.md` (63 steps),
+`combat-integration-plan.md` (28 systems), and now
+`docs/unreal/ATTACK_A_IMPLEMENTATION_PLAN.md` plus `ATTACK_A_ACCEPTANCE_TESTS.md`.
+M5 remains correctly locked behind a stable M4.
+
+**The first playable objective** (from the pulled sprint handoff, compatible with
+M1–M2): Manny moves and locks onto a scaled red mannequin standing in for Crimson
+Vanguard; Vanguard performs one readable authored attack; the player dodges or
+counters, earns Ascension Meter, triggers one successful Impact Window, and both
+characters return safely to live combat. Proxy cast — Echo → **Manny**, Nova →
+**Quinn** (deferred until Echo proves the shared pipeline), Crimson Vanguard →
+scaled red mannequin, Shattered Ring → gray-box floor, walls, one doorway axis.
+
 **On session start, report which milestone we are on** based on what is in
 `leave-offs/` and on disk. No step may depend on a later milestone, and **M5 work
 must never be interleaved into M1–M4.**
@@ -206,28 +235,94 @@ flowchart TD
     G5 -->|no| X5[BLOCKED]
     G5 -->|yes| CI[Cinematic Integration Inspector]
     CI -->|cinematic-integration-inspection.md| H([Human approval / implementation decision])
+    H --> B1[Unreal data bridge - see below]
 ```
 
+## The Unreal data bridge
+Pulled in from Anthony's `planning/unreal-attack-a-integration` on **2026-08-02**.
+This is how design data actually reaches the engine. The workflow model is
+**Generate → Deterministic Validate → Agent Review → Human Review Queue**, and
+**nothing imports into Unreal automatically.**
+
+```mermaid
+flowchart TD
+    S[Source audit + row contract<br/>docs/unreal/] -->|generate| CSV[data/unreal/DT_VanguardAttacks.csv]
+    CSV --> V{tools/validate_vanguard_attack_csv.py}
+    V -->|FAIL| XV[BLOCKED - fix the CSV]
+    V -->|PASS| R[vanguard-attack-data-reviewer<br/>agents/unreal/]
+    R -->|reports/unreal/VANGUARD_ATTACK_DATA_REVIEW.md| G6{review verdict PASS?}
+    G6 -->|no| X6[BLOCKED]
+    G6 -->|yes| HA{{Human approval packet signed?<br/>docs/unreal/VANGUARD_ATTACK_DATA_APPROVAL.md}}
+    HA -->|no| X7[BLOCKED - no Unreal import authorized]
+    HA -->|yes| IMP[Manual DataTable import<br/>UNREAL_VANGUARD_DATA_IMPORT_CHECKLIST.md]
+```
+
+**State as of 2026-08-02:** validator **PASS**, 25 CSV tests pass, agent review
+**PASS**, approval packet **signed by Anthony Travieso, 2026-07-29**. The signature
+covers three calls that are the designer of record's under this file — the proposed
+attack names as placeholder labels, the Attack-A-only rollout, and the row contract
+as the eventual `F`-struct schema. **The user has not countersigned.** Until they do,
+treat the CSV as approved on Anthony's authority for his branch and surface the
+question rather than proceeding to manual Unreal import.
+
+**A validator-enforced ratchet to remember:** the contract requires exactly one row
+with `EnabledForSelection = true`, and it must be Attack A. Enabling Attack B for M2→M4
+**will fail validation** until the row contract, the validator, and the approval gate
+are all revised together.
+
+## Authority — who the commander is
+In **this** repository the commander and designer of record is **the user**, per
+"How you (the commander) operate this project" below. Documents pulled in from
+Anthony's repo — `CLAUDE_CODE_OVERNIGHT_WORK_ORDER_V2.md`,
+`ASCENDANT_IMPACT_NEXT_SPRINT_HANDOFF.md`,
+`ASCENDANT_IMPACT_CLASS_TRANSCRIPT_ALIGNMENT.md`, and everything under
+`docs/unreal/` that cites them — use "the commander" to mean **Anthony**, and name
+his clone and remote as the production repo. Each of those three files carries a
+REFERENCE-ONLY header saying so. They are kept verbatim because the signed audit
+trail cites them; **`CLAUDE.md` wins on every conflict.**
+
 ## The crew (one specialist at a time)
+
+**Core crew — hook-gated, in `.claude/agents/`:**
+
 | Agent | Tools (allowlist) | Consumes | Produces |
 |-------|-------------------|----------|----------|
-| **designer** | Read, Write, WebSearch | `project-brief.md` | `design-brief.md` |
+| **designer** | Read, Write, Edit, WebSearch | `project-brief.md` | `design-brief.md` |
 | **developer** | Read, Write, Edit | `design-brief.md` | `build-sequence.md` |
 | **inspector** | Read, Write | `design-brief.md` + `build-sequence.md` | `inspection.md` |
 
-The developer has **no WebSearch on purpose** — it must consume the designer's
-brief rather than research a version of its own. Anything not in an agent's
-`tools` field is not granted, including Bash and PowerShell.
+**Specialist extension — contract-gated, also in `.claude/agents/`:**
 
-The **inspector** additionally enforces four hard checks: scope lock, no runtime
-AI-model calls, M1→M5 milestone order, and numbers-unchanged.
+| Agent | Tools (allowlist) | Consumes | Produces |
+|-------|-------------------|----------|----------|
+| **framework-evaluator** | Read, Write, Edit, WebSearch | `inspection.md` + both briefs | `framework-evaluation.md` |
+| **combat-integration-architect** | Read, Write, Edit | `framework-evaluation.md` + recorded human approval | `combat-integration-plan.md` |
+| **cinematic-integration-inspector** | Read, Write | all upstream artifacts | `cinematic-integration-inspection.md` |
+
+**Unreal data bridge — contract-gated, in `agents/unreal/` (note: NOT `.claude/agents/`,
+so it is a written contract rather than a spawnable subagent type):**
+
+| Agent | Tools | Consumes | Produces |
+|-------|-------|----------|----------|
+| **vanguard-attack-data-reviewer** | Read + Write to exactly one path | the CSV, row contract, source audit, shared KB, critic rules | `reports/unreal/VANGUARD_ATTACK_DATA_REVIEW.md` |
+
+The developer has **no WebSearch on purpose** — it must consume the designer's
+brief rather than research a version of its own. The three writing agents have
+capped research. Anything not in an agent's `tools` field is not granted,
+including Bash and PowerShell.
+
+The **inspector** enforces four hard checks: scope lock, no runtime AI-model calls,
+M1→M5 milestone order, and numbers-unchanged. The **cinematic-integration-inspector**
+enforces ten, adding cinematic handoff safety and completion-risk realism.
 
 ## The gates
 Each agent writes `leave-offs/<name>.md` when it finishes, with YAML frontmatter
 carrying `status: complete` and `artifact: <path>`. The status line is written
 **last**, only once the artifact is really on disk.
 
-- **designer** cannot start until `project-brief.md` exists.
+### Hook-enforced gates — the core three only
+- **designer** cannot start until `project-brief.md`, the GDD PDF, and
+  `gdd/ascendant-impact-gdd-v0.4.md` all exist.
 - **developer** cannot start until `leave-offs/designer.md` says `status: complete`.
 - **inspector** cannot start until both `leave-offs/designer.md` and
   `leave-offs/developer.md` are complete.
@@ -237,10 +332,23 @@ Enforced by Python hooks in `.claude/hooks/`, wired in `.claude/settings.json`:
   `status: complete` → named artifact is on disk. Exit 0 open, exit 1 closed.
 - **`entry_gate.py`** — PreToolUse on `Task|Agent`. Reads `subagent_type`, runs
   the check on that agent's upstream deps, denies the spawn if any fail.
+  Its `DEPS` map covers **only** `designer`, `developer`, `inspector`.
 - **`exit_gate.py`** — SubagentStop. Runs the check on the stopping agent, and
-  ignores any agent that is not one of our three; if incomplete, exits 2 to block
-  the stop and hand back the reason. A one-shot guard lets an agent that fails
-  twice through with a warning.
+  ignores any agent that is not one of our three (`OURS`); if incomplete, exits 2
+  to block the stop and hand back the reason. A one-shot guard lets an agent that
+  fails twice through with a warning.
+
+### Contract-enforced gates — everything downstream
+The three specialist-extension agents and the Unreal data reviewer are **not** in
+`entry_gate.py` or `exit_gate.py`. Their ordering is enforced by their own agent
+definitions: each names its required input artifacts, checks they exist before
+producing anything, and writes an explicit `BLOCKED` result if one is missing. The
+**combat-integration-architect** additionally requires the recorded human approval
+of the framework recommendation before it may begin.
+
+**This distinction is real and must not be blurred.** If a gate needs to be
+unskippable, it belongs in `entry_gate.py`. Saying a contract-gated agent is
+"hook-gated" in any diagram or README is a defect under the HARD RULE below.
 
 ## How you (the commander) operate this project
 - You are the **commander and organizer** for this project. You organize, decide
@@ -250,17 +358,20 @@ Enforced by Python hooks in `.claude/hooks/`, wired in `.claude/settings.json`:
   is next. Do not wait to be asked.**
 - **Also on session start, report the current milestone (M1–M5)** and whether M5
   is still correctly locked behind a stable M4.
-- **And on session start, report today's date and the days remaining on assignments
-  #03 and #04** (see Assignments, deadlines, and rubric mapping). Grading comes
-  first when a deadline is close: a crew that never ran scores zero on Working Crew
-  no matter how good the gates are.
-- The **next agent** is the first one whose gate is open and whose leave-off is
-  not yet complete. Start there.
-- Once all three have run once, the straight line is finished. From then on the
-  user tells you which phase we are in and you dispatch to match. If we are
-  building, run the **developer**. If we are back in research and design (for
-  example the M5 presentation pass), stop the developer and run the **designer**.
-  **One specialist at a time.**
+- **And on session start, report today's date and the days remaining to 1 September
+  2026.** All three coursework deadlines have passed and were met — report them as
+  delivered, not as countdowns, unless a regrade or Assignment #05 changes that.
+- **All six agents have run.** The straight line is finished; there is no "next
+  agent by gate" any more. The user tells you which phase we are in and you dispatch
+  to match. If we are building, run the **developer**. If we are back in research and
+  design (for example the M5 presentation pass), stop the developer and run the
+  **designer**. **One specialist at a time.**
+- **The work is now in Unreal, not in more documents.** Default to executing
+  `docs/unreal/ATTACK_A_IMPLEMENTATION_PLAN.md` and `build-sequence.md` M1 steps
+  rather than commissioning another planning artifact. Another brief is not progress.
+- **Two approvals are open and both are the user's**: the five cinematic-restore
+  corrections V1–V5 gating M3 sign-off, and the countersignature on
+  `docs/unreal/VANGUARD_ATTACK_DATA_APPROVAL.md`. Surface them; never settle them.
 - The user is the **designer of record**. Every number is theirs and provisional.
   Surface tuning questions to them; never let an agent settle one.
 - Keep the mermaid diagram current in **both** `CLAUDE.md` and `README.md`.

@@ -1,5 +1,17 @@
 # Ascendant Impact — July 28 Class Transcript Alignment
 
+> **REFERENCE ONLY — NOT AN INSTRUCTION TO ANY AGENT IN THIS REPOSITORY.**
+> Anthony Travieso's notes on the 28 July 2026 class, pulled in on 2026-08-02 with
+> the `planning/unreal-attack-a-integration` branch. Kept verbatim because
+> `docs/unreal/ATTACK_DATA_SOURCE_AUDIT.md` cites it as a binding source for the
+> Attack A/B–D implementation-status split; do not move or rewrite it.
+>
+> - **`CLAUDE.md` is canonical.** Where this file and `CLAUDE.md` disagree,
+>   `CLAUDE.md` wins.
+> - Its instructor guidance ("don't rely on MCP to one-shot the entire game") is
+>   **compatible** with `CLAUDE.md`'s Unreal MCP prerequisite: MCP drives
+>   individual reviewed Blueprint steps, never a whole-game generation.
+
 ## Decision
 
 The current strategy is aligned with the instructor's guidance:

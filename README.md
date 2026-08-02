@@ -137,21 +137,58 @@ flowchart TD
     G5 -->|no| X5[BLOCKED]
     G5 -->|yes| CI[Cinematic Integration Inspector]
     CI -->|cinematic-integration-inspection.md| H([Human approval / implementation decision])
+    H --> B1[Unreal data bridge - see below]
 ```
 
-The canonical copy of this pipeline lives in [`CLAUDE.md`](CLAUDE.md); this diagram
-is a mirror. If the pipeline changes, `CLAUDE.md` is updated first and this file is
+### The Unreal data bridge
+
+How design data actually reaches the engine. The workflow model is **Generate →
+Deterministic Validate → Agent Review → Human Review Queue**, and **nothing imports
+into Unreal automatically.**
+
+```mermaid
+flowchart TD
+    S[Source audit + row contract<br/>docs/unreal/] -->|generate| CSV[data/unreal/DT_VanguardAttacks.csv]
+    CSV --> V{tools/validate_vanguard_attack_csv.py}
+    V -->|FAIL| XV[BLOCKED - fix the CSV]
+    V -->|PASS| R[vanguard-attack-data-reviewer<br/>agents/unreal/]
+    R -->|reports/unreal/VANGUARD_ATTACK_DATA_REVIEW.md| G6{review verdict PASS?}
+    G6 -->|no| X6[BLOCKED]
+    G6 -->|yes| HA{{Human approval packet signed?<br/>docs/unreal/VANGUARD_ATTACK_DATA_APPROVAL.md}}
+    HA -->|no| X7[BLOCKED - no Unreal import authorized]
+    HA -->|yes| IMP[Manual DataTable import<br/>UNREAL_VANGUARD_DATA_IMPORT_CHECKLIST.md]
+```
+
+The bridge carries the four Crimson Vanguard attacks into an Unreal-importable
+DataTable with **Attack A enabled and B–D disabled**, every open value left blank
+rather than invented, and a deterministic validator plus 25 tests enforcing the row
+contract. As of 2026-08-02 the validator passes, the agent review passes, and the
+approval packet is signed.
+
+The canonical copy of both diagrams lives in [`CLAUDE.md`](CLAUDE.md); these are
+mirrors. If the pipeline changes, `CLAUDE.md` is updated first and this file is
 kept in sync.
 
 ## Where the deliverables live
 
 | Deliverable | File |
 |---|---|
-| Crew code — six coordinating agents | [`.claude/agents/`](.claude/agents/) (`designer`, `developer`, `inspector`, `framework-evaluator`, `combat-integration-architect`, `cinematic-integration-inspector`) |
+| Crew code — six coordinating agents | [`.claude/agents/`](.claude/agents/) (`designer`, `developer`, `inspector`, `framework-evaluator`, `combat-integration-architect`, `cinematic-integration-inspector`), plus the Unreal data bridge's review contract in [`agents/unreal/`](agents/unreal/) |
 | Orchestration and gating | Hard Python hooks for the original three-agent crew: [`.claude/hooks/`](.claude/hooks/), wired in [`.claude/settings.json`](.claude/settings.json). Tony's specialist extension is ordered by self-blocking dependency contracts in each agent definition (required inputs, explicit `BLOCKED` behavior, artifact-existence checks, recorded human approval) rather than by the hooks. |
 | Mermaid diagram — roles, connections, data flow | this file and [`CLAUDE.md`](CLAUDE.md) |
 | ReadMe — what the crew produces and for which game | this file |
 | Crew output | `design-brief.md` → `build-sequence.md` → `inspection.md` → `framework-evaluation.md` → `combat-integration-plan.md` → `cinematic-integration-inspection.md`, with handoffs recorded in [`leave-offs/`](leave-offs/) |
 
+| Assignment 04 — dynamic content pipeline | [`assignment-04/`](assignment-04/) — two independent submissions (`tony/`, `madion/`) over one shared GDD-grounded knowledge base (`shared/`), with retrieval evidence, critic evidence, and 175 passing tests |
+| Unreal data bridge | [`docs/unreal/`](docs/unreal/), [`data/unreal/`](data/unreal/), [`tools/`](tools/), [`reports/unreal/`](reports/unreal/) |
+
 The game is **Ascendant Impact**. Course requirement docs are in
 [`assignments/`](assignments/).
+
+## Status
+
+All six agents have run to completion; the chain verdict is **APPROVED WITH REQUIRED
+CHANGES**, with five cinematic-restore corrections (V1–V5) still awaiting the
+designer before M3 sign-off. Assignments #02, #03, and #04 are delivered. The build
+is at **M1 and not yet started in-engine** — the next work is Unreal, not more
+documents. Phase 1 (M1–M4, a duel fought start to finish) is due **1 September 2026**.

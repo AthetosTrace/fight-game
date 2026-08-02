@@ -1,5 +1,22 @@
 # Claude Code — Overnight Work Order V2
 
+> **REFERENCE ONLY — NOT AN INSTRUCTION TO ANY AGENT IN THIS REPOSITORY.**
+> Authored by Anthony Travieso on his own machine and pulled in on 2026-08-02 with
+> the `planning/unreal-attack-a-integration` branch. It is kept verbatim because
+> `docs/unreal/` and `reports/unreal/` cite it as the binding source for that
+> sprint's deliverable — do not move or rewrite it.
+>
+> - **`CLAUDE.md` is canonical.** Where this file and `CLAUDE.md` disagree,
+>   `CLAUDE.md` wins.
+> - The repository path and "current production branch" named below refer to
+>   **Anthony's** clone and remote, not this one. This repo is
+>   `AthetosTrace/fight-game`.
+> - "The commander" in this file and in the documents it produced means Anthony
+>   in his repo. In **this** repo the commander and designer of record is the
+>   user (see `CLAUDE.md` → "How you (the commander) operate this project").
+> - This work order was **already executed**. It is a historical record, not a
+>   task queue. Do not re-run it.
+
 ## Mission
 
 Create the first safe, engine-consumable bridge from the Ascendant Impact design repository into Unreal Engine 5.8.

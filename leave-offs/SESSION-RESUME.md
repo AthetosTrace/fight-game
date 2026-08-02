@@ -1,67 +1,79 @@
-# Session resume — written 2026-07-25, end of session
+# Session resume — written 2026-08-02
 
 Not a gate file. The gate hooks only read `designer.md`, `developer.md`, and
 `inspector.md`; this file is here for the next session to read first.
 
-## Why this session ended
-
-An **API session limit** (resets 7:20 pm America/New_York) killed the designer agent
-mid-run. It had already written `design-brief.md`; it had not yet written its
-leave-off. Nothing was lost — see `leave-offs/designer.md` for what the commander
-verified before recording that gate.
+**Recompute every date below on session start — they are stale the moment this file
+is saved.**
 
 ## Where the project actually stands
 
 | Thing | State |
 |---|---|
-| Milestone | **M1** — nothing built in Unreal yet |
-| Phase | **Phase 1** (playable duel by 1 Sept 2026) |
-| designer | **complete** — `design-brief.md`, 1090 lines |
-| developer | **not run** — gate is **open**, this is the next agent |
-| inspector | **not run** — gate closed until the developer completes |
-| #04 pipeline | **not started** |
+| Milestone | **M1 — not yet started in-engine.** No `.uproject`, no `Content/` anywhere in the repo |
+| Phase | **Phase 1** (a duel fought start to finish by 1 Sept 2026) |
+| Coursework | **#02, #03, #04 all delivered and past due-date.** Nothing outstanding |
+| Agent crew | **all six have run.** The straight line is finished — there is no "next agent by gate" |
+| Unreal data bridge | pulled in 2026-08-02; validator PASS, 25 CSV tests PASS, agent review PASS, approval signed by Anthony |
+| Git | local `main` == `origin/main`. Anthony's `tony/main` is behind us |
+
+## What happened this session (2026-08-02)
+
+1. **Audited `CLAUDE.md` against the repo** — found it two deliverables stale
+   (claimed #03 never ran and #04 never started), listing three agents when six
+   exist, with wrong designer tools and a gates section that implied the specialist
+   extension was hook-gated when it is not.
+2. **Confirmed Anthony never received our work.** `tony/main` is a direct ancestor
+   of our `main`. Our four commits — the agent-tools fix and all of
+   `assignment-04/madion/` — exist only on `origin`. The user chose to leave that
+   alone for now.
+3. **Pulled `tony/planning/unreal-attack-a-integration`** (15 commits, +3168 lines,
+   zero conflicts, all new paths). Verified in-tree afterward: validator PASS,
+   25 CSV tests, 175 assignment-04 tests, no regression. Pushed to `origin/main`.
+4. **Cleanup pass** — provenance headers on the three pulled root docs, `CLAUDE.md`
+   and `README.md` brought back in sync with reality, this file rewritten.
 
 ## Do this first, next session
 
-1. **Run the `developer`.** Its gate is open. It consumes `design-brief.md` and
-   produces `build-sequence.md`. This is the shortest path to the 3.0 Working Crew
-   points on #03.
-2. **Then run the `inspector`** — consumes both briefs, produces `inspection.md`.
-   That closes out assignment #03 completely.
-3. **Then move entirely to #04.** It is the deadline actually at risk.
+**Stop writing documents. Start building in Unreal.** Everything needed exists:
+`build-sequence.md` (63 steps, M1 first), `combat-integration-plan.md` (28 systems),
+`docs/unreal/ATTACK_A_IMPLEMENTATION_PLAN.md`, and
+`docs/unreal/ATTACK_A_ACCEPTANCE_TESTS.md`.
 
-## Deadlines as of the last session
+The first playable objective: Manny moves and locks onto a scaled red mannequin
+standing in for Crimson Vanguard; Vanguard performs one readable authored attack;
+the player dodges or counters, earns Ascension Meter, triggers one successful Impact
+Window, and both characters return safely to live combat.
 
-Today was **25 July 2026**.
+**Unreal MCP is still not connected.** It is required before build steps are executed
+in the editor.
 
-| Item | Due | Days left then |
-|---|---|---|
-| #03 Build an Agent Crew | 28 July 2026 | 3 |
-| #04 Dynamic Content Pipeline | 30 July 2026 | 5 |
-| **Game playable — Phase 1** | **1 September 2026** | 38 |
+## Still open — needs the user, and only the user
 
-**Recompute these on session start — they are stale the moment this file is saved.**
+- **Five cinematic-restore corrections V1–V5** in
+  `cinematic-integration-inspection.md`. M1–M2 may proceed without them; **M3
+  sign-off cannot.**
+- **Countersignature on `docs/unreal/VANGUARD_ATTACK_DATA_APPROVAL.md`.** It is
+  signed by Anthony Travieso (2026-07-29) and covers three designer-of-record calls:
+  the proposed attack names as placeholder labels, the Attack-A-only rollout, and the
+  row contract as the eventual `F`-struct schema. Until the user countersigns, treat
+  it as approved on Anthony's authority for his branch only, and do not proceed to
+  manual Unreal import.
+- **29 provisional values** in `design-brief.md` §14. None block the build — they
+  become exposed variables.
+- **Whether to push our four commits to Anthony's repo.** Deferred by the user on
+  2026-08-02.
 
-## Decisions made this session
+## Traps worth remembering
 
-- **The game ships 1 September 2026, in two phases.** Phase 1 = M1–M4, a duel that
-  can be fought start to finish with **some design on it**. Phase 2 = full M5 polish.
-  Written into `project-brief.md`, `CLAUDE.md`, and `README.md`.
-- **How Phase 1 gets a look without breaking M5 ordering:** dress the proxies. M1–M4
-  may stand up free third-party meshes, animations, and set dressing from the start —
-  asset selection is not a presentation pass. Tuned camera / VFX / hit-stop / sound
-  stays in M5.
-- **Budget is $0.** Unreal starter and template content, Fab free tier, free Quixel
-  grants, Mixamo, Paragon, Game Animation Sample Project. No purchases assumed.
-
-## Still open — needs the user
-
-- **The three #04 content gaps are not confirmed.** `CLAUDE.md` lists the candidates:
-  attack A–D names / choreography / telegraph copy · Shattered Ring history ·
-  Project Valor-7 origin · the Ascension fiction · UI, announcer, and telegraph
-  strings including the unfinalized short in-combat label for Crimson Vanguard.
-  **Confirm three with the user before generating anything for #04.**
-- **29 provisional values** await the human designer in `design-brief.md` §14. None
-  block the developer — they become exposed variables.
-- **Unreal MCP is not connected.** Required before build steps are executed in the
-  editor, not before `build-sequence.md` is written.
+- **Enabling Attack B will fail validation.** The row contract requires exactly one
+  enabled row and it must be A. M2→M4 needs the contract, the validator, and the
+  approval gate revised together.
+- **The attack names are not canon.** Fault Line / Advance Line / Bulwark Reach /
+  Thruster Snap came from Assignment 04 and are labeled *proposed, pending designer
+  review* everywhere they appear. Keep that labeling.
+- **Three root docs are Anthony's, not ours.** `CLAUDE_CODE_OVERNIGHT_WORK_ORDER_V2.md`,
+  `ASCENDANT_IMPACT_NEXT_SPRINT_HANDOFF.md`, and
+  `ASCENDANT_IMPACT_CLASS_TRANSCRIPT_ALIGNMENT.md` each carry a REFERENCE-ONLY
+  header. In those files "the commander" means Anthony. In this repo it means the
+  user. `CLAUDE.md` wins on every conflict.

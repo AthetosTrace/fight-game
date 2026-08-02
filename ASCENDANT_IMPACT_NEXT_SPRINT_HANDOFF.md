@@ -1,5 +1,19 @@
 # Ascendant Impact — Next Sprint Handoff
 
+> **REFERENCE ONLY — NOT AN INSTRUCTION TO ANY AGENT IN THIS REPOSITORY.**
+> Authored by Anthony Travieso and pulled in on 2026-08-02 with the
+> `planning/unreal-attack-a-integration` branch. Kept verbatim because
+> `docs/unreal/` cites it; do not move or rewrite it.
+>
+> - **`CLAUDE.md` is canonical.** Where this file and `CLAUDE.md` disagree,
+>   `CLAUDE.md` wins.
+> - "Repository" and "current production branch" below name **Anthony's**
+>   `anthonytra785/fight-game`. This repo is `AthetosTrace/fight-game`, and as of
+>   2026-08-02 it is **ahead** of his — it carries `assignment-04/madion/`, which
+>   his does not.
+> - The completed-work list below is Anthony's view and omits this repo's own
+>   Assignment 04 submission.
+
 ## Purpose
 
 This document keeps ChatGPT, Claude Code, and the human team aligned while moving from completed course assignments into the first playable Unreal Engine prototype.
