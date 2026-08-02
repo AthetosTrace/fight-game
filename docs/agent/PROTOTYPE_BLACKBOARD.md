@@ -875,3 +875,22 @@ All modified Blueprints compile clean (`warnings_as_errors=true`). Live-state ev
 ### 18.5 Git manifest (this milestone)
 
 Created: `Content/AscendantImpact/Duel/BP_DuelKnockoutCoordinator.uasset`. Modified: `Content/ThirdPerson/Blueprints/BP_ThirdPersonPlayerController.uasset` (toggle + chain), `Content/Variant_Combat/Blueprints/BP_VanguardProxy.uasset` + `Content/ThirdPerson/Blueprints/BP_ThirdPersonCharacter.uasset` (instance-editable health metadata only), `docs/agent/PROTOTYPE_BLACKBOARD.md`, `CLAUDE.md`. `Config/DefaultEditorPerProjectUserSettings.ini` untouched/unstaged.
+
+---
+
+## 19. Milestone 11 — Knockout fall-transition polish (2026-08-02, branch `feature/knockout-transition-polish`, from 64f97f5)
+
+**Problem:** the §18 knockout read as hit → upright reset → canned fall: the final hit-react bent the fighter, the mesh blended back toward the standing pose, `MM_Death_Front_01` restarted from standing, and ragdoll only took over 1.4 s later.
+
+**Fix (BP_DuelKnockoutCoordinator only):**
+
+- **Old sequence:** KO → stop systems → DisableMovement → play `MM_Death_Front_01` (blend-out 0) → ragdoll at `RagdollDelay` **1.4 s**.
+- **New sequence:** KO → stop systems (attack cancel + driver/mover ticks off) → DisableMovement (+ player attack block) → the already-playing final **hit-reaction montage remains the visible pose** → ragdoll at `ImpactToRagdollDelay` **0.2 s** (exposed, provisional 0.15–0.25 band) directly from the mesh's currently evaluated pose: capsule collision off, mesh profile Ragdoll, `SetSimulatePhysics(true)`, **`WakeAllRigidBodies`** (new). No impulse. No death montage in the default path.
+- **Why `MM_Death_Front_01` was bypassed:** dynamic slot montages always start from their authored standing pose, guaranteeing the visible reset; physics inheriting the live mid-hit-react pose collapses from exactly where the hit left the fighter.
+- **No sync step needed:** `SetSimulatePhysics` starts from the current evaluated pose and the capsule is never written — measured capsule displacement across the KO→ragdoll transition was **0.0 cm** for both fighters.
+
+**Assets changed:** `Content/AscendantImpact/Duel/BP_DuelKnockoutCoordinator.uasset` only (`RagdollDelay` removed, `ImpactToRagdollDelay` added at 0.2; `KnockoutVanguard`/`KnockoutPlayer`/`ApplyRagdoll`/`UpdateKnockout` rewritten). Compile clean with `warnings_as_errors=true`; saved.
+
+**PIE evidence (Lvl_DuelGraybox):** both KOs — flags one-shot, ragdoll simulating within the 0.7 s sample window, capsule moved 0.0 cm, driver stopped with telegraph hidden, stays down over 2.5 s+, HUD bars exactly 0.000, camera roll −6e-08, player KO blocks attack (`bIsAttacking=true`) and movement (`MOVE_None`); PIE restart resets all flags/health/movement; zero runtime/Accessed-None errors.
+
+**Remaining limitations:** ragdoll settle behavior depends on the template physics assets (no per-bone tuning); the 0.2 s window means the fall pose depends on which hit-react frame it lands on (variance is intentional but PENDING HUMAN for feel); no impulse means low-energy collapses — an optional small directional impulse is a documented future knob, deliberately not added.
