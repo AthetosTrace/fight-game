@@ -513,3 +513,68 @@ All numbers read from the live PIE world:
 - `Controller` and `ViewTarget` are not readable via `ObjectTools.get_properties` (same family as §11.9's ControlRotation) — possession was proven empirically (CMC consumed `AddMovementInput`, so a controller must exist).
 - `CaptureEditorImage` fails outright when the editor window isn't visible on the desktop ("Failed to capture any editor windows") — new tooling observation.
 - `time.sleep` inside `ProgrammaticToolset` scripts works and enables multi-sample runtime observation during PIE — first use of this technique; very effective for movement validation.
+
+---
+
+## 13. Milestone 5 — Duel-readability polish: jog retune + flat test arena (2026-08-02, branch `feature/duel-arena-polish`)
+
+Two deliverables: (1) retuned `BP_VanguardDuelMover` so the Vanguard visibly closes distance with purposeful combat-jog movement, and (2) a clean flat test level `Lvl_DuelGraybox` for camera/locomotion evaluation. No logic changes anywhere — Goal 1 is pure class-default tuning; Goal 2 is level content only. `Lvl_ThirdPerson` is untouched.
+
+### 13.1 Vanguard movement retune (class defaults only, no graph edits)
+
+| Variable | Old | New | Effect |
+|---|---|---|---|
+| `PreferredDistance` | 300 | **240** | settles into a closer, more readable fighting distance |
+| `RangeDeadZone` | 60 | **50** | advance triggers beyond 290 (was 360) — at the 350 cm spawn spacing the Vanguard now advances immediately instead of standing |
+| `VanguardMoveSpeed` | 180 | **300** | slow walk → combat jog |
+| `VanguardAcceleration` | 600 | **1000** | shorter, more purposeful starts/stops |
+| `DepthMoveScale` | 0.5 | **0.4** | restrained depth drift (120 cm/s) |
+
+Unchanged: `MinimumAxisSeparation` 110, depth decision intervals 1.5–3.5 s, `DepthHoldChance` 0.4, `MaxDepthTarget` ±150, lane 0 ± 180, `DepthArriveTolerance` 15. Hysteresis band is now advance >290 / retreat <190 / exits at 240. `compile_blueprint(warnings_as_errors=true)` clean; asset saved.
+
+### 13.2 Lvl_DuelGraybox — clean flat duel arena
+
+**Created `/Game/AscendantImpact/Maps/Lvl_DuelGraybox`** by duplicating `Lvl_ThirdPerson` via `AssetTools.duplicate` + `save_assets` — this **fully persisted the OFPA level from MCP alone** (66 fresh external-actor packages written to `Content/__ExternalActors__/AscendantImpact/Maps/Lvl_DuelGraybox/` + 2 under `__ExternalObjects__` + the `.umap`). The §7 "new actors need human Ctrl+S" blocker does not apply to the duplication path, because every package is created fresh by the asset-level duplicate.
+
+**Removed (17 actors — the raised central platform assembly that both fighters used to spawn on):** `SM_Cylinder` (the 700 cm disc top at Z≈200), `SM_QuarterCylinder5–12` (platform sides/skirt), `SM_Cube13–16` (platform body), `SM_Ramp9–12` (the four lane-adjacent ramps). **Kept:** the 4000×4000 `Floor`, all perimeter walls (`SM_Cube2/3/4/5/17/18/19/20` at ±1800–2000), the distant corner pillars/cubes/ramps at |X|≥1200 (visual boundary, outside the duel space), lighting/sky/fog/post-process.
+
+**Repositioned:** `PlayerStart` (0, 0, 302→**94**) yaw 0; `BP_VanguardProxy` (350, 0, 288→**90**) yaw 180 — both now on the flat floor (top at exactly Z=0, verified by `trace_world` at both spawn columns). GameMode: inherited project default (no per-level override was needed or added).
+
+**Persistence proof:** deletions flushed 66→49 external-actor packages on disk after `save_assets([])` (save-all-dirty); then a full level round-trip (load `Lvl_ThirdPerson`, reload `Lvl_DuelGraybox` from disk) confirmed spawn positions, deleted platform, and kept geometry all persisted. **No human Ctrl+S is required for this level.**
+
+### 13.3 Runtime validation (PIE in Lvl_DuelGraybox via MCP)
+
+- Player spawns at (0,0,92), Vanguard at (350,0,90) — same flat ground, player screen-left / Vanguard screen-right (camera side unchanged).
+- **Advance at spawn spacing:** by the first sample (~2 s in) the Vanguard had already jogged from 350 cm to 231 cm separation and settled to hold — exactly the "closes distance instead of standing" goal.
+- **Jog speed measured:** teleported the player 750 cm away → intent 1, sampled axis speed 236 then **302 cm/s** (target 300), settled at separation 231.7 with a clean stop — three consecutive motionless samples, i.e. **no jitter/oscillation** at the band edge.
+- Depth wander active (settled depth offset −124.4 matching `CurrentDepthTarget`), inside the lane.
+- Camera: rig transform == camera-manager transform (live view target), `SmoothedDistance` 607.4 = exactly clamp(450 + 0.6 × 262) for the measured 262 cm 2D separation — midpoint/zoom tracking both fighters on the new map.
+- View unobstructed: the only geometry between/around the fighters is the flat floor (obstruction candidates deleted; verified by the remaining-actor sweep).
+- Log sweep: zero Accessed None / Blueprint runtime errors (only the known 2026-08-01 authoring-time entries remain in the session log).
+- Punch/damage chain untouched this pass (no Blueprint graph was modified anywhere); regression is part of the human PIE list.
+
+### 13.4 PENDING HUMAN PIE
+
+- Whether 300 cm/s reads as a purposeful jog (vs. slide-y) with the existing forward-run locomotion blend, and overall cautious-probing feel under the new closer spacing.
+- Retreat feel when crowding it at player speeds; min-separation shove feel.
+- Depth shifts reading as restrained (0.4 scale).
+- Punch loop regression on the new map (damage, health bar, VFX, hit-react, hit-react movement pause).
+- Framing quality at 240 cm preferred distance (fighters are now closer → camera nearer MinCameraDistance more often).
+- Open the editor on `Lvl_DuelGraybox` (File → Open Level) or PIE directly from it; the project default map is still `Lvl_ThirdPerson` — switching the default was deliberately not done.
+
+### 13.5 Known limitations
+
+- `Lvl_DuelGraybox` inherits the template's look (checker floor, distant clutter at |X|≥1200) — evaluation arena, not environment design.
+- The editor session is left with `Lvl_DuelGraybox` open; the human should expect that on return.
+- Fighters can still wander along ±X to the distant geometry (~±1500) — no combat-axis bounds yet (same as §12.8).
+- Camera-facing/lane values remain duplicated between rig and mover.
+
+### 13.6 Tooling discoveries this run
+
+- **`AssetTools.duplicate` + `save_assets` persists an entire OFPA level** (map + all external actor/object packages) with no human save.
+- **`save_assets([])` (empty list = all dirty) flushes OFPA actor deletions and modifications to disk** — the map-path-only save does not; the save-all sweep is required for external packages. This supersedes the assumption that all OFPA edits need human Ctrl+S: only *newly added* actors in an existing level still have that limitation (untested whether save-all would fix those too — next time a new actor is placed, try `save_assets([])` before asking the human).
+- Level round-trip (`load_level` away and back) is a reliable, cheap persistence proof.
+
+### 13.7 Git manifest
+
+Modified: `Content/AscendantImpact/Duel/BP_VanguardDuelMover.uasset` (tuning defaults), `docs/agent/PROTOTYPE_BLACKBOARD.md`, `CLAUDE.md`. Added: `Content/AscendantImpact/Maps/Lvl_DuelGraybox.umap`, 49 packages under `Content/__ExternalActors__/AscendantImpact/Maps/Lvl_DuelGraybox/`, 2 under `Content/__ExternalObjects__/AscendantImpact/Maps/Lvl_DuelGraybox/`. `Lvl_ThirdPerson` and its external actors: zero changes. `Config/DefaultEditorPerProjectUserSettings.ini`: untouched/unstaged.
