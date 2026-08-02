@@ -28,12 +28,12 @@ All editing happens through the **unreal-mcp** MCP server against the live edito
 
 Validation standard: `compile_blueprint(warnings_as_errors=true)` must come back clean after every Blueprint change, then save the asset via MCP. There is no MCP asset-validation tool; suggest the human run **Tools → Validate Assets** for final sign-off. Functional verification is a human PIE pass — write test instructions rather than assuming success.
 
-### Known tooling gotchas (hard-won; see docs/agent/PROTOTYPE_BLACKBOARD.md §6 for detail)
+### Known tooling gotchas (hard-won; see docs/agent/PROTOTYPE_BLACKBOARD.md §6 and §11.9 for detail)
 
 - **Git**: `.git` is owned by a different Windows user; every git command must be invoked as `git -c safe.directory="E:/UnrealProjects/Production/AscendantImpact" ...` (do not modify global git config).
 - **OFPA level saves**: `Lvl_ThirdPerson` uses One-File-Per-Actor. Newly placed actors cannot be saved to disk via MCP (`save_actor` fails with "Asset does not exist") — a human Ctrl+S in the editor is required to persist them.
 - **Stale per-instance component data**: actors placed in the level *before* a component was added/configured on their Blueprint class keep a frozen snapshot that overrides both `set_properties` and `reset_properties`. Fix by deleting and re-placing the instance.
-- **Blueprint DSL quirks**: `(event ...)` sugar can't create Enhanced-Input events or match existing custom events — place nodes with `add_event`/`create_node` (find real type ids via `find_node_types`) and wire with `connect_pins`. Function graphs cannot contain latent nodes (`Delay`); use event-graph contexts. Array input pins reject literal defaults — feed them a `MakeArray` node. Bool variables drop the `b` prefix in accessor names (`bIsAttacking` → `Get/SetIsAttacking`).
+- **Blueprint DSL quirks**: `(event ...)` sugar can't create Enhanced-Input events or match existing custom events — place nodes with `add_event`/`create_node` (find real type ids via `find_node_types`) and wire with `connect_pins`. Function graphs cannot contain latent nodes (`Delay`); use event-graph contexts. Array input pins reject literal defaults — feed them a `MakeArray` node. Bool variables drop the `b` prefix in accessor names (`bIsAttacking` → `Get/SetIsAttacking`), and variable accessor type ids include the variable's category (`Variables|DuelCamera|GetDuelModeActive`, not `Variables|Default|…`). `SpawnActorFromClass`'s `SpawnTransform` by-ref pin also rejects literal defaults — wire a `MakeTransform` node. Type ids containing parentheses (`Math|Float|Clamp(Float)`) break the S-expression parser — use `select` ternaries / component math instead. Own-function calls need keyword args (`:Param val`) or positional args may bind to `self`. `get_node_type_pins` instantiates a probe node in the graph — delete it afterward.
 - **UserDefinedStruct/Enum assets cannot be created via MCP** — that is a manual editor step for the human.
 - `CaptureViewport` with a manual transform is unreliable during PIE; verify changes by reading graphs/properties back, not screenshots.
 
@@ -60,6 +60,8 @@ The Duel Camera is to be implemented with clean Blueprint functions/components w
 - Later (not first pass): smooth height, offset, push-in, and limited-angle dominance bias.
 
 **First implementation is limited to the stable profile camera and basic movement.** Dominance bias is deferred until the base framing is human-approved in PIE.
+
+**Status: first pass implemented (see blackboard §11).** `/Game/AscendantImpact/Camera/BP_DuelCameraRig` is a runtime-spawned rig activated by `BP_ThirdPersonPlayerController` (gated by its `bEnableDuelCamera` bool, default true) via `SetViewTargetWithBlend` — no level placement, original third-person camera bypassed reversibly, all tuning exposed on the rig's class defaults. Awaiting human PIE approval before any dominance-bias work.
 
 For reviewability, every camera work pass must document: exact Blueprint assets and functions; relevant variables with provisional defaults; graph descriptions; compile results; PIE acceptance criteria; human test results; and the exact Git file manifest.
 

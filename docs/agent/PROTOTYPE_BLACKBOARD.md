@@ -1,6 +1,6 @@
 # Ascendant Impact — Gray-box Combat Prototype Blackboard
 
-Branch: `feature/graybox-combat-sandbox`
+Branch history: §1–§10 were built on `feature/graybox-combat-sandbox`; §11 onward on `feature/duel-camera-graybox`.
 Scope for this run: smallest playable punch-and-damage checkpoint (per the active `/goal`), **not** the full approved Attack A AI plan (`ATTACK_A_IMPLEMENTATION_PLAN.md`), which requires `DT_VanguardAttacks` import + human sign-off (`VANGUARD_ATTACK_DATA_APPROVAL.md`) before it may begin. That plan is untouched and still gated.
 
 ## 1. Current project state (before this run)
@@ -268,3 +268,130 @@ Per the "smallest Blueprint-friendly structure" instruction, the struct is inten
 8. **Press Ctrl+S to save the level** if you want the Vanguard proxy placement/component changes to persist after closing the editor (see §7 — this is a required manual step; it is not automated).
 
 The two temporary debug `PrintString` nodes ("Attack Triggered", "Vanguard Health: X") are intentionally left in for this retest so the exact per-swing damage value is directly readable. Remove them once the loop is fully confirmed, on request.
+
+---
+
+## 11. Milestone 3 — Duel Camera graybox first pass (2026-08-01/02, branch `feature/duel-camera-graybox`)
+
+**Scope delivered:** first visually playable 2.5D duel camera slice per the approved camera-first milestone — stable side-profile camera, midpoint tracking, separation-based distance, arena-relative movement with a clamped depth lane, mutual fighter facing, mouse free-look disabled. Blueprint-only (decision of 2026-08-01 honored). No dominance bias, hit-driven camera moves, or cinematics (explicitly deferred). No combat logic was expanded, redesigned, or removed.
+
+### 11.1 Architecture chosen and why
+
+A **runtime-spawned camera rig actor** (`BP_DuelCameraRig`), spawned by the existing `BP_ThirdPersonPlayerController` at BeginPlay and made the view target via `SetViewTargetWithBlend`. Chosen because:
+
+- No new level actor means no OFPA "human must Ctrl+S" blocker (the §7 problem) and no stale-per-instance-data risk (§7e problem). Nothing in `Lvl_ThirdPerson` was placed or modified this pass.
+- The original third-person camera (`CameraBoom`/`FollowCamera` on the player) is **bypassed, not removed** — the rig simply becomes the view target. Setting the controller's new `bEnableDuelCamera` bool to false restores stock behavior entirely (spawn + view-target switch + duel movement mode are all gated on it).
+- Movement became arena-relative with **zero changes to the `Move` function**: the rig pins the controller's control rotation each tick to the yaw perpendicular to the combat axis (pointing from the camera side into the lane), so the template's existing control-rotation-relative movement math *is* arena-relative while the rig runs. W/S = depth, A/D = along the combat axis, always screen-correct for the configured camera side.
+
+Combat axis for this level: **world X** (PlayerStart at (0,0,302) yaw 0; Vanguard placed at (350,0,288) yaw 180). Depth = world Y, lane centered on Y=0.
+
+### 11.2 Assets created / modified (exact Git manifest)
+
+**Created:**
+- `Content/AscendantImpact/Camera/BP_DuelCameraRig.uasset` — Actor Blueprint, root scene component + `DuelCamera` (`CameraComponent`, FOV **55**, Perspective projection — the only component-template edit).
+
+**Modified:**
+- `Content/ThirdPerson/Blueprints/BP_ThirdPersonCharacter.uasset` — added bool `bDuelModeActive` (category "Duel Camera"); added function `SetDuelMovementMode(bActive)`; inserted a Branch gate in `Aim` (mouse look). Nothing else touched — `Move`, the attack chain, and `bIsAttacking` logic are untouched.
+- `Content/ThirdPerson/Blueprints/BP_ThirdPersonPlayerController.uasset` — added `bEnableDuelCamera` (bool, instance-editable, default **true**) and `DuelCameraRig` (object ref) in category "Duel Camera"; BeginPlay's existing Sequence node got a **third output pin** (existing wiring untouched): `then_2 → Branch(bEnableDuelCamera) → SpawnActor BP_DuelCameraRig (identity transform via MakeTransform) → Set DuelCameraRig → SetViewTargetWithBlend(rig, BlendTime 0.75)`.
+- `docs/agent/PROTOTYPE_BLACKBOARD.md` — this section.
+
+**Explicitly not touched:** `BP_VanguardProxy`, `IA_Attack`, `IMC_Default`, `IMC_MouseLook`, `UI_LifeBar`, all `/Game/Variant_Combat/` feedback assets, `Lvl_ThirdPerson` and its external actors, `Config/DefaultEditorPerProjectUserSettings.ini` (personal config, left unstaged).
+
+### 11.3 BP_DuelCameraRig — functions, events, variables
+
+**Event graph:** `EventTick(DeltaSeconds)` → `ResolveFighters()` → nested IsValid guards on both fighter refs (fail-safe: if either is missing this tick, nothing runs, no errors) → one-shot `ActivateDuelMode()` (guarded by `bDuelActivated`) → `UpdateDuelCamera(DeltaSeconds)`.
+
+**Functions (all plain function graphs, no latent nodes):**
+- `ResolveFighters()` — calls `ResolvePlayer()` + `ResolveVanguard()`. Each early-outs when its ref is already valid, so **no global searches happen after initialization** (`GetPlayerPawn`/`GetActorOfClass` run only while a ref is unresolved).
+- `ResolvePlayer()` — `GetPlayerPawn(0)` → cast `BP_ThirdPersonCharacter` → store `PlayerFighter`.
+- `ResolveVanguard()` — `GetActorOfClass(BP_VanguardProxy_C)` → store `VanguardFighter`; if none found and `bAutoSpawnVanguard` and the player is valid, spawns one at player location + (VanguardSpawnDistance, 0, 0) (fallback only — never triggers in `Lvl_ThirdPerson`, which already has the placed Vanguard; fallback spawn offset assumes CombatAxisYaw near 0, documented limitation).
+- `ActivateDuelMode()` — calls player's `SetDuelMovementMode(true)` (sets `bDuelModeActive`, sets `CharacterMovement.bOrientRotationToMovement = false` so facing control doesn't fight movement orientation); snaps `SmoothedMidpoint`/`SmoothedDistance` to current values (no first-frame lurch); sets `bDuelActivated`.
+- `UpdateDuelCamera(DeltaSeconds)` — per tick:
+  1. Midpoint = (P+V)/2 (component-wise); separation = 2D distance (XY).
+  2. Desired distance = clamp(BaseCameraDistance + separation × DistancePerSeparation, Min, Max) — clamps done with `select` ternaries.
+  3. `VInterpTo`/`FInterpTo` smooth midpoint and distance into `SmoothedMidpoint`/`SmoothedDistance`.
+  4. Camera offset yaw = CombatAxisYaw + CameraSideSign × (90 − SideAngleDegrees) → camera position = smoothed midpoint + offset dir × smoothed distance, raised by CameraHeightOffset; rotation = `FindLookAtRotation` to midpoint + LookHeightOffset (slight down-pitch, **roll always 0**, no orbit possible — one fixed side of the axis by construction, no live crossing).
+  5. `SetControlRotation(yaw = CombatAxisYaw − CameraSideSign × 90)` on the player controller every tick — pins movement axes (this is what makes `Move` arena-relative and also neutralizes any residual look input).
+  6. Player depth clamp: world Y clamped to DepthLaneCenter ± DepthLaneHalfWidth via `SetActorLocation` (X/Z untouched).
+  7. Facing: both fighters `RInterpTo` yaw-only toward each other (`SetActorRotation`, yaw only — pitch/roll untouched; does not touch animation, montages, collision, or damage handling).
+
+**Exposed tuning variables (all instance-editable, ALL VALUES PROVISIONAL):**
+
+| Category | Variable | Default | Meaning |
+|---|---|---|---|
+| Targets | `bAutoSpawnVanguard` | true | Spawn fallback Vanguard if none in level |
+| Targets | `VanguardSpawnDistance` | 350 | Fallback spawn offset (cm, +X) |
+| Combat Axis | `CombatAxisYaw` | 0 | Combat axis yaw (0 = world X) |
+| Combat Axis | `CameraSideSign` | **+1** | Which side of the axis the camera sits (+1 = +Y side → player appears screen-left; −1 mirrors) |
+| Framing | `SideAngleDegrees` | 12 | Degrees off perfectly-flat side profile (spec range 5–20) |
+| Framing | `CameraHeightOffset` | 60 | Camera height above fighter midpoint (≈ chest/eye line) |
+| Framing | `LookHeightOffset` | 20 | Look-target height above midpoint (creates slight down-angle) |
+| Distance | `BaseCameraDistance` | 450 | Distance at zero separation |
+| Distance | `DistancePerSeparation` | 0.6 | Extra distance per cm of fighter separation |
+| Distance | `MinCameraDistance` | 500 | Distance floor |
+| Distance | `MaxCameraDistance` | 900 | Distance ceiling |
+| Smoothing | `MidpointInterpSpeed` | 5 | Midpoint tracking speed |
+| Smoothing | `DistanceInterpSpeed` | 3 | Zoom response speed |
+| Smoothing | `FacingInterpSpeed` | 8 | Fighter turn-to-face speed |
+| Movement Constraints | `DepthLaneCenter` | 0 | Lane center (world Y) |
+| Movement Constraints | `DepthLaneHalfWidth` | 180 | Max depth excursion each way (cm) |
+
+Internal (not editable): `PlayerFighter`, `VanguardFighter`, `SmoothedMidpoint`, `SmoothedDistance`, `bDuelActivated`. Camera FOV 55 lives on the `DuelCamera` component template. A `bShowDebug` var was added then removed (no debug path was implemented; a dead toggle would mislead).
+
+### 11.4 Compile & save results
+
+- `BP_DuelCameraRig`, `BP_ThirdPersonCharacter`, `BP_ThirdPersonPlayerController`: all `compile_blueprint(warnings_as_errors=true)` → **clean** (final pass ran all three back-to-back).
+- All three saved to disk via `AssetTools.save_assets`; git confirms exactly the three expected content changes + docs.
+- One transient compile failure during authoring (fixed): `SpawnActorFromClass` requires `SpawnTransform` to be **wired** (by-ref pin) — literal defaults are not accepted; fed it a `MakeTransform` node. Same gotcha family as the MakeArray rule.
+- No MCP asset-validation tool exists (unchanged from §5); recommend the human run **Tools → Validate Assets** on the three Blueprints for final sign-off.
+
+### 11.5 Tool-assisted validation (evidence, PIE via MCP)
+
+Two full PIE sessions were started/stopped via `EditorAppToolset.StartPIE/StopPIE`, and runtime state was read from the live PIE world (`UEDPIE_0_` actors) via MCP:
+
+- **Duel Camera becomes the active view:** `PlayerCameraManager`'s transform was identical to the rig's transform (session 1: pos (312.3, −645.7, 361.1) yaw 102°; session 2 after side flip: (312.3, +645.7, 361.1) yaw −102°). Blend-in from `SetViewTargetWithBlend(0.75s)`.
+- **Both fighters resolve:** `PlayerFighter` → PIE player pawn, `VanguardFighter` → the existing placed Vanguard (fallback spawn correctly did NOT trigger).
+- **Activation:** `bDuelActivated=true`, player `bDuelModeActive=true`, player `bOrientRotationToMovement=false`, controller `DuelCameraRig` ref set.
+- **Midpoint + distance math:** `SmoothedMidpoint` (175, 0, 301) = exact midpoint of the two fighters; `SmoothedDistance` 660.1 = exactly clamp(450 + 350×0.6, 500, 900) for the 350 cm spawn separation.
+- **Stable side / no roll:** camera roll ~0 (1e-8), fixed side (sign of Y offset matches `CameraSideSign` in both sessions; flipping the default mirrored it exactly).
+- **Fighters face each other:** at rest, player yaw 0 (toward Vanguard at +X), Vanguard yaw 180 (toward player).
+- **No runtime errors:** output-log sweep for `Accessed None` / Blueprint runtime errors during both PIE sessions → zero hits (only the three already-fixed authoring-time tool errors appear, timestamped before PIE).
+- **Visual check:** `CaptureEditorImage` screenshots (kept in the session scratchpad, deliberately not committed) show clean side-profile framing, both fighters fully readable, player screen-left / Vanguard screen-right after the side flip.
+- `CaptureViewport` now requires `captureTransform` even for a current-view capture (tool schema quirk); `CaptureEditorImage` is the reliable capture path during PIE.
+- **Side default flipped after session 1:** with `CameraSideSign=-1` the player read as the right-side fighter; flipped default to `+1` for fighting-game convention (player left). One CDO float, re-verified in PIE session 2.
+
+### 11.6 PENDING HUMAN PIE (not claimable via tools)
+
+- Feel of midpoint tracking / zoom smoothing while actually moving (interp speeds are provisional).
+- A/D actually closes/retreats and reads screen-correct; W/S depth feel and the ±180 lane clamp behavior at the boundary (clamp is positional — expect a firm invisible wall, not a soft push).
+- Mouse movement does nothing (free-look gated + control rotation pinned) — verify no residual camera twitch.
+- Punch loop regression: LMB attack, damage prints, health bar, VFX, hit-react all still work at melee range under the new camera (logic untouched, but the new camera angle changes what you see; also strafing animation will look like forward-run while side-stepping — known cosmetic limitation, `ABP_Unarmed` has no strafe blendspace wiring).
+- Jump under the duel camera (deliberately unchanged this pass).
+- Camera behavior when fighters get very close (min-distance clamp) and very far (max-distance + framing at lane extremes).
+
+### 11.7 Human test instructions (PIE)
+
+1. Open `Lvl_ThirdPerson`, press Play (in-viewport PIE).
+2. Expect a ~0.75 s blend from behind-the-shoulder to the side-profile duel view; player on the **left**, Vanguard on the **right**.
+3. **A/D** = retreat/close along the duel axis. **W/S** = limited depth movement (stops at the lane edges). **Mouse** = should do nothing. **Space** = jump (stock). **LMB** = punch (stock combat checkpoint).
+4. Walk into melee range and confirm the whole §7 punch loop still behaves (Attack Triggered print, health decrement prints, bar, sparks, hit-react).
+5. To compare against stock behavior, set `bEnableDuelCamera` default to false in `BP_ThirdPersonPlayerController` (or flip `CameraSideSign` on `BP_DuelCameraRig` to −1 to mirror the stage). All tuning values live on `BP_DuelCameraRig` class defaults under Targets / Combat Axis / Framing / Distance / Smoothing / Movement Constraints.
+
+### 11.8 Known limitations (accepted for first pass)
+
+- Depth clamp and fallback-spawn offset assume the combat axis is world-X aligned (`CombatAxisYaw` near 0); generalizing the clamp to arbitrary axis yaw is future work if arenas ever rotate.
+- Depth clamp is a hard positional clamp (SetActorLocation), not a movement-input constraint — functional but blunt at the lane edge.
+- Strafe animation: side-stepping plays the forward locomotion pose (no strafe blendspace in `ABP_Unarmed`); cosmetic only.
+- Vanguard facing is driven externally by the rig each tick (no AI added, per scope); if a future hit-react needs rotational freedom, gate the facing write.
+- `SmoothedMidpoint.Z` follows capsule centers; jumping bobs the framing slightly (midpoint interp at speed 5 damps it). Height smoothing/refinement is explicitly a later pass per the milestone.
+- Deferred per milestone: dominance bias, push-in, offset framing, smooth height handling.
+
+### 11.9 Failures and fixes this run
+
+- `get_node_type_pins` **instantiates a probe node** in the target graph — it must be deleted afterward or it lingers as a stray (one `K2Node_VariableSet_0` was created and removed in `SetDuelMovementMode`).
+- Bool-var accessor names strip the `b` prefix AND include the variable's category in the DSL type id: `bDuelModeActive` in category "Duel Camera" → `Variables|DuelCamera|Get/SetDuelModeActive` (a bare `Variables|Default|…` guess fails).
+- Type ids containing parentheses (`Math|Float|Clamp(Float)`, `Math|Vector|Distance2D(Vector)`, `Utilities|String|ToString(Float)`) are risky in the S-expression DSL — avoided entirely via `select` ternary clamps and component-wise math (sqrt of dx²+dy²).
+- DSL positional args can mis-bind to the `self` pin on own-function calls (`CallFunction|UpdateDuelCamera DeltaSeconds` tried to feed DeltaSeconds into `self`); keyword form `:DeltaSeconds DeltaSeconds` fixes it.
+- `SpawnActorFromClass`'s `SpawnTransform` by-ref pin rejects literal defaults — must wire a `MakeTransform` (compile error otherwise; see §11.4).
+- `ProgrammaticToolset` scripts: `dict.get(key, default)` is unsupported (`_StrictDict`), and helper kwargs that shadow positional args raise TypeErrors — use plain `[]` access and dict-style args.
+- `PlayerCameraManager.ViewTarget` and controller `ControlRotation` are not readable via `ObjectTools.get_properties`; proving the active view target was done by comparing the camera manager's actor transform to the rig's (identical ⇒ rig is the view target).
