@@ -9,6 +9,16 @@
 > show which gate is still locked once the health bar pins; **C3** Q2 must be tuned so
 > ≤25% rival health and meter 100 arrive close together. See `design/decisions.md`.
 
+## ⏳ PROPOSED — awaiting your approval
+
+These items have a researched recommendation on disk and are **not closed**. Approve or
+change them and they get deleted. Kept as an index here so the entries below stay in
+build order rather than being rewritten every group.
+
+| Items | Group | Answer file |
+|---|---|---|
+| 2 (Q1), 3 (Q2), 21 (Q3), 11 (Q4), 12 (Q5) | 02 — combat economy | `design/group-02-combat-economy.md` |
+
 ## How this file works
 
 - **Completed items are DELETED, not ticked.** This file only ever shows what is
