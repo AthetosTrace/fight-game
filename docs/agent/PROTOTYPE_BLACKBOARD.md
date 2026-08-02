@@ -578,3 +578,60 @@ Unchanged: `MinimumAxisSeparation` 110, depth decision intervals 1.5–3.5 s, `D
 ### 13.7 Git manifest
 
 Modified: `Content/AscendantImpact/Duel/BP_VanguardDuelMover.uasset` (tuning defaults), `docs/agent/PROTOTYPE_BLACKBOARD.md`, `CLAUDE.md`. Added: `Content/AscendantImpact/Maps/Lvl_DuelGraybox.umap`, 49 packages under `Content/__ExternalActors__/AscendantImpact/Maps/Lvl_DuelGraybox/`, 2 under `Content/__ExternalObjects__/AscendantImpact/Maps/Lvl_DuelGraybox/`. `Lvl_ThirdPerson` and its external actors: zero changes. `Config/DefaultEditorPerProjectUserSettings.ini`: untouched/unstaged.
+
+---
+
+## 14. Milestone 6 — Arena containment + base camera framing finalization (2026-08-02, branch `feature/duel-camera-containment`)
+
+**Scope delivered:** exposed combat-axis bounds keep both fighters inside the central flat portion of `Lvl_DuelGraybox` (no more drifting into perimeter walls or the green clutter), and the camera's distance curve was retuned so the *widest legal separation* keeps both fighters framed — the one clear issue the stress math demonstrated. No new systems, no level edits, no animation changes.
+
+### 14.1 Architecture and boundary values
+
+Containment lives in **`BP_VanguardDuelMover.ApplyConstraints`** — the function that already owned min-separation and lane clamps, so all fighter position constraints have a single authority (no third value set was introduced). Two new instance-editable floats, category **Arena Bounds**:
+
+- `CombatAxisMin` = **−650**, `CombatAxisMax` = **+650** (provisional). Max legal separation 1300 cm; nearest environment geometry starts at |X|≈1200, so fighters keep ≥500 cm clearance from everything.
+
+The clamp is a **single deterministic pass**: player X → [Min, Max−MinSep]; then Vanguard X → [clampedPlayerX+MinSep, Max]; Vanguard depth → lane (unchanged). This guarantees bounds + ordering + min-separation simultaneously (player can never be pushed out of bounds by the ordering rule). Corrections are gentle (≤ one frame of movement in normal play, no teleporting; player correction only fires on actual violation). Additionally, **`ApplyMovementInputs` suppresses retreat input once the Vanguard is within 5 cm of `CombatAxisMax`** so it doesn't run-in-place against the invisible bound. Player-side boundary behavior is walk-in-place at the edge (input suppression for the player pawn would require touching `Move` — deliberately not done).
+
+### 14.2 Camera changes (and what was deliberately left unchanged)
+
+**The demonstrated issue:** with FOV 55, screen half-width ≈ distance × 0.52. The old curve (0.6 × separation, max 900) frames at most ~940 cm of separation — far less than the 1300 cm the bounds allow; both fighters would leave the screen at wide spacings. **Changed on `BP_DuelCameraRig` class defaults:**
+
+- `DistancePerSeparation` 0.6 → **0.8**
+- `MaxCameraDistance` 900 → **1500**
+
+At S=1300 steady state: distance 1490 → half-width 776 cm vs. the 700 needed (fighter at 650 + ~50 body) — framed with ~10% margin at the absolute worst case. At the settled fighting range (~285 cm separation, incl. depth offset) distance ≈ 680 → fighters occupy the central ~55% of the screen — no large empty framing. At min separation (110): distance 538, above the 500 floor.
+
+**Left unchanged, with reasoning:** `MinCameraDistance` 500, `BaseCameraDistance` 450, FOV 55, `SideAngleDegrees` 12, height/look offsets, all smoothing speeds. `DistanceInterpSpeed` 3 was examined for zoom lag at maximum separation-growth rate (~240 cm/s of distance target change → ~80 cm steady-state lag ≈ 42 cm of half-width): borderline but not a demonstrated problem in normal play, and the measured zoom behavior shows clean monotone settling — kept per the "only adjust on demonstrated issue" rule. No dominance bias, arcs, or hit-driven motion added.
+
+### 14.3 Compile / save / PIE evidence
+
+`BP_VanguardDuelMover` + `BP_DuelCameraRig` compile clean (`warnings_as_errors=true`); both saved. PIE stress in `Lvl_DuelGraybox` (runtime numbers from the live PIE world):
+
+- **Axis bounds:** player teleported to −2000 → clamped to exactly **−650.0**. Vanguard teleported to +2000 → clamped to 650, then correctly advanced (sampled at 379 mid-jog toward the player). No fighter can reach walls (±1800) or clutter (±1200).
+- **Depth bounds:** player teleported to Y=+2000 → exactly **180.0**; Vanguard to −2000 → clamped then drifting to its depth target (−137.7), inside the lane.
+- **Ordering:** player X < Vanguard X after every stress case; min-separation still enforced — and in the crowd test the Vanguard *retreated by behavior* (settled gap 285.7) before the hard clamp was ever needed.
+- **Zoom stability:** SmoothedDistance samples after crowding: 554.7 → 681.2 → 682.1 → 682.1 → 682.1 → 682.1 — monotone settle, **zero pulsing/oscillation**. Camera roll −3.9e-08 (no roll, no axis crossing; side fixed at +Y).
+- **Wide-case camera:** during the max-separation transient the distance was mid-interpolation at 1194 → target ~1490, confirming the new curve engages.
+- **Visual:** PIE screenshot shows both fighters fully framed on flat ground, player left / Vanguard right, facing each other, perimeter geometry background-only, view unobstructed.
+- **Log:** zero Accessed None / Blueprint runtime errors (only the known 2026-08-01 authoring entries).
+- `WorldPosToScreenCoords` proved to use the **editor** viewport camera even during PIE (returned off-screen values) — not usable for PIE framing checks; framing was verified geometrically + by screenshot instead.
+
+### 14.4 PENDING HUMAN PIE
+
+- Boundary feel when walking into the axis edges (player walks in place at the invisible bound — acceptable?).
+- Framing quality across the full legal range in motion, especially the zoom-out toward 1490 during max-range chases.
+- Whether the wider `DistancePerSeparation` 0.8 pullback feels right at mid ranges.
+- Punch/damage/health-bar/VFX/hit-react regression (logic untouched since §12; still unverified by hand on this map).
+- Overall duel-readability sign-off of the base camera (gates the deferred dominance-bias work).
+
+### 14.5 Known limitations
+
+- Vanguard gait: moves at 300 cm/s while `ABP_Unarmed` displays whatever its existing locomotion blend chooses — no walk/jog/run state matching was added (out of scope). **Multi-speed locomotion + animation matching is a later presentation task.**
+- Player boundary is a positional clamp (walk-in-place at edges), not input suppression.
+- Bounds assume the world-X combat axis, consistent with rig/mover (§11.8/§12.8).
+- `Lvl_ThirdPerson` still has no arena bounds (the mover's defaults apply there too if played — bounds ±650 also happen to fit that map's central area, but it retains its platform/stairs; `Lvl_DuelGraybox` is the evaluation map).
+
+### 14.6 Git manifest
+
+Modified: `Content/AscendantImpact/Duel/BP_VanguardDuelMover.uasset` (2 new vars + 2 rewritten functions), `Content/AscendantImpact/Camera/BP_DuelCameraRig.uasset` (2 tuning defaults), `docs/agent/PROTOTYPE_BLACKBOARD.md`, `CLAUDE.md`. No level, input, character, controller, or combat assets touched. `Config/DefaultEditorPerProjectUserSettings.ini` untouched/unstaged.
