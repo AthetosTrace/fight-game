@@ -237,7 +237,11 @@ therefore produce a brief concrete enough to drive Blueprint work through that M
 
 ```mermaid
 flowchart TD
-    C[Commander · CLAUDE.md] -->|project-brief.md| D[Designer]
+    C[Commander · CLAUDE.md] --> GP[Goal Planner<br/>runs first, no upstream agent]
+    GP -->|design/goal-plan.md| GQ{top item a design question?}
+    GQ -->|yes| HS([STOP - hand to the human])
+    GQ -->|no| C2[Commander dispatches]
+    C2 -->|project-brief.md| D[Designer]
     D -->|design-brief.md| G1{designer complete?}
     G1 -->|no| X1[BLOCKED]
     G1 -->|yes| BR{design-only pass<br/>or build pass?}
@@ -304,6 +308,21 @@ trail cites them; **`CLAUDE.md` wins on every conflict.**
 
 ## The crew (one specialist at a time)
 
+**Planner — runs first, hook-gated on files only, in `.claude/agents/`:**
+
+| Agent | Tools (allowlist) | Consumes | Produces |
+|-------|-------------------|----------|----------|
+| **goal-planner** | Read, Write | `gdd/sections/`, `gdd/reference/`, `design/`, `design/decisions.md`, `TODO.md`, `build-sequence.md` | `design/goal-plan.md` |
+
+The **goal-planner** diffs what the GDD says the game is against what `design/` records as
+decided, produces the outstanding list, ranks it by the lowest `build-sequence.md` step each
+item blocks, classifies each as engineering or design, and recommends the next dispatch.
+**It may propose and it may rank; it may never decide a design question, and it stops when
+the top item is one.** No `Edit` on purpose — it cannot modify what it audits. Its
+`entry_gate.py` entry has **no upstream agent dependency** (it runs first) but still requires
+`project-brief.md`, the extracted GDD, and `build-sequence.md`, so it cannot plan against an
+empty repo. **Assignment #05 deliverable — see `assignment-05/`.**
+
 **Core crew — hook-gated, in `.claude/agents/`:**
 
 | Agent | Tools (allowlist) | Consumes | Produces |
@@ -348,7 +367,14 @@ Each agent writes `leave-offs/<name>.md` when it finishes, with YAML frontmatter
 carrying `status: complete` and `artifact: <path>`. The status line is written
 **last**, only once the artifact is really on disk.
 
-### Hook-enforced gates — the core three only
+### Hook-enforced gates
+- **goal-planner** cannot start until `project-brief.md`,
+  `gdd/ascendant-impact-gdd-v0.4.md` and `build-sequence.md` all exist. **It has no upstream
+  agent dependency on purpose** — it runs first and decides what runs next, so gating it on
+  another agent's leave-off would deadlock the pipeline. **Do not add one.**
+  Note: `exit_gate.py`'s `OURS` set is still `{designer, developer, inspector}`, so the
+  goal-planner's own leave-off is written **by contract in its definition, not by hook
+  enforcement.** Adding it to `OURS` is a one-line change if that is wanted.
 - **designer** cannot start until `project-brief.md`, the GDD PDF, and
   `gdd/ascendant-impact-gdd-v0.4.md` all exist.
 - **developer** cannot start until `leave-offs/designer.md` says `status: complete`.
