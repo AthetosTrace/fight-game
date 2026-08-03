@@ -1,7 +1,14 @@
 # TODO — Ascendant Impact
 
-**53 open items** — **10 closed · 33 PROPOSED · 1 blocked on you · 19 untouched.** Last worked 2026-08-02.
-> Eighteen new items (46–63) were found by the dispatches themselves: real gaps in
+**64 open items** — **8 closed · 35 PROPOSED · 1 blocked on you · 28 untouched.**
+Last worked 2026-08-03.
+
+> **INSPECTED 2026-08-03.** A cross-consistency pass over all nine dispatches
+> (`design/inspection-design-answers.md`) found **3 process-authority violations and 11
+> cross-group contradictions**, and **zero GDD violations**. Group 07's 26/26 in-range
+> claim was independently recomputed and **CONFIRMED**. Items 6 and 29 were wrongly
+> closed and are **restored below**. Items 64–72 are the contradictions.
+> Twenty-seven new items (46–72) were found by the dispatches and the inspection: real gaps in
 > `design-brief.md` §13.2 that have no row and no Q number. The list grew because the
 > work found holes, which is the list working.
 
@@ -27,6 +34,7 @@ build order rather than being rewritten every group.
 | 31 (Q9), 39 (Q19), 40 (Q20), 41 (Q21) | 06 — Final Clash and meter | `design/group-06-final-clash.md` |
 | 25 (Q25), 5 (Q23), 32 (Q29), 27 | 07 — structure and canon | `design/group-07-structure-and-canon.md` |
 | 19 (Q30), 42 (Q31) | 08 — asset decisions | `design/group-08-assets.md` |
+| **6 (Q17), 29 (Q18)** — reopened by the inspection | 06 / 07 | see those group files |
 
 ## How this file works
 
@@ -38,6 +46,12 @@ build order rather than being rewritten every group.
   an approved item is deleted. KIND A items are APPROVED on delivery and deleted at once.
 - **Item numbers are stable ids, not positions.** Deletions leave gaps. That is correct —
   a gap means something got finished.
+- **⚠ TWO NUMBERING SPACES OVERLAP.** `TODO.md` **item** numbers and proposed new
+  `design-brief.md` **§13.2 row** numbers both currently run through the high 50s and
+  early 60s and mean unrelated things. Group 05 proposes §13.2 **rows** 58–61 (faceplate
+  treatment, Ascension emissive curve, its thresholds, the "SFN" expansion); `TODO.md`
+  **items** 58–61 are Starter Content, two blend values and the death-race question.
+  **Always write "item N" or "§13.2 row N" — never a bare number.**
 - **Ranked by build order, not by importance.** Every item names the lowest-numbered
   `build-sequence.md` step that first needs it. Work top-down and you will never be
   blocked by something further down this list.
@@ -72,7 +86,7 @@ rows 29–57 are Q1–Q29 with no remainder. They are therefore listed once, und
 number, and not double-counted. §13.1 is fully specified by the GDD and contributes no
 open items, with one exception now recorded below (row 28).
 
-**The reverse is not true, and that is the interesting part.** Items 46–63 are
+**The reverse is not true, and that is the interesting part.** Items 46–72 are
 values the build needs that §13.2 has **no row for at all**. The table is complete with
 respect to itself and incomplete with respect to the game. Expect more of these as the
 groups run.
@@ -108,6 +122,16 @@ satisfying moments.
 **5. Q23 — Is there a duel timer?** · **KIND B**
 **Recommend none.** Reason given: the GDD lists only one loss condition (player health
 zero) and gives 3–5 minutes as a *target session*, not a timer.
+
+### M1-10 — Create the Enhanced Input assets
+
+**6. Q17 — Do the Clash beats reuse `IA_Impact`?** · **KIND B** ·
+**⏳ PROPOSED — reopened 2026-08-03**
+Reopened by the inspection: group 06 closed this as KIND A, but `design-brief.md` §14 reads
+*"Recommend yes, for learned consistency. **Designer confirms.**"* — the brief reserves the
+confirmation to you. The recommendation stands: reuse `IA_Impact`, one action, one
+`IMC_Duel`, routed by a `bClashBeatOpen` bool. See `design/group-06-final-clash.md`.
+*Genuinely blocked:* `IMC_Duel` needs a second binding if the answer is no.
 
 ### M1-12 — Create `DA_FighterProfile` + Echo and Nova instances
 
@@ -299,6 +323,16 @@ Probably concept-art flavour — but they are numbers in the source of truth and
 agent will find them. Decide whether they are non-canonical and record it.
 **MOBILITY 6/10 is not a movement-speed value.**
 
+### M2-12 — Create the six `BTTask_*` tasks
+
+**29. Q18 — BTTask montage failsafe margin.** · **KIND B** ·
+**⏳ PROPOSED — reopened 2026-08-03**
+Reopened by the inspection: group 07 closed this as KIND A, but its own justification —
+*"any value in 0.25–0.50 works; 0.35 is the middle with a documented reason"* — describes a
+designer choice. The value breaks no range; the authority was wrong. Recommendation stands:
+**0.35 s**, expressed as `MontageLength / EffectivePlayRate + 0.35` — **the division by
+effective play rate is not optional**, or it fires early on every Phase 2 telegraph.
+
 ### M2-13 — Author Attack A montage and its notify states
 
 **30. Q27 — `ANS_Recover` incoming-damage multiplier.** · **KIND B**
@@ -438,6 +472,70 @@ strings ever need a unit name, this is the thread to pull.
 
 ---
 
+---
+
+## Found by the cross-consistency inspection, 2026-08-03
+
+Full detail in [`design/inspection-design-answers.md`](design/inspection-design-answers.md).
+
+### M2-04 — the one most likely to break a build
+
+**64. C3 from the approved Q22 is NOT satisfied.** · **KIND B** · **YOUR CALL**
+C3 requires ≤25% rival health and meter 100 to arrive **close together**. At Q2 = 1200 they
+are **90–135 s apart**. Group 02 said so and then passed itself against a substituted
+criterion (meter-first ordering is safe). **A dispatch may not amend an approved
+constraint's success criterion and then mark itself compliant against the amended one.**
+Two paths: amend C3 explicitly on the record, or take group 06's **Q2 → 1050–1100**.
+
+**65. Telegraph and Recover are specified two incompatible ways.** · **KIND B** ·
+**Blocks M2-04 and M4-04 from both being built as written**
+Group 07 authors them as **absolute seconds** (`Phase1.TelegraphSeconds`);
+`design-brief.md` §13.1 rows 20–21 and `build-sequence.md` M4-04 implement them as a
+**scale factor** (`ANS_Telegraph` length × `TelegraphScale`). Worse: group 07's four P2/P1
+ratios are **0.786 / 0.800 / 0.775 / 0.778 — not uniform**, so a single `TelegraphScale`
+cannot express them. Either the data model moves to per-attack absolute seconds, or Q25 is
+re-authored as scales.
+
+**66. Q25's Attack A tension was computed on an unreachable distance band.** · **KIND B**
+Group 07's 2.97 s-vs-3.0 s finding rests on the 0–90 cm band, which group 04's own capsule
+arithmetic (40 + 60 = 100 cm minimum separation) marks **physically unreachable**. The
+tension may be smaller than reported, or absent. Recompute before acting on it.
+
+### M1-12 / M4-08 — the rival speed knot
+
+**67. Groups 04, 05 and 06 assume three different player/rival speeds.** · **KIND B**
+Group 04's Q21 support table and whiff arithmetic assume a **500 cm/s** player; group 05
+proposes **600 uu/s**. Group 06's Q21 arithmetic uses **600 uu/s as the rival's speed** —
+the most favourable legal value. All three interact with open **item 49** (the rival's
+`MaxWalkSpeed`, which has no row at all). **Items 49, 67 and Q21 must be tuned in one
+session.**
+
+### M3-08 / M4-06 / M4-08 — `build-sequence.md` is stale
+
+**68. `build-sequence.md` M3-08 still carries the two defects V2 and V5 correct.** · **KIND A**
+And `build-sequence.md` is **not on the architect's apply list** for item 63. Whoever
+applies V1–V5 must update the build sequence too, or the developer builds the old spec.
+
+**69. `build-sequence.md` M4-08 step 2 pushes the fighters "along their axis".** · **KIND A**
+Q21 mandates the **arena long axis**. One of the two is wrong.
+
+**70. `build-sequence.md` M4-06 names no `AM_Clash_Beat2`.** · **KIND A**
+Q20 specifies two beats at 0.50 s each; the build step names only one montage.
+
+**71. Group 08 pulls the Q30 Paragon swap to M1-23; `build-sequence.md` files it under M5-06.** · **KIND A**
+Asset selection at M1-23 is legitimate under the dressed-proxies rule. The build sequence
+has not caught up.
+
+### Not blocking anything — record only
+
+**72. Q20's tuning band and Q19's ceiling both need a recompute.** · **KIND B**
+**Q20:** its band is **0.45–0.60 s** while its justification claims it reuses the GDD's
+**0.35–0.50 s** Standard range — the top half sits outside the range it rests on.
+**Q19:** its "hard ceiling 1.30 s" was computed from GDD Phase 2 *floors*; under Q25's
+authored values the real floor is **1.77 s**, so the ceiling is over-tight and §14's
+rejected **1.5 s would in fact be safe**.
+
+
 ## Not yet triggered
 
 **The GDD-out-of-date item is armed but has not fired.** The rule in
@@ -445,6 +543,8 @@ strings ever need a unit name, this is the thread to pull.
 **supersedes a GDD line**, an item gets added here stating the GDD is out of date and
 that clearing it means Adrian updates the source PDF, re-exports and re-extracts.
 
-As of 2026-08-02 `design/decisions.md` holds **no entries**, so nothing supersedes the
-GDD yet. Item 28 (the 208 cm height) supersedes a **`design-brief.md`** line, not a GDD
+As of 2026-08-03 `design/decisions.md` holds **nine dated entries** plus a corrections
+note. **None of them supersedes a GDD line** — the two supersessions on record are of
+`design-brief.md` (§13.1 row 28's missing cm figure, and §12.6's "no free sound source
+verified"), not of the GDD. So rule 4 has still not fired. Item 28 (the 208 cm height) supersedes a **`design-brief.md`** line, not a GDD
 line — the GDD had the value all along. **Do not add the GDD-out-of-date item for it.**

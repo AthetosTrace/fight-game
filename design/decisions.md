@@ -53,6 +53,41 @@ and triggers rule 4.
 
 **Nothing supersedes the GDD yet, so rule 4 has not fired.**
 
+## Corrections — 2026-08-03
+
+The cross-consistency inspection (`design/inspection-design-answers.md`) found three
+process-authority violations. **It found no violation of the GDD itself.** Corrected here.
+
+### 1. Q18 was wrongly marked APPROVED — reopened as PROPOSED
+
+Group 07 closed Q18 at 0.35 s as a KIND A engineering item. Its own justification —
+*"any value in 0.25–0.50 works; 0.35 is the middle with a documented reason"* — describes a
+**designer choice**, not a documented procedure with nothing to decide. The value breaks no
+range. **The authority was wrong, not the number.** `TODO.md` item 29 restored.
+
+### 2. Q17 was wrongly marked APPROVED — reopened as PROPOSED
+
+`design-brief.md` §14 reads *"Recommend yes, for learned consistency. **Designer confirms.**"*
+The brief reserves the confirmation to the human. `TODO.md` item 6 restored.
+
+### 3. Constraint C3 from the APPROVED Q22 is NOT satisfied
+
+C3 requires that **≤25% rival health and meter 100 arrive close together**. At Q2 = 1200
+meter 100 lands at ~0:40–1:25 and the health gate at ~2:53 — **90 to 135 seconds apart.**
+Group 02 said so plainly (*"They do not arrive close together"*) and then declared C3
+satisfied against a **substituted criterion** — that meter-first is the safe ordering.
+
+**That substitution is the violation.** The argument may well be right, but a dispatch may
+not amend an approved constraint's success criterion and then mark itself compliant against
+the amended one. C3 came from the one decision carrying the designer's recorded approval.
+
+**Status: OPEN, and the designer's call.** Two paths, both already on the table:
+- **Accept meter-first ordering as C3's real intent** and amend C3 explicitly, on the record.
+- **Take group 06's Q2 → 1050–1100**, which group 06 independently identified as the
+  compliant lever and which group 02 also offered as the fix for its own ~5:24 overshoot.
+
+Recorded as `TODO.md` item 64. **No number was changed to produce this note.**
+
 ## Log
 
 ### 2026-08-02 — Group 09 · the five cinematic corrections (V1–V5)
@@ -149,7 +184,7 @@ warning lights and emissive carry the load — which is why the capped cue floor
 
 ### 2026-08-02 — Group 07 · structure and canon (Q25, Q18, Q23, Q29, items 26, 27, 28)
 
-- **Status:** **Q18 and item 28 APPROVED** (KIND A, deleted from `TODO.md`). Q25, Q23, Q29
+- **Status:** **item 28 APPROVED** (KIND A, deleted). **Q18 was wrongly closed and is reopened as PROPOSED** — see the 2026-08-03 correction note. Q25, Q23, Q29
   and item 27 **PROPOSED**. **Item 26 is not resolved — it is blocked on a human and stays
   open.**
 - **Resolves:** TODO items 25 (Q25), 29 (Q18), 5 (Q23), 32 (Q29), 27, 28
@@ -179,7 +214,7 @@ Three Q25 findings the developer must not miss:
 
 | Item | Answer | Lives in | Unblocks |
 |---|---|---|---|
-| Q18 | **APPROVED — 0.35 s**, as `MontageLength / EffectivePlayRate + 0.35`. **Must divide by effective play rate** or it fires early on every Phase 2 telegraph | `DA_TuningGlobals` | M2-12 |
+| Q18 | **PROPOSED — 0.35 s** (reopened 2026-08-03, see correction note), as `MontageLength / EffectivePlayRate + 0.35`. **Must divide by effective play rate** or it fires early on every Phase 2 telegraph | `DA_TuningGlobals` | M2-12 |
 | Q23 | **No timer** — the variable should not exist. Under Q22 a clock converts group 06's bounded retry loop into a hard fail. Two terminal branches, not three | `BP_DuelDirector` | M1-09 |
 | Q29 | **Recommend `VALOR-7`; ship the field blank.** Keeps Q45's build behaviour but breaks its silence, because the GDD names *this* one for finalization and an unnamed boss health bar is a visible hole | `WBP_HUD` | M3-04 |
 | 27 | **Non-canonical for gameplay.** Stays in the GDD unedited, legal as #04 flavour, **forbidden as a float** | — | M2-04 |
@@ -215,14 +250,14 @@ recovery durations — the third group in a row to report that.*
 
 ### 2026-08-02 — Group 06 · Final Clash and meter (Q9, Q17, Q19, Q20, Q21)
 
-- **Status:** **Q17 APPROVED** (KIND A, deleted from `TODO.md`). Q9, Q19, Q20, Q21 **PROPOSED**.
+- **Status:** **Q17 was wrongly closed and is reopened as PROPOSED** — see the 2026-08-03 correction note. Q9, Q19, Q20, Q21 **PROPOSED**.
 - **Resolves:** TODO items 31 (Q9), 6 (Q17), 39 (Q19), 40 (Q20), 41 (Q21)
 - **Dispatch:** group 06 → `design/group-06-final-clash.md`
 
 | Q | Proposed | Lives in | Unblocks |
 |---|---|---|---|
 | Q9 | **No decay.** `MeterDecayRate` should not exist as a variable at all — no Tick, no timer, no float | `BP_AscensionComponent` | M3-03 |
-| Q17 | **APPROVED — reuse `IA_Impact`.** One action, one `IMC_Duel`, routed by a `bClashBeatOpen` bool | `IMC_Duel` | M1-10 |
+| Q17 | **PROPOSED — reuse `IA_Impact`.** (reopened 2026-08-03) One action, one `IMC_Duel`, routed by a `bClashBeatOpen` bool | `IMC_Duel` | M1-10 |
 | Q19 | **1.2 s**, band 1.0–1.3, authored as `CounterRecoveryLength + 0.6 s` | `BP_FinalClashDirector` | M4-05 |
 | Q20 | **0.50 s, both beats, identical** — the top of the GDD's published 0.35–0.50 s Standard range | `BP_FinalClashDirector` | M4-06 |
 | Q21 | **1200 cm** along the arena long axis, midpoint push with clamp-and-redistribute; band **1100**–1300 | `BP_FinalClashDirector` | M4-08 |
@@ -455,7 +490,7 @@ difficulty — Q28 is the only one of the three that scales correctly.**
 - **Supersedes GDD:** none. Every value fills a blank the GDD never specified; all fixed
   GDD numbers are cited and unchanged.
 
-**C3 is satisfied, but not as framed** — meter 100 arrives ~0:40–1:25 while the health
+**C3 IS NOT SATISFIED — see the 2026-08-03 correction note.** Group 02 wrote: — meter 100 arrives ~0:40–1:25 while the health
 gate arrives ~2:53, so they do *not* converge. The ordering is meter-first, which is the
 safe direction: the player spends the tail attacking and damage still progresses. The
 dangerous state (1 HP, empty meter) does not occur in normal play.
