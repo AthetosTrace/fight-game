@@ -1,6 +1,6 @@
 # TODO — Ascendant Impact
 
-**55 open items** — **2 closed · 27 PROPOSED · 28 untouched.** Last worked 2026-08-02.
+**54 open items** — **2 closed · 27 PROPOSED · 27 untouched.** Last worked 2026-08-02.
 > Twelve new items so far (46–57) were found by the dispatches themselves: real gaps in
 > `design-brief.md` §13.2 that have no row and no Q number. The list grew because the
 > work found holes, which is the list working.
@@ -414,6 +414,30 @@ feel like a real test?**
 **41. Q21 — Failed-Clash separation distance.** · **KIND B**
 No number. Reason given: must place both fighters outside every attack's `MinRange`
 (Q10) so the player is not immediately re-engaged while recovering.
+
+---
+
+### M4-05 / M4-06 / M4-08 — additional gaps found 2026-08-02
+
+Found by the group 06 dispatch. Each is a value the M4 build needs that has no GDD
+number, no §13.2 row and no Q number.
+
+**54. `AM_Clash_Beat1` / `AM_Clash_Beat2` montage lengths and prompt lead-in.** · **KIND B**
+A 0.50 s window with no wind-up is a different mechanic from a 0.50 s window with one.
+Only the GDD's 1–3 s burst constrains it.
+
+**55. The successful-counter recovery length.** · **KIND B**
+Q19 is expressed as `CounterRecoveryLength + 0.6 s` and cannot be locked without it.
+Distinct from item 46, which is the counter's *success* window; this is the recovery
+*after* success.
+
+**56. What happens if `IA_FinalClash` is pressed while an Impact Window prompt is open.** · **KIND B**
+Both can be live at once after a counter. Proposed rule, surfaced not decided: the Impact
+Window resolves first and the post-counter Clash window is **paused, not consumed**.
+
+**57. The wall margin for the Q21 clamp.** · **KIND A**
+How close to the arena edge a fighter may be placed. Engineering-adjacent, but it changes
+the effective separation near the ends of the long axis.
 
 ---
 
