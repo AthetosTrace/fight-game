@@ -1,7 +1,7 @@
 # TODO — Ascendant Impact
 
-**53 open items** — **4 closed · 31 PROPOSED · 1 blocked on you · 21 untouched.** Last worked 2026-08-02.
-> Twelve new items so far (46–57) were found by the dispatches themselves: real gaps in
+**53 open items** — **5 closed · 33 PROPOSED · 1 blocked on you · 19 untouched.** Last worked 2026-08-02.
+> Thirteen new items so far (46–58) were found by the dispatches themselves: real gaps in
 > `design-brief.md` §13.2 that have no row and no Q number. The list grew because the
 > work found holes, which is the list working.
 
@@ -26,6 +26,7 @@ build order rather than being rewritten every group.
 | 7 (Q14), 8 (Q15), 9 (Q16), 43, 44, 45 | 05 — fighter feel and presentation | `design/group-05-fighter-feel.md` |
 | 31 (Q9), 39 (Q19), 40 (Q20), 41 (Q21) | 06 — Final Clash and meter | `design/group-06-final-clash.md` |
 | 25 (Q25), 5 (Q23), 32 (Q29), 27 | 07 — structure and canon | `design/group-07-structure-and-canon.md` |
+| 19 (Q30), 42 (Q31) | 08 — asset decisions | `design/group-08-assets.md` |
 
 ## How this file works
 
@@ -71,7 +72,7 @@ rows 29–57 are Q1–Q29 with no remainder. They are therefore listed once, und
 number, and not double-counted. §13.1 is fully specified by the GDD and contributes no
 open items, with one exception now recorded below (row 28).
 
-**The reverse is not true, and that is the interesting part.** Items 46–57 are
+**The reverse is not true, and that is the interesting part.** Items 46–58 are
 values the build needs that §13.2 has **no row for at all**. The table is complete with
 respect to itself and incomplete with respect to the game. Expect more of these as the
 groups run.
@@ -239,12 +240,16 @@ value in Q10 gets re-tuned twice.
 against — mech proportion, small head relative to torso, oversized rounded pauldrons,
 back vanes, fully enclosed fists.
 
-**20. Footwear branding on both fighter sheets is a rights-review item.** · **KIND A**
-*(Closest fit — this is a rights check, not an Unreal procedure.)* Raised by the
-recovered character sheets: Echo and Nova both wear athletic sneakers carrying a
-swoosh-style side mark. `CLAUDE.md` requires rights review for anything entering a
-submitted course build. Applies to proxies now and to final character treatment at
-M5-06.
+---
+
+### M1-23 — additional gap found 2026-08-02
+
+**58. Verify whether UE Starter Content still ships in 5.8.** · **KIND A**
+Found by the group 08 dispatch, **MEDIUM confidence**: search results indicate Starter
+Content was **removed from the engine in 5.7**, and `design-brief.md` §12.1 and §12.6 both
+lean on it — for basic materials and as the audio fallback. The source is community-grade,
+not Epic documentation. **Clearing this is five minutes: tick Starter Content on a new 5.8
+project and see.** The group 08 asset ledger routes around it either way.
 
 ---
 

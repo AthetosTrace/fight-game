@@ -55,6 +55,51 @@ and triggers rule 4.
 
 ## Log
 
+### 2026-08-02 — Group 08 · asset decisions (Q30, Q31, item 20)
+
+- **Status:** **Item 20 APPROVED** for the build action (deleted from `TODO.md`); the legal
+  characterization is referred to a human. Q30 and Q31 **PROPOSED**.
+- **Resolves:** TODO items 19 (Q30), 42 (Q31), 20
+- **Dispatch:** group 08 → `design/group-08-assets.md`
+
+| Item | Answer | Where it lands | Unblocks |
+|---|---|---|---|
+| Q30 | **YES — take `Paragon: Crunch`** (alternate `Paragon: Steel`). Decide by **2026-08-09**, import **before M2-04/M2-05 are authored**. Build the rival on **Crunch's own skeleton using Crunch's own animation cycles**, which removes the `IK Retargeter` pass from the critical path entirely | M1-23 → M2 | M1-23 |
+| Q31 | **Phase 1 ships without an audio *pass* — and that must be said now, not discovered.** No M1–M4 gate names audio; only M5's does. **But not literally silent:** a capped **6–9 one-shot cue floor at ~0.5 day**, sequenced *after* M4's gate, routed through `BP_PresentationSubsystem` so it stays disable-able | M5-04 | M5-04 |
+| 20 | **APPROVED — exposure is zero.** The swoosh exists only on the GDD's concept sheets, **on no asset in the build or the plan.** Manny and Quinn carry no branding. Remedy: a five-minute recorded verification at **M1-23** and a one-sentence constraint on **M5-06** art that does not exist yet | process | M1-23 |
+
+- **Why Crunch:** it wins on the two page-14 lines that actually matter for readability —
+  **fully enclosed fist with no weapon** ("the hand *is* the weapon") and **mech proportion
+  with a small head**. Steel loses on the shield.
+- **Day cost of Q30: ≈1.0 day, offset by ≈0.5–1.0 day returned** on M2 attack-animation
+  sourcing → **net ≈0 to +0.5 days.** Retargeting Manny animations onto Crunch instead is
+  **+1.0–1.5 days (do not).** Swapping *after* the attack rows are authored is
+  **+2.0–3.0 days and is forbidden** — that is precisely the double-tuning §14 warned about.
+- **Supersedes GDD:** none. **But Q31 supersedes `design-brief.md` §12.6's "no free sound
+  source verified"** — the **Sonniss #GameAudioGDC** bundle is worldwide, non-exclusive,
+  royalty-free, commercial, **no attribution**, with an **AI/ML-training prohibition that
+  binds Assignment #04, not the game**. Freesound filtered to **CC0** is the right tool for
+  the nine-cue floor; the CC0 filter is mandatory because every other licence there carries
+  an attribution obligation.
+
+**A defect in the brief, MEDIUM confidence — now TODO item 58.** Search results indicate
+**UE Starter Content was removed from the engine in 5.7**, and `design-brief.md` §12.1 and
+§12.6 both lean on it. The source is community-grade, not Epic docs. **Verify by ticking
+Starter Content on a new 5.8 project — five minutes.** The asset ledger routes around it
+either way.
+
+**Gaps that could not be closed with a free source:** the rival's **back-vane/thruster
+silhouette** (no free asset matches page 14 — omit in Phase 1; telegraph pose plus emissive
+carries Attack D's cue; geometry is M5); a **martial-arts strike set with the intended
+weight** (standing §12.6 gap); **character art matching the sheets** (standing, M5); a **UI
+icon set** (text and plain bars suffice). **Music is not a Phase 1 gap** and now has a
+verified free M5 option in Incompetech, at the cost of a **CC BY 4.0 credits-screen
+obligation** — the paid attribution-free licence is named and explicitly not taken.
+
+**Q31 addresses the readability tension honestly:** the GDD names sound as a Telegraph and
+Phase 2 channel. Shipping the pass in M5 means that channel is absent in Phase 1, so pose,
+warning lights and emissive carry the load — which is why the capped cue floor exists at all.
+
 ### 2026-08-02 — Group 07 · structure and canon (Q25, Q18, Q23, Q29, items 26, 27, 28)
 
 - **Status:** **Q18 and item 28 APPROVED** (KIND A, deleted from `TODO.md`). Q25, Q23, Q29
