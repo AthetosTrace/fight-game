@@ -422,11 +422,18 @@ unskippable, it belongs in `entry_gate.py`. Saying a contract-gated agent is
 - **And on session start, report today's date and the days remaining to 1 September
   2026.** All three coursework deadlines have passed and were met — report them as
   delivered, not as countdowns, unless a regrade or Assignment #05 changes that.
-- **All six agents have run.** The straight line is finished; there is no "next
-  agent by gate" any more. The user tells you which phase we are in and you dispatch
+- **When you do not know what to run next, run the `goal-planner`.** It exists precisely
+  to answer that question: it diffs the GDD against `design/`, ranks what is left by the
+  lowest `build-sequence.md` step each item blocks, and stops at the first design
+  question. **It had not yet been run as of 2026-08-03.** Its output is
+  `design/goal-plan.md`.
+- **All six original agents have run.** The straight line is finished; there is no "next
+  agent by gate" among them. The user tells you which phase we are in and you dispatch
   to match. If we are building, run the **developer**. If we are back in research and
   design (for example the M5 presentation pass), stop the developer and run the
   **designer**. **One specialist at a time.**
+- **35 items in `TODO.md` are PROPOSED and awaiting the designer.** Never build on a
+  PROPOSED value as though it were settled, and never let an agent promote one itself.
 - **The work is now in Unreal, not in more documents.** Default to executing
   `docs/unreal/ATTACK_A_IMPLEMENTATION_PLAN.md` and `build-sequence.md` M1 steps
   rather than commissioning another planning artifact. Another brief is not progress.
