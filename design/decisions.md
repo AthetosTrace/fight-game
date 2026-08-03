@@ -55,6 +55,72 @@ and triggers rule 4.
 
 ## Log
 
+### 2026-08-02 — Group 07 · structure and canon (Q25, Q18, Q23, Q29, items 26, 27, 28)
+
+- **Status:** **Q18 and item 28 APPROVED** (KIND A, deleted from `TODO.md`). Q25, Q23, Q29
+  and item 27 **PROPOSED**. **Item 26 is not resolved — it is blocked on a human and stays
+  open.**
+- **Resolves:** TODO items 25 (Q25), 29 (Q18), 5 (Q23), 32 (Q29), 27, 28
+- **Dispatch:** group 07 → `design/group-07-structure-and-canon.md`
+
+**Q25 — 26 per-attack values, all PROPOSED.** Telegraph P1 **A 0.70 · B 0.60 · C 0.80 ·
+D 0.90**, P2 **0.55 / 0.48 / 0.62 / 0.70**. Active, one value for both phases, **A 0.22 ·
+B 0.36 · C 0.30 · D 0.45**. Recover P1 **0.85 / 0.70 / 0.60 / 0.55**, P2 **0.68 / 0.56 /
+0.48 / 0.44**. Duel-level: Reposition **0.90 / 0.55**, Select **0.15 / 0.15**, Return to
+Neutral **0.15 / 0.15**. Telegraph tracks range (close = short); Recover tracks commitment
+inversely (D shortest because D exists to set up A). Lives in `DT_VanguardAttacks` +
+`S_AttackPhaseTuning`; unblocks M2-04.
+
+**RANGE COMPLIANCE: 26 / 26 in range. 0 out of range. 0 GDD ranges altered or collapsed.**
+One value sits on an inclusive boundary — **Attack D's Active at 0.45 s is the published
+maximum**, deliberately, per group 04's mandate. **The validation check must therefore be
+`Min <= Value <= Max`**, and D's Active has zero upward headroom.
+
+Three Q25 findings the developer must not miss:
+- **`ActiveSeconds` must never gain a per-phase field.** Scaling D's 0.45 s by the ~0.78
+  Phase 2 ratio makes 600 cm cross at **1714 cm/s** and breaks the GDD's own no-snap rule.
+  It belongs on the row, outside both phase structs.
+- **Attack B's first-to-last hit notify must span ≤ 0.26 s**, or Q6's 0.28 s i-frames
+  cannot cover the sequence and **B becomes unavoidable.**
+- **Q5 = 3 survives independently.** Punish windows come out 1.75–2.05 s (P1) and
+  1.29–1.53 s (P2) against a ~1.0 s combo, confirming group 02's rejection of 4 sections.
+
+| Item | Answer | Lives in | Unblocks |
+|---|---|---|---|
+| Q18 | **APPROVED — 0.35 s**, as `MontageLength / EffectivePlayRate + 0.35`. **Must divide by effective play rate** or it fires early on every Phase 2 telegraph | `DA_TuningGlobals` | M2-12 |
+| Q23 | **No timer** — the variable should not exist. Under Q22 a clock converts group 06's bounded retry loop into a hard fail. Two terminal branches, not three | `BP_DuelDirector` | M1-09 |
+| Q29 | **Recommend `VALOR-7`; ship the field blank.** Keeps Q45's build behaviour but breaks its silence, because the GDD names *this* one for finalization and an unnamed boss health bar is a visible hole | `WBP_HUD` | M3-04 |
+| 27 | **Non-canonical for gameplay.** Stays in the GDD unedited, legal as #04 flavour, **forbidden as a float** | — | M2-04 |
+| 28 | **APPROVED — 208 cm.** 82 in × 2.54 = 208.28, rounded as Echo's 183 and Nova's 173 are. Uniform scale only; capsule scales with the mesh; reach re-validated per GDD §07 | `BP_CrimsonVanguard` | M2-05 |
+
+- **Q29 prior art:** Titanfall 2 (BT-7274 → "BT"), Armored Core VI (`AAP07: BALTEUS`),
+  MGR (`LQ-84i`), plus a 2–16-char nameplate budget and ~30% localization buffer that puts
+  `CRIMSON VANGUARD` at 16 characters with **zero headroom**.
+- **Item 27's load-bearing part is the fence around MOBILITY 6/10 versus open item 49:**
+  `0.6 × 600 = 360 uu/s` triggers exactly the kiting failure group 04 warned about,
+  `0.6 × 1030 = 618`, and "6/10 of an unstated max" is undefined. **Three answers, so not a
+  number.**
+- **Item 28 caveat:** **width is still unspecified.** Do not derive a capsule radius from
+  "roughly twice the shoulder width."
+- **Supersedes GDD:** none. Item 28 is a transcription *from* the GDD, filling a blank in
+  `design-brief.md` §13.1 row 28.
+
+**Item 26 is correctly unresolved and stays open.** The transcription disclaims itself, so
+the dispatch refused to settle a canon contradiction from low-confidence text and instead
+wrote four specific questions for the designer to answer by zooming page 14. **M2-04 is
+not blocked** — Attack A keeps 0–260 cm, 32 damage and its Q25 timings under every reading,
+because authored §04 text outranks an image description and a reference sheet cannot add a
+mechanic. The real risk named: **Assignment #04 seeding lore from a low-confidence chunk.**
+
+**One tension carried forward: Attack A's Phase 1 cycle is 2.97 s against Q12's 3.0 s A
+cooldown — 0.03 s of slack.** At 0–90 cm, where group 04's bands make A the only legal
+attack, that is A every ~3.0 s at 32 damage — **10.7 dmg/s against 100 HP.** It cannot be
+fixed from inside Q25; every legal choice of the six state values lands the cycle in
+2.8–3.2 s. The levers belong to Q12, Q10 or Q3. **Q12 and Q25 need one joint tuning session.**
+
+*Research note: 11/15 searches. No shipped game publishes per-attack boss telegraph or
+recovery durations — the third group in a row to report that.*
+
 ### 2026-08-02 — Group 06 · Final Clash and meter (Q9, Q17, Q19, Q20, Q21)
 
 - **Status:** **Q17 APPROVED** (KIND A, deleted from `TODO.md`). Q9, Q19, Q20, Q21 **PROPOSED**.

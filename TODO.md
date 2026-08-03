@@ -1,6 +1,6 @@
 # TODO — Ascendant Impact
 
-**54 open items** — **2 closed · 27 PROPOSED · 27 untouched.** Last worked 2026-08-02.
+**53 open items** — **4 closed · 31 PROPOSED · 1 blocked on you · 21 untouched.** Last worked 2026-08-02.
 > Twelve new items so far (46–57) were found by the dispatches themselves: real gaps in
 > `design-brief.md` §13.2 that have no row and no Q number. The list grew because the
 > work found holes, which is the list working.
@@ -25,6 +25,7 @@ build order rather than being rewritten every group.
 | 17 (Q24), 22 (Q10), 23 (Q12), 24 (Q13), 10 (Q11), 18 (mezzanine) | 04 — spacing and arena | `design/group-04-spacing-and-arena.md` |
 | 7 (Q14), 8 (Q15), 9 (Q16), 43, 44, 45 | 05 — fighter feel and presentation | `design/group-05-fighter-feel.md` |
 | 31 (Q9), 39 (Q19), 40 (Q20), 41 (Q21) | 06 — Final Clash and meter | `design/group-06-final-clash.md` |
+| 25 (Q25), 5 (Q23), 32 (Q29), 27 | 07 — structure and canon | `design/group-07-structure-and-canon.md` |
 
 ## How this file works
 
@@ -273,7 +274,11 @@ Four attacks × two phases × four scaled states. The designer fills these in th
 Table. The **range-validation check** the developer builds against them (§13.1) is
 KIND A and can proceed without the values.
 
-**26. "Plasma-gauntlet weapons" may contradict Attack A.** · **KIND B**
+**26. "Plasma-gauntlet weapons" may contradict Attack A.** · **KIND B** ·
+**⛔ BLOCKED ON YOU — four specific questions in `design/group-07-structure-and-canon.md`**
+The group 07 dispatch correctly refused to settle a canon contradiction from a
+low-confidence transcription. **Clearing this means zooming GDD page 14 by eye and
+confirming the wording.** M2-04 is not blocked meanwhile.
 Raised by page 14. Its UNITS DESCRIPTION panel reads *"powerful, integrated
 plasma-gauntlet weapons"*, while GDD §04 describes Attack A only as **"Close-range
 committed gauntlet force"** and the sheet's own gauntlet panel shows an enclosed fist
@@ -288,23 +293,6 @@ are consumed by nothing in the GDD, `design-brief.md`, or `combat-integration-pl
 Probably concept-art flavour — but they are numbers in the source of truth and a future
 agent will find them. Decide whether they are non-canonical and record it.
 **MOBILITY 6/10 is not a movement-speed value.**
-
-### M2-05 — Create `BP_CrimsonVanguard`
-
-**28. Record Crimson Vanguard's height in centimetres — 208 cm.** · **KIND A**
-`design-brief.md` §13.1 row 28 lists **6'10" with no cm figure**, while rows 26 and 27
-give Echo 183 cm and Nova 173 cm. The blank was never a design decision — the number was
-simply unreadable until page 10 was recovered on 2026-08-02, where it is printed as
-**"6'10" (208 cm)"**. This is a transcription from the GDD, not an invention. Needs the
-designer's acceptance, then a dated entry in `design/decisions.md`.
-**This supersedes a `design-brief.md` line, not a GDD line** — so it does *not* trip the
-GDD-out-of-date rule.
-
-### M2-12 — Create the six `BTTask_*` tasks
-
-**29. Q18 — BTTask montage failsafe margin.** · **KIND A**
-Range to consider: **0.25–0.50 s** past montage length. Reason given: an engineering
-safety value, not a feel value.
 
 ### M2-13 — Author Attack A montage and its notify states
 
