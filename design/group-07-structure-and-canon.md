@@ -600,7 +600,7 @@ never affecting the duel. That measures the 3–5 minute target without enforcin
   There is no range and no candidate list. The formal string is fixed; the short form is a
   blank the GDD asks the designer to fill.
 
-### How this relates to the Q45 precedent, and why it differs
+### How this relates to the item 45 precedent, and why it differs
 
 Group 05 answered item 45 by shipping `FighterUnitLine` **blank** rather than inventing a
 meaning for the "SFN" monogram, and cited Q29 as its precedent. **Q29 should keep half of that
@@ -614,7 +614,7 @@ future agent will otherwise flatten the two:
 | Can the build ship without it? | **Yes.** A badge is art; a blank line is invisible. | **No.** A boss health bar with no name is a visible hole in the HUD at M3-04. |
 | Correct answer | Ship blank. Invent nothing. | **Ship blank in code, but hand the designer a shortlist and a recommendation** — because the GDD asked for one, and because an unanswered Q29 blocks a visible HUD element rather than an optional flourish. |
 
-So the **build behaviour is identical to Q45** — `RivalDisplayName` is exposed, defaults to
+So the **build behaviour is identical to item 45** — `RivalDisplayName` is exposed, defaults to
 empty, and the developer does not fill it. What differs is that this file does its job and
 brings a candidate forward, because *"the designer decides"* is not a useful answer to a
 question the source document specifically asked the designer to decide.

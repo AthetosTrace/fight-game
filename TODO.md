@@ -1,6 +1,6 @@
 # TODO — Ascendant Impact
 
-**64 open items** — **8 closed · 35 PROPOSED · 1 blocked on you · 28 untouched.**
+**65 open items** — **8 closed · 35 PROPOSED · 1 blocked on you · 29 untouched.**
 Last worked 2026-08-03.
 
 > **INSPECTED 2026-08-03.** A cross-consistency pass over all nine dispatches
@@ -8,7 +8,7 @@ Last worked 2026-08-03.
 > cross-group contradictions**, and **zero GDD violations**. Group 07's 26/26 in-range
 > claim was independently recomputed and **CONFIRMED**. Items 6 and 29 were wrongly
 > closed and are **restored below**. Items 64–72 are the contradictions.
-> Twenty-seven new items (46–72) were found by the dispatches and the inspection: real gaps in
+> Twenty-eight new items (46–73) were found by the dispatches and the inspection: real gaps in
 > `design-brief.md` §13.2 that have no row and no Q number. The list grew because the
 > work found holes, which is the list working.
 
@@ -86,7 +86,7 @@ rows 29–57 are Q1–Q29 with no remainder. They are therefore listed once, und
 number, and not double-counted. §13.1 is fully specified by the GDD and contributes no
 open items, with one exception now recorded below (row 28).
 
-**The reverse is not true, and that is the interesting part.** Items 46–72 are
+**The reverse is not true, and that is the interesting part.** Items 46–73 are
 values the build needs that §13.2 has **no row for at all**. The table is complete with
 respect to itself and incomplete with respect to the game. Expect more of these as the
 groups run.
@@ -116,6 +116,20 @@ hits kill me" — a 3–5-hit budget is a common readable target for an armored-
 Range to consider: **800–2000**. Reason given: must be tuned against the 3–5 minute
 session target and against the Phase 2 (50%) and Clash (25%) thresholds landing at
 satisfying moments.
+
+### M1-05 — the one most likely to break a build
+
+**64. C3 from the approved Q22 is NOT satisfied.** · **KIND B** · **YOUR CALL**
+C3 requires ≤25% rival health and meter 100 to arrive **close together**. At Q2 = 1200 they
+are **90–135 s apart**. Group 02 said so and then passed itself against a substituted
+criterion (meter-first ordering is safe). **A dispatch may not amend an approved
+constraint's success criterion and then mark itself compliant against the amended one.**
+Two paths: amend C3 explicitly on the record, or take group 06's **Q2 → 1050–1100**.
+
+**73. Group 08's Q31 contradicts itself on milestone placement.** · **KIND B**
+Raised in the pass-1 inspection and not logged at the time. Q31 says Phase 1 ships
+without an audio pass, then specifies a 6–9 cue floor *sequenced after M4's gate* — which is
+M5 work described as a Phase 1 deliverable. Decide which it is.
 
 ### M1-09 — Create `BP_DuelDirector`
 
@@ -479,13 +493,6 @@ strings ever need a unit name, this is the thread to pull.
 Full detail in [`design/inspection-design-answers.md`](design/inspection-design-answers.md).
 
 ### M2-04 — the one most likely to break a build
-
-**64. C3 from the approved Q22 is NOT satisfied.** · **KIND B** · **YOUR CALL**
-C3 requires ≤25% rival health and meter 100 to arrive **close together**. At Q2 = 1200 they
-are **90–135 s apart**. Group 02 said so and then passed itself against a substituted
-criterion (meter-first ordering is safe). **A dispatch may not amend an approved
-constraint's success criterion and then mark itself compliant against the amended one.**
-Two paths: amend C3 explicitly on the record, or take group 06's **Q2 → 1050–1100**.
 
 **65. Telegraph and Recover are specified two incompatible ways.** · **KIND B** ·
 **Blocks M2-04 and M4-04 from both being built as written**

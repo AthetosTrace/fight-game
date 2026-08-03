@@ -1,5 +1,11 @@
 # Group 01 — BLOCKING — Q22
 
+> **STATUS UPDATE — 2026-08-02: this proposal was APPROVED by the designer of record.**
+> The closing line of this file still reads "Q22 remains PROPOSED", which was true when it
+> was written. It is no longer. Q22 is **SETTLED AND BINDING** — see `design/decisions.md`
+> and the banner in `TODO.md`. This file is preserved as the reasoning behind the decision,
+> not as its current status.
+
 **Dispatched:** 2026-08-02 · **Status of every answer below: PROPOSED — the designer decides.**
 
 ## Q22 — Is the 1 HP floor permanent or Clash-only?

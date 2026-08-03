@@ -187,7 +187,7 @@ warning lights and emissive carry the load — which is why the capped cue floor
 - **Status:** **item 28 APPROVED** (KIND A, deleted). **Q18 was wrongly closed and is reopened as PROPOSED** — see the 2026-08-03 correction note. Q25, Q23, Q29
   and item 27 **PROPOSED**. **Item 26 is not resolved — it is blocked on a human and stays
   open.**
-- **Resolves:** TODO items 25 (Q25), 29 (Q18), 5 (Q23), 32 (Q29), 27, 28
+- **Resolves:** TODO items 25 (Q25), 5 (Q23), 32 (Q29), 27, 28. **Item 29 (Q18) was reopened 2026-08-03 and is NOT resolved.**
 - **Dispatch:** group 07 → `design/group-07-structure-and-canon.md`
 
 **Q25 — 26 per-attack values, all PROPOSED.** Telegraph P1 **A 0.70 · B 0.60 · C 0.80 ·
@@ -216,7 +216,7 @@ Three Q25 findings the developer must not miss:
 |---|---|---|---|
 | Q18 | **PROPOSED — 0.35 s** (reopened 2026-08-03, see correction note), as `MontageLength / EffectivePlayRate + 0.35`. **Must divide by effective play rate** or it fires early on every Phase 2 telegraph | `DA_TuningGlobals` | M2-12 |
 | Q23 | **No timer** — the variable should not exist. Under Q22 a clock converts group 06's bounded retry loop into a hard fail. Two terminal branches, not three | `BP_DuelDirector` | M1-09 |
-| Q29 | **Recommend `VALOR-7`; ship the field blank.** Keeps Q45's build behaviour but breaks its silence, because the GDD names *this* one for finalization and an unnamed boss health bar is a visible hole | `WBP_HUD` | M3-04 |
+| Q29 | **Recommend `VALOR-7`; ship the field blank.** Keeps item 45's build behaviour but breaks its silence, because the GDD names *this* one for finalization and an unnamed boss health bar is a visible hole | `WBP_HUD` | M3-04 |
 | 27 | **Non-canonical for gameplay.** Stays in the GDD unedited, legal as #04 flavour, **forbidden as a float** | — | M2-04 |
 | 28 | **APPROVED — 208 cm.** 82 in × 2.54 = 208.28, rounded as Echo's 183 and Nova's 173 are. Uniform scale only; capsule scales with the mesh; reach re-validated per GDD §07 | `BP_CrimsonVanguard` | M2-05 |
 
@@ -251,7 +251,7 @@ recovery durations — the third group in a row to report that.*
 ### 2026-08-02 — Group 06 · Final Clash and meter (Q9, Q17, Q19, Q20, Q21)
 
 - **Status:** **Q17 was wrongly closed and is reopened as PROPOSED** — see the 2026-08-03 correction note. Q9, Q19, Q20, Q21 **PROPOSED**.
-- **Resolves:** TODO items 31 (Q9), 6 (Q17), 39 (Q19), 40 (Q20), 41 (Q21)
+- **Resolves:** TODO items 31 (Q9), 39 (Q19), 40 (Q20), 41 (Q21). **Item 6 (Q17) was reopened 2026-08-03 and is NOT resolved.**
 - **Dispatch:** group 06 → `design/group-06-final-clash.md`
 
 | Q | Proposed | Lives in | Unblocks |
@@ -490,7 +490,7 @@ difficulty — Q28 is the only one of the three that scales correctly.**
 - **Supersedes GDD:** none. Every value fills a blank the GDD never specified; all fixed
   GDD numbers are cited and unchanged.
 
-**C3 IS NOT SATISFIED — see the 2026-08-03 correction note.** Group 02 wrote: — meter 100 arrives ~0:40–1:25 while the health
+**C3 IS NOT SATISFIED — see the 2026-08-03 correction note.** Group 02's own text reads: meter 100 arrives ~0:40–1:25 while the health
 gate arrives ~2:53, so they do *not* converge. The ordering is meter-first, which is the
 safe direction: the player spends the tail attacking and damage still progresses. The
 dangerous state (1 HP, empty meter) does not occur in normal play.
