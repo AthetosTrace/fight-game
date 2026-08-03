@@ -1,7 +1,7 @@
 # TODO — Ascendant Impact
 
-**53 open items** — **5 closed · 33 PROPOSED · 1 blocked on you · 19 untouched.** Last worked 2026-08-02.
-> Thirteen new items so far (46–58) were found by the dispatches themselves: real gaps in
+**53 open items** — **10 closed · 33 PROPOSED · 1 blocked on you · 19 untouched.** Last worked 2026-08-02.
+> Eighteen new items (46–63) were found by the dispatches themselves: real gaps in
 > `design-brief.md` §13.2 that have no row and no Q number. The list grew because the
 > work found holes, which is the list working.
 
@@ -72,7 +72,7 @@ rows 29–57 are Q1–Q29 with no remainder. They are therefore listed once, und
 number, and not double-counted. §13.1 is fully specified by the GDD and contributes no
 open items, with one exception now recorded below (row 28).
 
-**The reverse is not true, and that is the interesting part.** Items 46–58 are
+**The reverse is not true, and that is the interesting part.** Items 46–63 are
 values the build needs that §13.2 has **no row for at all**. The table is complete with
 respect to itself and incomplete with respect to the game. Expect more of these as the
 groups run.
@@ -337,55 +337,28 @@ exists anywhere in the GDD.**
 Range to consider: **3–8 s**. Reason given: too short and the cinematic bursts stop
 feeling earned; too long and the +20 gain becomes unreachable inside a 3–5 minute duel.
 
-**34. V1 — Rival AI ownership during the Impact burst is assumed, not specified.** · **KIND A**
-The only documented mechanism that parks `BT_CrimsonVanguard` is the `bInClash`
-Blackboard bool → `BTTask_WaitIndefinite` branch, which is **Clash-only**. Nothing
-suspends the six-state Attack Cycle during the 1–3 s Impact burst. As specified,
-`BTTask_SelectAttack`/`BTTask_Telegraph` can fire mid-burst, fight the stagger montage
-for the montage slot, and either desync the debug state display or strand the burst.
-**Acceptance:** `combat-integration-plan.md` names an explicit rival-ownership mechanism
-for the burst (a park flag analogous to `bInClash`, or a documented can't-attack-state
-rule), states what is suspended when a window opens — including "nothing", if that is
-the decision — routes its release through `RestoreCombatState()`, and adds the
-mechanism to the M3-GATE checklist.
+**63. Apply the five corrections to `combat-integration-plan.md`.** · **KIND A**
+V1–V5 are written and APPROVED as drop-in specification text in
+`design/group-09-cinematic-corrections.md`. **The `combat-integration-architect` must
+apply them** — the designer dispatch deliberately did not edit the architect's artifact.
+**This is what actually clears hard check 7 and unlocks M3 sign-off. M1 and M2 may proceed
+now regardless.** The architect must also choose between `BPI_CombatWindows` and the
+two-explicit-calls fallback.
 
-**35. V4 — Animation-state cleanup and the death-during-burst edge are unspecified.** · **KIND A**
-Animation cleanup is specified only on Clash failure; **mid-overlay player death is
-undefined**. **Acceptance:** each overlay branch states its montage-cleanup rule
-(natural completion vs explicit stop), and a single stated rule resolves `OnDeath`
-during any overlay. *The `OnDeath` rule may need a design decision — surface it rather
-than settling it.*
+**59. `CameraReturnBlendSeconds` — no value chosen.** · **KIND B**
+Proposed band **0.15–0.40 s**, 0.0 legal. Introduced by V2's camera-restore step.
 
-### M3-08 — Write `RestoreCombatState()` once
+**60. `OverlayStopBlendOutSeconds` — no value chosen.** · **KIND B**
+Proposed band **0.0–0.15 s**. Introduced by V4's targeted `Montage Stop`.
 
-**36. V2 — Camera ownership is not restored by the single restore function.** · **KIND A**
-The specified body restores input, collision, locomotion, tags, lock-on, time dilation,
-rival BT and the prompt widget — **it contains no camera-return step** — yet plan §2
-principle 4 and the §10 checklist both claim it restores camera. The claim overstates
-the spec. **Acceptance:** an explicit camera-ownership restoration step (e.g.
-`Set View Target with Blend` back to the player's spring-arm camera) is added inside the
-single restore function so every branch inherits it, and the §2/§10 claims are aligned
-to match the spec exactly. *Upstream note: `design-brief.md` §7.5 has the same omission
-— surface to the designer, do not silently edit.*
+**61. Should a same-frame death that races an earned `IA_Impact` press still show the
+burst before the Loss screen?** · **KIND B**
+V4 part 4, deliberately left open. The dispatch recommends aborting immediately but did
+not settle it.
 
-**37. V3 — Hitbox/trace shutdown on restoration is assumed engine behavior.** · **KIND A**
-Trace termination relies on notify-end firing when a montage is stopped.
-**Acceptance:** either an explicit trace-termination / hit-set-clear step in restore, or
-the assumption is named, tested in the sandbox or an M2 case, and added to the M3-GATE
-checklist as "no trace survives a handoff".
-
-**38. V5 — Two transient tags are omitted from the restore clear list.** · **KIND A**
-`State.Dodging` and `State.CanCounter` are registered transient tags absent from the
-clear list. `State.CanCounter` clearing relies on the same assumed notify-end behavior
-as V3 — **a stale `State.CanCounter` after a handoff yields a free counter, i.e.
-unearned spectacle**, which is precisely what the central promise forbids.
-**Acceptance:** both are added to the clear list, or a per-tag guarantee-of-clearance is
-documented.
-
-> The single-restore-function design is exactly right, which is why these omissions
-> matter: **one spec fix repairs every branch at once.**
-
----
+**62. Is `design-brief.md` §7.5 amended in place, or annotated as superseded?** · **KIND A**
+V2's omission exists upstream in the design brief's pseudocode too. The inspector required
+that it be **surfaced, not silently edited** — so the process question is yours.
 
 ## M4 — Complete duel
 

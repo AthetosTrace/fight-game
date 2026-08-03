@@ -55,6 +55,53 @@ and triggers rule 4.
 
 ## Log
 
+### 2026-08-02 — Group 09 · the five cinematic corrections (V1–V5)
+
+- **Status:** **ALL FIVE APPROVED** (KIND A engineering). Deleted from `TODO.md`. Four
+  narrow carve-outs remain PROPOSED and became items 59–62.
+- **Resolves:** TODO items 34 (V1), 35 (V4), 36 (V2), 37 (V3), 38 (V5)
+- **Dispatch:** group 09 → `design/group-09-cinematic-corrections.md`
+- **These clear hard check 7 (cinematic handoff safety), the one check
+  `cinematic-integration-inspection.md` failed.**
+
+| V | Correction | Targets |
+|---|---|---|
+| V1 | `bInImpactBurst` on `BB_CrimsonVanguard` as a second park key alongside `bInClash`, with a second `Selector` branch (`Observer Aborts = Lower Priority`) into the existing `BTTask_WaitIndefinite`; both released only in `RestoreCombatState()`. **Nothing is suspended while a window is merely open** — combat continues under the prompt | plan §3.1 row 19, §5.1 step 7 |
+| V2 | `Set View Target with Blend` back to the possessed `BP_PlayerFighter` as an unconditional restore step, **called directly on the PlayerController, never through `BP_PresentationSubsystem`**; §2 principle 4 and §10 line 7 rewritten verbatim; §3.1 row 27 made the sole authoritative list | plan §3.1 row 27, §2, §10 |
+| V3 | All hit-window state moved off the notify object onto the combat components behind a new `BPI_CombatWindows` interface, keyed by a monotonic `WindowID`; `ForceCloseOrphanedWindows()` called from restore and from the component tick. **Retires the notify-end dependency entirely** | plan §3.1 row 27, §8.4 |
+| V4 | Per-branch montage-cleanup ledger; directors record `ActiveOverlayMontages` so restore's targeted `Montage Stop` covers natural completion, abort and death in one step; a single terminal `bDuelOver` rule on `BP_DuelDirector` resolves `OnDeath` during any overlay | plan §3.1 rows 19, 22, 27 |
+| V5 | Blind clear replaced with `ResyncTransientTags()` over a closed seven-tag set, reading V3's window registry | plan §3.1 row 27 clear list |
+
+**Two findings that go beyond the inspector's own text:**
+1. **A latent unintended-punishment bug already present in the approved clear list.**
+   Restore runs on the Impact FAILURE branch, where nothing was suspended — so a blind
+   clear of `State.Invulnerable` / `State.PerfectWindow` **strips a player's i-frames
+   mid-dodge** if a window expires during that dodge. **Adding `State.Dodging` literally,
+   as V5's acceptance condition words it, would have widened the bug.** The resync shape
+   satisfies the intent without creating it. The same reasoning forced V3's closure to be
+   **orphan-scoped** rather than "close everything" — an unscoped force-close would whiff
+   the player's own live combo hit.
+2. **V1's "can't-attack-state rule" alternative is not actually available.**
+   `AN_ComboFinisher` can open a window in any rival state, so a burst can begin
+   mid-`Telegraph`. **The park flag is mandatory, not a preference.**
+
+**Load-bearing engine fact:** `Received Notify End` is documented as **unreliable under
+montage interruption**, which is what turned V3's either/or acceptance condition into a
+both.
+
+**Unresolved, left to the architect:** `BPI_CombatWindows` is a new asset, and the plan's
+anti-fork rule (§2 principle 1) wants one shared class — but the player and rival have
+different combat components, so an interface is the lightest way to give restore one call
+path across both. The two-explicit-calls fallback is named; **choosing between them is the
+architect's call when applying.**
+
+**Supersedes GDD:** none. Burst stays 1–3 s; failed Clash stays 1 HP / meter 50 / 3 s;
+Impact response stays 0.75 s and 0.35–0.50 s. No auto-success anywhere.
+
+**These are a paper correction to `combat-integration-plan.md`. The architect must apply
+them, and that is now TODO item 63. M1 and M2 may proceed now regardless — only M3 is
+gated.**
+
 ### 2026-08-02 — Group 08 · asset decisions (Q30, Q31, item 20)
 
 - **Status:** **Item 20 APPROVED** for the build action (deleted from `TODO.md`); the legal
