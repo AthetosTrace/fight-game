@@ -253,7 +253,14 @@ and therefore reopens the APPROVED Q22.**
 
 ## Q17 — Do the Clash beats reuse `IA_Impact`?
 
-- **Kind:** **A** (engineering) · **Status:** **APPROVED**
+> **REOPENED 2026-08-03 by the cross-consistency inspection.** This section was written as
+> KIND A / APPROVED, but `design-brief.md` §14 reads *"Recommend yes, for learned
+> consistency. **Designer confirms.**"* — the brief reserves the confirmation to the human.
+> Status is now **PROPOSED** and `TODO.md` item 6 is restored. The recommendation below,
+> including both developer notes, stands unchanged.
+
+- **Kind:** ~~A~~ **B** — reclassified 2026-08-03; see the note above
+- **Status:** ~~APPROVED~~ **PROPOSED**
 - **Unblocks build step:** **M1-10**
 - **Value lives in:** `IMC_Duel` (`design-brief.md` §13.2 row 45)
 - **GDD range:** none published, and none needed. The GDD requires only that the Clash is

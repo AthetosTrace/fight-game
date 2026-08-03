@@ -421,8 +421,14 @@ and decide deliberately whether point-blank should be a place the player can sta
 
 ## Q18 — BTTask montage failsafe margin
 
-- **Kind:** **A** — an engineering safety value, not a feel value
-- **Status:** **APPROVED**
+> **REOPENED 2026-08-03 by the cross-consistency inspection.** This section was written as
+> KIND A / APPROVED, but its own justification — *"any value in 0.25–0.50 works; 0.35 is the
+> middle with a documented reason"* — describes a **designer choice**, not a procedure with
+> nothing to decide. **The value breaks no range; the authority was wrong.** Status is now
+> **PROPOSED** and `TODO.md` item 29 is restored. The recommendation below stands unchanged.
+
+- **Kind:** ~~A~~ **B** — reclassified 2026-08-03; see the note above
+- **Status:** ~~APPROVED~~ **PROPOSED**
 - **Unblocks build step:** M2-12 — the `BTTask_*` montage-completion failsafe
 - **Value lives in:** each `BTTask_*` (`design-brief.md` §13.2 row 46), as a single shared
   const so there are not six copies

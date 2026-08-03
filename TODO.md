@@ -86,8 +86,10 @@ rows 29–57 are Q1–Q29 with no remainder. They are therefore listed once, und
 number, and not double-counted. §13.1 is fully specified by the GDD and contributes no
 open items, with one exception now recorded below (row 28).
 
-**The reverse is not true, and that is the interesting part.** Items 46–73 are
-values the build needs that §13.2 has **no row for at all**. The table is complete with
+**The reverse is not true, and that is the interesting part.** Items **46–63** are values
+the build needs that §13.2 has **no row for at all**. Items **64–73** are different — they
+are cross-group contradictions and record defects found by the inspections, not missing
+rows. The table is complete with
 respect to itself and incomplete with respect to the game. Expect more of these as the
 groups run.
 
@@ -125,11 +127,6 @@ are **90–135 s apart**. Group 02 said so and then passed itself against a subs
 criterion (meter-first ordering is safe). **A dispatch may not amend an approved
 constraint's success criterion and then mark itself compliant against the amended one.**
 Two paths: amend C3 explicitly on the record, or take group 06's **Q2 → 1050–1100**.
-
-**73. Group 08's Q31 contradicts itself on milestone placement.** · **KIND B**
-Raised in the pass-1 inspection and not logged at the time. Q31 says Phase 1 ships
-without an audio pass, then specifies a 6–9 cue floor *sequenced after M4's gate* — which is
-M5 work described as a Phase 1 deliverable. Decide which it is.
 
 ### M1-09 — Create `BP_DuelDirector`
 
@@ -458,6 +455,15 @@ the effective separation near the ends of the long axis.
 ## M5 — Presentation pass (Phase 2)
 
 ### M5-04 — Fill `RequestSound`
+
+**73. Group 08's Q31 states two different milestone placements for the cue floor.** · **KIND B**
+Raised in the pass-1 inspection, logged late, and **restated 2026-08-03 because the first
+wording was wrong.** The conflict is internal to `design/group-08-assets.md`: §Q31 says
+*"Milestone: M1–M4 for the floor (asset selection), M5 for everything else"* (L194–195) but
+later says the cues are *"authored after M4's gate is met"* (L302–305). **Both can be legal
+— `CLAUDE.md` permits a thin presentation floor after M4 *inside* Phase 1 — so this is not
+an M5-interleaving violation. It is an ambiguity about which side of the asset-selection /
+authoring line the cues fall on**, and that decides whether they ship on 1 September.
 
 **42. Q31 — Is a silent Phase 1 build acceptable?** · **KIND B**
 No free sound source was verified (§12.6). Reason given: shipping silent on 1 September
