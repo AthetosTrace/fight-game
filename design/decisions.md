@@ -55,6 +55,58 @@ and triggers rule 4.
 
 ## Log
 
+### 2026-08-02 — Group 06 · Final Clash and meter (Q9, Q17, Q19, Q20, Q21)
+
+- **Status:** **Q17 APPROVED** (KIND A, deleted from `TODO.md`). Q9, Q19, Q20, Q21 **PROPOSED**.
+- **Resolves:** TODO items 31 (Q9), 6 (Q17), 39 (Q19), 40 (Q20), 41 (Q21)
+- **Dispatch:** group 06 → `design/group-06-final-clash.md`
+
+| Q | Proposed | Lives in | Unblocks |
+|---|---|---|---|
+| Q9 | **No decay.** `MeterDecayRate` should not exist as a variable at all — no Tick, no timer, no float | `BP_AscensionComponent` | M3-03 |
+| Q17 | **APPROVED — reuse `IA_Impact`.** One action, one `IMC_Duel`, routed by a `bClashBeatOpen` bool | `IMC_Duel` | M1-10 |
+| Q19 | **1.2 s**, band 1.0–1.3, authored as `CounterRecoveryLength + 0.6 s` | `BP_FinalClashDirector` | M4-05 |
+| Q20 | **0.50 s, both beats, identical** — the top of the GDD's published 0.35–0.50 s Standard range | `BP_FinalClashDirector` | M4-06 |
+| Q21 | **1200 cm** along the arena long axis, midpoint push with clamp-and-redistribute; band **1100**–1300 | `BP_FinalClashDirector` | M4-08 |
+
+- **Q9 is shown falsifiably:** a decay of just **0.76 pts/s** zeroes a struggling player's
+  income and makes the game unwinnable while the loss condition stays live. C1 confirmed.
+- **Q19 finds a real defect in §14's own range.** §14 offers 0.5–1.5 s; **1.5 s is unsafe**
+  — the earliest legal Phase 2 strike after a counter is **1.30 s**, so 1.5 s would let the
+  player Clash out of an incoming hit.
+- **Q20 argues against §14's "beat 2 tighter" suggestion.** Under Q22 that makes the more
+  expensive failure the more likely one. Asura's Wrath is the named failure mode. Final
+  Fantasy XVI's unfailable clash is rejected by name against the GDD's no-auto-success rule.
+- **Q21 implementation:** `Teleport = true` not sweep, `ProjectPointToNavigation` first,
+  applied **under the camera cut**.
+- **Supersedes GDD:** none. Q20 takes 0.50 s from **inside** a published range rather than
+  inventing a value.
+
+**Retry-loop verdict: acceptable under Q22, with margin — but the penalty is regressive.**
+One retry costs ≈19 s (strong) to ≈71 s (struggling). **The GDD's 3-second cooldown is
+never binding** — the fastest possible rebuild is 13.8 s. A competent player can **fail
+four times and still finish inside 5:00**. The tail cannot run away because the loss
+condition bounds it: the struggling player statistically dies (~118 damage) during their
+first retry.
+
+**Three tensions carried forward:**
+1. **The practical meaning of Q22 + Q20 is that a player who cannot execute the two beats
+   loses the duel rather than grinding it out.** Defensible — it is Sekiro's position — but
+   it makes *"I fought well for four minutes and lost to two timing beats"* reachable.
+   **This is the question the file most wants the designer to answer.**
+2. **Q21 cannot be validated** because the rival's `MaxWalkSpeed` does not exist (item 49).
+   This group supplies the missing **upper bound ~1030 uu/s**; group 04 supplied the lower
+   bound. **They must be tuned in one session.**
+3. **No shipped game reached publishes a numeric QTE window or a knockback distance in
+   world units** — six searches spent confirming that. Q20 and Q21 are derived from the
+   GDD's own ranges and group 04's arena, not from prior art. **Q19 is the weakest-sourced
+   answer in the file.**
+
+**Bonus: group 01's unverified Hi-Fi Rush claim is now closed** — the fight continues and
+the parry set can be retried, which is the GDD's failed-Clash rule shipped in a real game.
+
+**Four more missing rows — now TODO items 54, 55, 56, 57.**
+
 ### 2026-08-02 — Group 05 · fighter feel and presentation (Q14, Q15, Q16, items 43, 44, 45)
 
 - **Status:** **PROPOSED** — all six. The designer decides.

@@ -1,7 +1,7 @@
 # TODO — Ascendant Impact
 
-**52 open items** — **1 closed · 23 PROPOSED · 29 untouched.** Last worked 2026-08-02.
-> Eight new items so far (46–53) were found by the dispatches themselves: real gaps in
+**55 open items** — **2 closed · 27 PROPOSED · 28 untouched.** Last worked 2026-08-02.
+> Twelve new items so far (46–57) were found by the dispatches themselves: real gaps in
 > `design-brief.md` §13.2 that have no row and no Q number. The list grew because the
 > work found holes, which is the list working.
 
@@ -24,6 +24,7 @@ build order rather than being rewritten every group.
 | 14 (Q6), **15 (Q7 · BLOCKING)**, 16 (Q8), 33 (Q26), 30 (Q27), 13 (Q28) | 03 — defensive timing | `design/group-03-defensive-timing.md` |
 | 17 (Q24), 22 (Q10), 23 (Q12), 24 (Q13), 10 (Q11), 18 (mezzanine) | 04 — spacing and arena | `design/group-04-spacing-and-arena.md` |
 | 7 (Q14), 8 (Q15), 9 (Q16), 43, 44, 45 | 05 — fighter feel and presentation | `design/group-05-fighter-feel.md` |
+| 31 (Q9), 39 (Q19), 40 (Q20), 41 (Q21) | 06 — Final Clash and meter | `design/group-06-final-clash.md` |
 
 ## How this file works
 
@@ -69,7 +70,7 @@ rows 29–57 are Q1–Q29 with no remainder. They are therefore listed once, und
 number, and not double-counted. §13.1 is fully specified by the GDD and contributes no
 open items, with one exception now recorded below (row 28).
 
-**The reverse is not true, and that is the interesting part.** Items 46–53 are
+**The reverse is not true, and that is the interesting part.** Items 46–57 are
 values the build needs that §13.2 has **no row for at all**. The table is complete with
 respect to itself and incomplete with respect to the game. Expect more of these as the
 groups run.
@@ -105,12 +106,6 @@ satisfying moments.
 **5. Q23 — Is there a duel timer?** · **KIND B**
 **Recommend none.** Reason given: the GDD lists only one loss condition (player health
 zero) and gives 3–5 minutes as a *target session*, not a timer.
-
-### M1-10 — Create the Enhanced Input assets
-
-**6. Q17 — Do the Clash beats reuse `IA_Impact`?** · **KIND A**
-**Recommend yes, for learned consistency.** Designer confirms. *Genuinely blocked:*
-`IMC_Duel` needs a second binding if the answer is no.
 
 ### M1-12 — Create `DA_FighterProfile` + Echo and Nova instances
 
