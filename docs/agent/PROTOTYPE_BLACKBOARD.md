@@ -931,3 +931,57 @@ Created: `Content/AscendantImpact/Duel/BP_DuelKnockoutCoordinator.uasset`. Modif
 **Known limitations / PENDING HUMAN PIE:** subjective boss presence at 1.1 (exposed as the mesh `relativeScale3D` — trivially tunable); ~10% added foot skate; ragdoll limb-through-floor aesthetics; hit-reaction look at scale; whether the unchanged capsule reads acceptably at the new shoulder width in motion.
 
 **Git manifest:** `Content/Variant_Combat/Blueprints/BP_VanguardProxy.uasset` (mesh template scale), `Content/AscendantImpact/Duel/BP_VanguardBasicAttackDriver.uasset` (telegraph offset), one `Lvl_DuelGraybox` external-actor package (instance mesh scale), `docs/agent/PROTOTYPE_BLACKBOARD.md`. No CLAUDE.md change (no new durable gotcha). Assignment 5 untouched. Personal editor config unstaged.
+
+---
+
+## 22. Milestone 14 — Player jump-over + dynamic side switching (2026-08-03, branch `feature/duel-jump-side-switch`, from cd28717)
+
+**Starting checkpoint:** `cd28717` ("Increase Vanguard stature and retune spacing"), branch created from `feature/vanguard-stature-pass`. Pre-work audit: working tree clean except unstaged personal `Config/DefaultEditorPerProjectUserSettings.ini`; f89cf38 / 2a5a631 / cd28717 all ancestors of HEAD.
+
+**Map verification:** `Lvl_DuelGraybox` loaded and verified BEFORE any gameplay change. The raised central platform was **never present in Lvl_DuelGraybox** — the earlier audit's platform sighting was only the untouched `Lvl_ThirdPerson` template (which legitimately keeps it). Evidence: bounds query over the ±650 combat arena (Z 15–400) returned no raised geometry; ground traces at X −500/0/+500 all hit exactly Z 0; the 8 `SM_Ramp*` actors sit on the outer perimeter (|X|,|Y| 800–1800), far outside combat bounds. Both fighters PIE-spawn grounded (player Z 92.15, Vanguard Z 90). No level edit was needed; `Lvl_ThirdPerson` untouched; `Lvl_DuelGraybox` left loaded.
+
+**Goal:** the player can jump over the Vanguard and switch sides; the fixed P1-left/P2-right rule is replaced by dynamic side ownership computed from positions.
+
+### Architecture (all in existing actors; no new assets)
+
+**Side ownership — `BP_VanguardDuelMover` (the constraints authority, per §12):**
+- New vars (Default category; defaults on CDO): `CurrentSideSign` int **+1** (+1 = Vanguard right of player, −1 = left), `SideDeadzone` float **20**, `CrossingMinRelativeHeight` float **50**, `bCrossingActive` bool **false**.
+- New `UpdateSideOwnership()`: only while NOT crossing AND player not falling AND |vanX−playerX| > SideDeadzone → `CurrentSideSign = sign(vanX−playerX)`. Deadzone + grounded-only + previous-value retention = no flicker near equal X (landing inside the deadzone keeps the old side; the clamp then restores it — deterministic).
+- New `SetCrossingCollisionEnabled(bEnable)`: mutual `IgnoreActorWhenMoving` on both fighters' capsules (player↔Vanguard) + sets `bCrossingActive`. Symmetric enable/disable — no accumulation (verified false after every crossing and after KO).
+- New `UpdateCrossingState()` (called first in `ApplyConstraints`): activate when NOT crossing AND player `CharacterMovement.IsFalling` AND (playerZ − vanguardZ) > CrossingMinRelativeHeight; deactivate on first grounded frame — order matters: restore collision FIRST, then `UpdateSideOwnership` (side update is gated on !bCrossingActive; original order silently skipped the flip — caught during authoring).
+- `ApplyConstraints()` rewritten side-aware: player X allowed range = crossing ? [AxisMin,AxisMax] : side>0 ? [AxisMin, AxisMax−MinSep] : [AxisMin+MinSep, AxisMax]; Vanguard X = crossing ? arena clamp only : side-aware `MinimumAxisSeparation` (78) push on its owned side + arena clamp; Vanguard Y lane clamp unchanged. Player is written ONLY when out of range (never repositioned on landing — overlap resolution moves the Vanguard, ≤ ~78 cm, same mechanism the clamp always used).
+- `ApplyMovementInputs()`: advance/retreat direction was already relative (sign of vanX−playerX); the only fix was the retreat arena-bound guard, now side-aware (retreat toward AxisMax when Vanguard right, toward AxisMin when left).
+
+**Attacks:**
+- `BP_VanguardBasicAttackDriver.TryStartAttack`: removed the explicit `playerX < vanguardX` fixed-side gate — the ONE hard side assumption in the driver. Range (abs-separation ≤ AttackRange 240), montage gate, decision chance (0.65), retry, cooldowns, telegraph, windup-cancel all unchanged. `PerformImpactCheck` was already side-agnostic (Vanguard forward vector × ImpactForwardOffset + depth tolerance).
+- Player punch: unchanged — overlap at `ActorForward × 120` r110 was already facing-driven.
+
+**Facing — `BP_DuelCameraRig.UpdateDuelCamera`:** both fighters were already rotated toward each other every tick via `FindLookAtRotation` + `RInterpTo` (inherently side-agnostic). Added: new `FacingUpdateMinDistance` float (default **30**) — facing writes are skipped while horizontal fighter distance ≤ 30 cm (i.e. player directly overhead mid-cross), preventing yaw jitter/spin from degenerate look-at. Camera framing/position math untouched: camera side comes from fixed `CameraSideSign`/`CombatAxisYaw`, so fighters swapping screen sides cannot flip the camera; player control rotation stays pinned (screen-space A/D preserved automatically).
+
+**Knockout — `BP_DuelKnockoutCoordinator.StopMover`:** now calls `mover.SetCrossingCollisionEnabled(false)` before disabling the mover's tick, so a KO during an active crossing cannot leak move-ignore state.
+
+**Jump tuning — `BP_ThirdPersonCharacter` CharMoveComp CDO:** `JumpZVelocity` **500 → 690**, `GravityScale` **1.0 → 1.25** (AirControl 0.35, MaxWalkSpeed 600, single jump unchanged). Arc: apex ≈ 194 cm rise (measured 194.2 in PIE), airtime ≈ 1.13 s — capsule bottom clears the Vanguard capsule top (176 cm) near apex; old 500/1.0 apex (~128) could not. Existing template jump/fall/land animation states via `ABP_Unarmed` untouched; IA_Jump wiring untouched (Started→Jump, Completed→StopJumping, verified statically).
+
+### Validation (compile + PIE, Lvl_DuelGraybox)
+
+Compile clean with `warnings_as_errors=true`: mover, driver, coordinator, camera rig, player. All graphs verified by DSL read-back.
+
+PIE evidence (MCP-driven; real keyboard jumps via Slate `PressKey` SpaceBar into the focused PIE viewport; real LMB punches via Slate `Click` on the viewport; mid-air lateral carry simulated by scripted X-repositioning while genuinely falling — analog-stick-held crossing arc itself is PENDING HUMAN):
+- **A (map):** flat arena, no platform, both fighters grounded. ✓
+- **B (grounded contact):** player teleported to 40 cm inside MinSep → Vanguard pushed out within 0.4 s, player untouched, side stable. ✓
+- **C (jump in place):** real SpaceBar jump, apex 286.4 Z (rise 194), crossing window opened mid-air (13 samples) and closed on landing, zero side flips, mode returns to Walking. ✓
+- **D (jump over):** crossing active → carry to vanX+120 → land: exactly one flip (+1→−1), facing swaps mutually (player −147°, Vanguard +33°), settle at hold-band sep ~183. ✓
+- **E (repeat, incl. landing at vanX−40 inside MinSep):** each crossing exactly one flip; overlap resolved (sep → ≥78 then mover re-opens to ~183); a crossing landing near AxisMax clamped the player exactly at 650 (correct side-aware bound); `bCrossingActive` false after every landing — no accumulating ignores. ✓
+- **Camera:** rig Y stayed ~+582–597 (its arena side) and yaw −102.0 EXACTLY constant across all swaps — no flip, no axis crossing. ✓
+- **F (movement after swap):** advance/hold re-establishes ~180–183 from BOTH sides; retreat verified with Vanguard LEFT of player (moved −X away, old code would have jammed at the wrong bound); depth wander continues in-lane (Y 86 → −63 over samples). Control rotation pinned (screen-space input preserved by construction). ✓
+- **G (punch after swap):** from the right side: Vanguard 70→60, exactly one 10-damage event, player facing −X at punch. ✓
+- **H (strike from both sides):** player RIGHT: hit landed 4.9 s in (50→40); player LEFT: hit 3.3 s in (20→10); one damage event each; whiff/telegraph pipeline unchanged. ✓
+- **I (knockout, both fighters):** Vanguard KO from the RIGHT side: 2 verified punches 20→0 → ragdoll simulating, extra punch does nothing (health stays 0, one-shot), `bCrossingActive` false post-KO, body stays down (Z 90 stable), player alive/walking. Player KO also exercised incidentally (left side): health 0 → MOVE_None, ragdoll, attack blocked — full §19 path intact. ✓
+- **PIE restart:** all state resets (healths reinit 100 via InitHealth, side +1, crossing false, Vanguard standing at 1.1 scale, driver values from CDO, jump values live). ✓
+- **Logs:** zero Accessed-None / Blueprint runtime errors across all sessions (only authoring-time MCP tool errors present, timestamped pre-PIE).
+
+**Failed attempts / gotchas hit during this work (see CLAUDE.md additions):** landing branch originally updated side before clearing `bCrossingActive` (self-gated no-op — fixed by reordering); `read_graph_dsl` silently omits Enhanced-Input event bodies; new-variable DSL accessors are `Variables|Default|Get<Name>` with the bool `b` prefix dropped (older vars read as `|Getb<Name>` — trust `find_node_types`); self-targeted `SetActorLocationAndRotation` needs keyword args; a false "jump input broken" trail was actually the player being KO'd by live Vanguard strikes accumulating between MCP calls (PIE advances in real time between tool calls — account for it when scripting tests).
+
+**PENDING HUMAN PIE:** jump height/speed/gravity feel (690/1.25 exposed on CharMoveComp); ease of crossing with real held-stick horizontal input (scripted carry only proved the logic); landing feel; facing turn smoothness at FacingInterpSpeed during swaps; camera comfort during swaps (apex ~286 Z vs framing headroom); whether jump-over is too strong as an escape (no cost/recovery attached — deliberate); jump/fall/land animation quality (template states, no montage authored); attack readability from both sides; SideDeadzone 20 / CrossingMinRelativeHeight 50 tuning.
+
+**Git manifest:** MODIFIED `Content/AscendantImpact/Duel/BP_VanguardDuelMover.uasset` (4 vars + 3 functions + ApplyConstraints/ApplyMovementInputs rewrite), `Content/AscendantImpact/Duel/BP_VanguardBasicAttackDriver.uasset` (TryStartAttack side gate removed), `Content/AscendantImpact/Duel/BP_DuelKnockoutCoordinator.uasset` (StopMover crossing restore), `Content/AscendantImpact/Camera/BP_DuelCameraRig.uasset` (FacingUpdateMinDistance + facing guard in UpdateDuelCamera), `Content/ThirdPerson/Blueprints/BP_ThirdPersonCharacter.uasset` (CharMoveComp JumpZVelocity/GravityScale), `docs/agent/PROTOTYPE_BLACKBOARD.md`, `CLAUDE.md`. No level/OFPA changes. No new assets. Personal editor config left unstaged.
