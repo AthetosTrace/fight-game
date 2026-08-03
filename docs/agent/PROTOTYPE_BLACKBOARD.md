@@ -985,3 +985,41 @@ PIE evidence (MCP-driven; real keyboard jumps via Slate `PressKey` SpaceBar into
 **PENDING HUMAN PIE:** jump height/speed/gravity feel (690/1.25 exposed on CharMoveComp); ease of crossing with real held-stick horizontal input (scripted carry only proved the logic); landing feel; facing turn smoothness at FacingInterpSpeed during swaps; camera comfort during swaps (apex ~286 Z vs framing headroom); whether jump-over is too strong as an escape (no cost/recovery attached — deliberate); jump/fall/land animation quality (template states, no montage authored); attack readability from both sides; SideDeadzone 20 / CrossingMinRelativeHeight 50 tuning.
 
 **Git manifest:** MODIFIED `Content/AscendantImpact/Duel/BP_VanguardDuelMover.uasset` (4 vars + 3 functions + ApplyConstraints/ApplyMovementInputs rewrite), `Content/AscendantImpact/Duel/BP_VanguardBasicAttackDriver.uasset` (TryStartAttack side gate removed), `Content/AscendantImpact/Duel/BP_DuelKnockoutCoordinator.uasset` (StopMover crossing restore), `Content/AscendantImpact/Camera/BP_DuelCameraRig.uasset` (FacingUpdateMinDistance + facing guard in UpdateDuelCamera), `Content/ThirdPerson/Blueprints/BP_ThirdPersonCharacter.uasset` (CharMoveComp JumpZVelocity/GravityScale), `docs/agent/PROTOTYPE_BLACKBOARD.md`, `CLAUDE.md`. No level/OFPA changes. No new assets. Personal editor config left unstaged.
+
+---
+
+## 23. Milestone 15 — Jump-feel polish (2026-08-03, branch `feature/duel-jump-feel-polish`, from 92428e8)
+
+**Goal:** tighten the §22 jump (694→194 cm apex / ~1.13 s felt tall and floaty) into a fighting-game arc without touching the side-switch architecture. Only `BP_ThirdPersonCharacter` CharMoveComp values changed; every other system untouched by design.
+
+**Values (previous → final):** `JumpZVelocity` 690 → **820**, `GravityScale` 1.25 → **1.9**, `AirControl` **0.35 unchanged** (kept for crossing steerability; no overshoot observed — shorter airtime already cuts max horizontal travel from ~680 to ~540 cm).
+
+**Measured candidates (PIE, real SpaceBar jumps, 2 trials each):**
+| J / G | apex rise | airtime | note |
+|---|---|---|---|
+| 690 / 1.25 (old) | 194 cm | ~1.13 s | baseline, floaty |
+| 780 / 1.75 | 176.9–177.4 | 0.92–0.94 s | apex ~= Vanguard capsule top |
+| **820 / 1.9 (chosen)** | **180.0–180.5** | **0.89–0.92 s** | sharpest launch/descent, keeps >176 clearance |
+| 740 / 1.6 | 174.5–174.6 | 0.97–0.98 s | floatiest of the three, least clearance |
+
+Chosen 820/1.9: shortest airtime in the 0.85–1.0 s target with apex still above the Vanguard capsule top (176 cm at 1.1 stature). Crossing window (samples with `bCrossingActive` true during flight, ~0.05 s cadence + call latency): 11–12 samples ≈ **0.6–0.7 s** above the 50 cm threshold — ample for the cross (was 13–15 ≈ 0.7–0.9 s).
+
+**Regression suite (PIE, Lvl_DuelGraybox, compile clean warnings-as-errors on the player BP; all via real Space jumps + real LMB punches, mid-air lateral carry scripted as in §22):**
+1. Jump in place: window opened+closed, zero flips. ✓
+2/3. Cross from close range (start gap 80 = min-sep): one flip, landing sep 182.3, facing swapped. ✓
+4. Cross from moderate range (start 250): one flip back, landing sep 194.5. ✓
+5. Repeated crossings ×2: exactly one flip each, `bCrossingActive` false after every landing (no residual ignores). ✓
+6. Land very close (carry to +35, inside min-sep): Vanguard pushed out, settles 183, one flip, player never repositioned (z 92.2 on every landing). ✓
+7. Punch immediately after landing opposite side: 90→80, one event. ✓
+8. Vanguard strike after side switch (player right): hit landed (70→60, one event). ✓
+9. KO after switching sides: 8 punches / 8 hits 80→0 → ragdoll simulating, crossing state clear, player unaffected. ✓
+10. PIE restart: values live (820/1.9/0.35), Vanguard 100 standing, side +1, crossing false, driver values from CDO. ✓
+Camera: yaw −102.0 exactly constant and same arena side through every test. Logs: zero Accessed-None / Blueprint runtime errors.
+
+**Known animation mismatches (future animation-integration items, NOT expanded here):** none newly *measured* — but with 1.9 gravity the template jump/fall/land state timing was authored for slower arcs, so expect: land transition possibly starting late, apex pose reaching fall-loop briefly, and the §21 foot-skate unchanged. Flagged for the human pass; no animation assets touched.
+
+**Testing gotchas (already in CLAUDE.md, reconfirmed):** PIE runs in real time between MCP calls (idle player ate live strikes 100→70/80 before scripts could zero `attackDecisionChance`); compiling a Blueprint while PIE runs reinstances the pawn and silently kills Slate-injected input for that session — restart PIE after any mid-session compile.
+
+**PENDING HUMAN PIE:** responsiveness; jump height (180 rise); ascent/descent speed at 1.9 G; horizontal control (AirControl 0.35 vs shorter airtime); ease of crossing with a real held stick; landing feel; camera comfort (apex ~272 Z well inside framing); whether the faster jump is still too strong an escape; animation timing against the faster physics (see mismatch list).
+
+**Git manifest:** MODIFIED `Content/ThirdPerson/Blueprints/BP_ThirdPersonCharacter.uasset` (CharMoveComp JumpZVelocity 820, GravityScale 1.9), `docs/agent/PROTOTYPE_BLACKBOARD.md`, `CLAUDE.md` (jump values + mid-PIE-compile gotcha). Nothing else. Personal editor config left unstaged.
