@@ -116,6 +116,26 @@ CHANGES** — the sandbox test and milestones M1–M2 may proceed on the approve
 Blueprint-first foundation, while M3 sign-off waits on the designer's acceptance
 of five named corrections to the cinematic restore contract.
 
+### How the build reaches Unreal
+
+The **developer** is the only agent connected to the running editor. It talks to Epic's
+own **`ModelContextProtocol`** plugin — the Anthropic MCP server shipped experimentally
+inside Unreal Engine 5.8 — over HTTP at `http://127.0.0.1:8000/mcp`, registered for this
+repo in [`.mcp.json`](.mcp.json) under the server name `unreal-mcp`.
+
+The plugin runs with **tool search enabled**, so it exposes just three meta-tools —
+`list_toolsets`, `describe_toolset`, `call_tool` — and every real editor action is
+dispatched through `call_tool`. Those three are exactly what the developer's allowlist
+names.
+
+**No other agent gets it.** Giving the editor to a planning or auditing agent would let
+something meant only to read start changing the build; the inspector in particular has
+neither `Edit` nor the MCP, for the same reason. The developer's use is bounded by six
+rules in its own definition, and two of them carry the weight: **one reviewed step at a
+time, never a one-shot build**, and **any value still OPEN or PROPOSED gets an empty
+variable rather than a guess typed into a Blueprint default** — typing a number into the
+editor is the same violation as writing one into a document.
+
 ## Build order
 
 **M1** combat gray box → **M2** rival state loop → **M3** Impact handoff →

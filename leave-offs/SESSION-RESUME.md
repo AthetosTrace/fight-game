@@ -1,5 +1,11 @@
 # Session resume — written 2026-08-03
 
+> **2026-08-04 — read [`STOP-2026-08-04.md`](STOP-2026-08-04.md) BEFORE this file.** A task was
+> interrupted mid-run, and **OneDrive rolled two files backward during a folder move, losing
+> `design/goal-plan.md` sections 5–8.** That note carries the loss, the recovery options, and
+> the resume list. It also supersedes two rows below: the `goal-planner` **has** now been run,
+> and the working tree is **not** clean.
+
 Not a gate file. The gate hooks read `designer.md`, `developer.md` and `inspector.md`; this
 file is here for the next session to read **first**.
 

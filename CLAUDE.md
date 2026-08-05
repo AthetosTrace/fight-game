@@ -229,9 +229,37 @@ must never be interleaved into M1–M4.**
 
 ## Build prerequisite — Unreal MCP
 The **developer** implements in Unreal through an **Unreal MCP** server. It must be
-re-established/connected *before the developer runs*. The **designer** should
-therefore produce a brief concrete enough to drive Blueprint work through that MCP
-(real editor paths and Blueprint node names, gray-box first).
+connected *before the developer runs*. The **designer** should therefore produce a brief
+concrete enough to drive Blueprint work through that MCP (real editor paths and Blueprint
+node names, gray-box first).
+
+**The concrete wiring, established 2026-08-04.** The server is Epic's own
+**`ModelContextProtocol`** plugin — *"Anthropic MCP server implementation for Unreal
+Engine"*, **Experimental**, shipped in the engine at
+`Engine/Plugins/Experimental/ModelContextProtocol`. It is **not** a third-party bridge.
+
+| | |
+|---|---|
+| Transport | **HTTP**, `http://127.0.0.1:8000/mcp` |
+| Settings | **Project Settings → Plugins → Model Context Protocol** (`UModelContextProtocolSettings`, saved to `EditorPerProjectUserSettings`) |
+| Defaults | `ServerPortNumber = 8000` · `ServerUrlPath = /mcp` · **`bAutoStartServer = false`** · `bEnableToolSearch = true` |
+| Client config | `.mcp.json` at the **repo root**, server name **`unreal-mcp`** |
+| Console commands | `ModelContextProtocol.StartServer [port]` · `.StopServer` · `.RefreshTools` · `.GenerateClientConfig <ClaudeCode\|Cursor\|VSCode\|Gemini\|Codex\|All>` |
+
+**Two traps.**
+
+1. **`bAutoStartServer` defaults to `false`.** Enabling the plugin and ticking toolsets is
+   **not** enough — nothing listens on 8000 until the server is started. Verify with
+   `netstat -ano | findstr 8000`, never by assumption.
+2. **Tool search is on**, so `tools/list` returns only three meta-tools —
+   `list_toolsets`, `describe_toolset`, `call_tool`. Every real editor tool is reached
+   **through `call_tool`**. That is why the developer's allowlist names exactly those three
+   and not a long list of editor verbs.
+
+`ModelContextProtocol.GenerateClientConfig ClaudeCode` writes `.mcp.json` relative to the
+**Unreal project** directory, which is `FightGame/` — one level below the repo root where
+Claude Code needs it. **Check the path if you use the console command**; the committed
+`.mcp.json` at the repo root is the one that counts.
 
 ## The pipeline
 
@@ -328,7 +356,7 @@ empty repo. **Assignment #05 deliverable — see `assignment-05/`.**
 | Agent | Tools (allowlist) | Consumes | Produces |
 |-------|-------------------|----------|----------|
 | **designer** | Read, Write, Edit, WebSearch | `project-brief.md` | `design-brief.md` |
-| **developer** | Read, Write, Edit | `design-brief.md` | `build-sequence.md` |
+| **developer** | Read, Write, Edit, **`mcp__unreal-mcp__list_toolsets`, `mcp__unreal-mcp__describe_toolset`, `mcp__unreal-mcp__call_tool`** | `design-brief.md` | `build-sequence.md` **+ changes in the running editor** |
 | **inspector** | Read, Write | `design-brief.md`, `project-brief.md`, `gdd/`, `combat-integration-plan.md`, everything produced this session, and `build-sequence.md` when present | `inspection.md` |
 
 **Specialist extension — contract-gated, also in `.claude/agents/`:**
@@ -350,6 +378,16 @@ The developer has **no WebSearch on purpose** — it must consume the designer's
 brief rather than research a version of its own. The three writing agents have
 capped research. Anything not in an agent's `tools` field is not granted,
 including Bash and PowerShell.
+
+**The developer is the only agent holding the Unreal MCP, and that is deliberate.** It is
+the only agent whose job is the editor; giving the editor to a planning or auditing agent
+would let something that is supposed to only read start changing the build. **The inspector
+must never get it** — an inspector that can repair what it audits stops being an inspector,
+which is the same reason it has no `Edit`. The developer's MCP use is bounded by six rules
+in `.claude/agents/developer.md`, of which two matter most: **one reviewed step at a time,
+never a one-shot build**, and **a value that is OPEN or PROPOSED gets an empty variable, not
+a guess typed into a Blueprint default.** Typing a number into the editor is the same
+violation as writing one into a document.
 
 The **inspector** enforces the four hard checks — scope lock, no runtime AI-model
 calls, M1→M5 milestone order, numbers-unchanged — **plus a session audit**: every

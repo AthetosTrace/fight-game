@@ -38,6 +38,26 @@ assignment-05/
 The copies in `agent/` are for the grader's convenience. **The live agent runs from
 `.claude/agents/goal-planner.md` and the live hooks from `.claude/hooks/`.**
 
+## The short version
+
+This project has two gates. The **entry gate** runs before an agent starts, and refuses to
+start it if the files that agent is supposed to read are not on disk yet. The **exit gate**
+runs when an agent tries to finish, and refuses to let it finish until the file it was
+supposed to produce is actually on disk.
+
+That pair is my version of a goal: a condition a machine checks, stated as a rule about
+files, that the agent cannot talk its way past — because the check runs in a separate small
+program that reads the disk, not inside the agent being checked. An agent can be wrong about
+whether it finished. The program reading the disk cannot.
+
+I built this before goals were covered in class. It does the same job, so I kept it instead
+of replacing it.
+
+Two folders: [`agent/`](agent/) holds the agent and its two gates — the gates are short
+Python scripts that the tool runs on its own at those two moments, which is what a *hook*
+is. [`evidence/`](evidence/) holds the artifacts this README cites, so every claim below can
+be checked against a file rather than taken on trust.
+
 ---
 
 ## 1. What the agent built
@@ -207,9 +227,8 @@ is what tests it.**
 
 ## 3. How goals are enforced
 
-**There is no goal primitive in Claude Code.** No `goal:` field, no built-in success
-criterion. So the goal has to be a **machine-checked condition the agent cannot declare its
-way past** — and this project already had the mechanism.
+A goal, here, is a **machine-checked condition the agent cannot declare its way past** — and
+this project already had the mechanism for it.
 
 ### `exit_gate.py` — the completion contract
 
