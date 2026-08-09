@@ -1,0 +1,102 @@
+{
+  "schema_version": "1.0.0",
+  "plan_id": "gen-seed8",
+  "seed": 8,
+  "generated_by": "Tools/ArenaPipeline/generator.py",
+  "provenance": {
+    "floor_footprint": "design/group-04-spacing-and-arena.md Q24 - header states EVERY ANSWER IN THIS FILE IS PROPOSED, NOT DECIDED",
+    "combat_span": "docs/agent/PROTOTYPE_BLACKBOARD.md 14.1 - CombatAxisMin/Max = +/-650, max legal separation 1300",
+    "resolutions_applied": [
+      "U1",
+      "U2"
+    ]
+  },
+  "floor": {
+    "long_axis_cm": 2400.0,
+    "short_axis_cm": 1600.0,
+    "z_cm": 0.0
+  },
+  "combat_axis": {
+    "axis": "X",
+    "min_cm": -650.0,
+    "max_cm": 650.0
+  },
+  "ceiling_cm": 520.0,
+  "obstacle_extents": {
+    "depth_cm": 50.0,
+    "width_cm": 300.0,
+    "height_cm": 300.0,
+    "status": "PROPOSED"
+  },
+  "camera": {
+    "near_wall_culled": true
+  },
+  "spawns": {
+    "player": {
+      "x_cm": -125.0,
+      "y_cm": 0.0,
+      "z_cm": 94.0,
+      "yaw_deg": 0.0
+    },
+    "opponent": {
+      "x_cm": 125.0,
+      "y_cm": 0.0,
+      "z_cm": 90.0,
+      "yaw_deg": 180.0
+    }
+  },
+  "obstacles": [
+    {
+      "name": "Doorway_Frame",
+      "x_cm": 1175.0,
+      "y_cm": -455.8,
+      "blocking": true,
+      "in_camera_corridor": false
+    },
+    {
+      "name": "Truss_Panel",
+      "x_cm": -1175.0,
+      "y_cm": -470.2,
+      "blocking": true,
+      "in_camera_corridor": false
+    },
+    {
+      "name": "Mezzanine_Strut_A",
+      "x_cm": 1175.0,
+      "y_cm": 499.7,
+      "blocking": true,
+      "in_camera_corridor": false
+    },
+    {
+      "name": "Mezzanine_Strut_B",
+      "x_cm": -1175.0,
+      "y_cm": 374.7,
+      "blocking": true,
+      "in_camera_corridor": false
+    }
+  ],
+  "boundaries": [
+    {
+      "name": "Wall_DoorwayEnd",
+      "axis": "x",
+      "x_cm": 1200.0
+    },
+    {
+      "name": "Wall_TrussEnd",
+      "axis": "x",
+      "x_cm": -1200.0
+    },
+    {
+      "name": "Railing_North",
+      "axis": "y",
+      "x_cm": 0.0,
+      "y_cm": 800.0
+    },
+    {
+      "name": "Railing_South",
+      "axis": "y",
+      "x_cm": 0.0,
+      "y_cm": -800.0
+    }
+  ]
+}
