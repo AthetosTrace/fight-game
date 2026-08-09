@@ -1,0 +1,551 @@
+{
+  "scanned_from": "C:\\Users\\athet\\Documents\\AscendantCapstone\\ascendant-impact-ue",
+  "build_sequence": "build-sequence.md",
+  "steps_parsed": 63,
+  "assets_required": 178,
+  "assets_built": 184,
+  "owned_steps": [
+    "M1-21"
+  ],
+  "gaps": [
+    {
+      "step_id": "M1-05",
+      "title": "Create DA_TuningGlobals",
+      "missing": [
+        "DA_TuningGlobals"
+      ]
+    },
+    {
+      "step_id": "M1-06",
+      "title": "Create BP_PresentationSubsystem (wired and EMPTY)",
+      "missing": [
+        "BP_PresentationSubsystem"
+      ]
+    },
+    {
+      "step_id": "M1-07",
+      "title": "Create WBP_DebugPanel",
+      "missing": [
+        "WBP_DebugPanel"
+      ]
+    },
+    {
+      "step_id": "M1-08",
+      "title": "Create the shared BP_HealthComponent",
+      "missing": [
+        "BP_HealthComponent"
+      ]
+    },
+    {
+      "step_id": "M1-09",
+      "title": "Create BP_DuelDirector",
+      "missing": [
+        "BP_DuelDirector",
+        "DA_FighterProfile"
+      ]
+    },
+    {
+      "step_id": "M1-10",
+      "title": "Create the Enhanced Input assets",
+      "missing": [
+        "IMC_Duel",
+        "IA_LightAttack",
+        "IA_Dodge",
+        "IA_Counter",
+        "IA_LockOn",
+        "IA_Impact",
+        "IA_FinalClash"
+      ]
+    },
+    {
+      "step_id": "M1-11",
+      "title": "Create BP_PlayerFighter (the ONE player class)",
+      "missing": [
+        "BP_Echo",
+        "BP_Nova",
+        "BP_HealthComponent",
+        "BP_CombatComponent",
+        "BP_AscensionComponent",
+        "BP_LockOnComponent"
+      ]
+    },
+    {
+      "step_id": "M1-12",
+      "title": "Create DA_FighterProfile + Echo and Nova instances",
+      "missing": [
+        "DA_FighterProfile",
+        "DA_FighterProfile_Echo",
+        "DA_FighterProfile_Nova",
+        "ABP_Fighter"
+      ]
+    },
+    {
+      "step_id": "M1-13",
+      "title": "Implement ApplyFighterProfile",
+      "missing": [
+        "BP_DuelDirector"
+      ]
+    },
+    {
+      "step_id": "M1-14",
+      "title": "Create ABP_Fighter (shared AnimBP with stance additive)",
+      "missing": [
+        "ABP_Fighter",
+        "DA_FighterProfile"
+      ]
+    },
+    {
+      "step_id": "M1-15",
+      "title": "Create BP_CombatComponent",
+      "missing": [
+        "BP_CombatComponent",
+        "ANS_ActiveHit"
+      ]
+    },
+    {
+      "step_id": "M1-16",
+      "title": "Create BP_LockOnComponent",
+      "missing": [
+        "BP_LockOnComponent",
+        "IA_LockOn",
+        "WBP_HUD"
+      ]
+    },
+    {
+      "step_id": "M1-17",
+      "title": "Author AM_Player_LightCombo",
+      "missing": [
+        "AM_Player_LightCombo",
+        "ANS_ComboLink",
+        "ANS_ActiveHit",
+        "AN_ComboFinisher"
+      ]
+    },
+    {
+      "step_id": "M1-18",
+      "title": "Create the player combat notify states / notify",
+      "missing": [
+        "ANS_ComboLink",
+        "ANS_ActiveHit",
+        "AN_ComboFinisher"
+      ]
+    },
+    {
+      "step_id": "M1-19",
+      "title": "Author AM_Player_Dodge with nested i-frame notifies",
+      "missing": [
+        "AM_Player_Dodge",
+        "ANS_IFrame",
+        "ANS_PerfectDodge"
+      ]
+    },
+    {
+      "step_id": "M1-20",
+      "title": "Wire the counter input and player counter montages",
+      "missing": [
+        "AM_Player_Counter",
+        "AM_Player_CounterWhiff",
+        "IA_Counter",
+        "AM_Vanguard_CounterReact"
+      ]
+    },
+    {
+      "step_id": "M1-21",
+      "title": "Gray-box L_ShatteredRing",
+      "missing": [
+        "L_ShatteredRing",
+        "PS_VanguardEntrance",
+        "PS_VanguardCombatMark"
+      ]
+    },
+    {
+      "step_id": "M1-22",
+      "title": "Character-select entry",
+      "missing": [
+        "WBP_CharacterSelect",
+        "L_CharacterSelect",
+        "DA_FighterProfile"
+      ]
+    },
+    {
+      "step_id": "M1-23",
+      "title": "Stand up the dressed proxies (asset selection, NOT presentation)",
+      "missing": [
+        "DA_FighterProfile"
+      ]
+    },
+    {
+      "step_id": "M2-01",
+      "title": "Create the rival enums",
+      "missing": [
+        "E_VanguardState",
+        "E_VanguardAttackID"
+      ]
+    },
+    {
+      "step_id": "M2-02",
+      "title": "Create S_AttackPhaseTuning",
+      "missing": [
+        "S_AttackPhaseTuning"
+      ]
+    },
+    {
+      "step_id": "M2-03",
+      "title": "Create S_VanguardAttackDef",
+      "missing": [
+        "E_VanguardAttackID",
+        "S_AttackPhaseTuning"
+      ]
+    },
+    {
+      "step_id": "M2-04",
+      "title": "Create DT_VanguardAttacks with all four rows",
+      "missing": [
+        "DT_VanguardAttacks"
+      ]
+    },
+    {
+      "step_id": "M2-05",
+      "title": "Create BP_CrimsonVanguard",
+      "missing": [
+        "BP_HealthComponent"
+      ]
+    },
+    {
+      "step_id": "M2-06",
+      "title": "Create BP_VanguardCombatComponent",
+      "missing": [
+        "BP_VanguardCombatComponent",
+        "DT_VanguardAttacks",
+        "ANS_ActiveHit",
+        "ANS_Recover"
+      ]
+    },
+    {
+      "step_id": "M2-07",
+      "title": "Create BP_VanguardController (AIController)",
+      "missing": [
+        "BP_VanguardController"
+      ]
+    },
+    {
+      "step_id": "M2-08",
+      "title": "Create BB_CrimsonVanguard (Blackboard)",
+      "missing": [
+        "BB_CrimsonVanguard",
+        "E_VanguardState",
+        "E_VanguardAttackID"
+      ]
+    },
+    {
+      "step_id": "M2-09",
+      "title": "Build BT_CrimsonVanguard",
+      "missing": [
+        "BT_CrimsonVanguard",
+        "BB_CrimsonVanguard",
+        "BTTask_WaitIndefinite",
+        "BTService_UpdateCombatData",
+        "BTService_DrawDebugState",
+        "BTTask_Idle_Reposition",
+        "BTTask_SelectAttack",
+        "BTTask_Telegraph",
+        "BTTask_ActiveAttack",
+        "BTTask_Recover",
+        "BTTask_ReturnToNeutral"
+      ]
+    },
+    {
+      "step_id": "M2-10",
+      "title": "Create BTService_UpdateCombatData",
+      "missing": [
+        "BTService_UpdateCombatData"
+      ]
+    },
+    {
+      "step_id": "M2-11",
+      "title": "Create BTService_DrawDebugState",
+      "missing": [
+        "BTService_DrawDebugState"
+      ]
+    },
+    {
+      "step_id": "M2-12",
+      "title": "Create the six BTTask_* tasks",
+      "missing": [
+        "BTTask_Idle_Reposition",
+        "BTTask_SelectAttack",
+        "BTTask_Telegraph",
+        "BTTask_ActiveAttack",
+        "ANS_ActiveHit",
+        "ANS_TrackingLock",
+        "BTTask_Recover",
+        "ANS_Recover",
+        "BTTask_ReturnToNeutral"
+      ]
+    },
+    {
+      "step_id": "M2-13",
+      "title": "Author Attack A montage and its notify states",
+      "missing": [
+        "AM_Vanguard_AttackA",
+        "ANS_CounterWindow",
+        "ANS_Telegraph",
+        "ANS_ActiveHit",
+        "ANS_Recover"
+      ]
+    },
+    {
+      "step_id": "M2-14",
+      "title": "Wire the counter interrupt through the sequence",
+      "missing": [
+        "BTTask_Recover",
+        "AM_Vanguard_CounterReact"
+      ]
+    },
+    {
+      "step_id": "M3-01",
+      "title": "Create the meter/impact enums",
+      "missing": [
+        "E_MeterEvent",
+        "E_ImpactTrigger"
+      ]
+    },
+    {
+      "step_id": "M3-02",
+      "title": "Create S_MeterGain + DT_MeterGains (five rows)",
+      "missing": [
+        "S_MeterGain",
+        "DT_MeterGains"
+      ]
+    },
+    {
+      "step_id": "M3-03",
+      "title": "Create BP_AscensionComponent",
+      "missing": [
+        "BP_AscensionComponent",
+        "BP_FinalClashDirector"
+      ]
+    },
+    {
+      "step_id": "M3-04",
+      "title": "Create WBP_HUD (meter bar + reticle + gate indicators stub)",
+      "missing": [
+        "WBP_HUD"
+      ]
+    },
+    {
+      "step_id": "M3-05",
+      "title": "Wire all five meter hooks",
+      "missing": [
+        "AN_ComboFinisher",
+        "IA_Counter",
+        "ANS_CounterWindow",
+        "BP_ImpactWindowDirector"
+      ]
+    },
+    {
+      "step_id": "M3-06",
+      "title": "Create WBP_ImpactPrompt",
+      "missing": [
+        "WBP_ImpactPrompt"
+      ]
+    },
+    {
+      "step_id": "M3-07",
+      "title": "Create BP_ImpactWindowDirector",
+      "missing": [
+        "BP_ImpactWindowDirector",
+        "BP_DuelDirector",
+        "WBP_ImpactPrompt",
+        "IA_Impact"
+      ]
+    },
+    {
+      "step_id": "M3-08",
+      "title": "Write RestoreCombatState() once",
+      "missing": [
+        "BP_DuelDirector",
+        "BP_PresentationSubsystem",
+        "WBP_ImpactPrompt",
+        "IA_Impact"
+      ]
+    },
+    {
+      "step_id": "M4-01",
+      "title": "Author Attacks B, C, and D",
+      "missing": [
+        "AM_Vanguard_AttackB",
+        "AM_Vanguard_AttackC",
+        "AM_Vanguard_AttackD",
+        "ANS_Telegraph",
+        "ANS_ActiveHit",
+        "ANS_Recover",
+        "ANS_CounterWindow",
+        "DT_VanguardAttacks",
+        "ANS_TrackingLock"
+      ]
+    },
+    {
+      "step_id": "M4-02",
+      "title": "Create ANS_TrackingLock",
+      "missing": [
+        "ANS_TrackingLock"
+      ]
+    },
+    {
+      "step_id": "M4-03",
+      "title": "Range- and cooldown-based selection across all four attacks",
+      "missing": [
+        "BTTask_SelectAttack"
+      ]
+    },
+    {
+      "step_id": "M4-04",
+      "title": "Phase 2 via the one data path",
+      "missing": [
+        "BP_DuelDirector",
+        "BTTask_ReturnToNeutral",
+        "BP_PresentationSubsystem"
+      ]
+    },
+    {
+      "step_id": "M4-05",
+      "title": "Create BP_FinalClashDirector and the double gate",
+      "missing": [
+        "BP_FinalClashDirector",
+        "BP_DuelDirector",
+        "WBP_HUD",
+        "IA_FinalClash"
+      ]
+    },
+    {
+      "step_id": "M4-06",
+      "title": "The two timing beats (reuse 7 machinery) + LS_FinalClash",
+      "missing": [
+        "LS_FinalClash",
+        "AM_Clash_Beat1",
+        "AM_Clash_Finisher",
+        "AM_Vanguard_CounterReact",
+        "BTTask_WaitIndefinite",
+        "IA_Impact",
+        "WBP_ImpactPrompt"
+      ]
+    },
+    {
+      "step_id": "M4-07",
+      "title": "Clash SUCCESS -> Win",
+      "missing": [
+        "AM_Clash_Finisher",
+        "BP_HealthComponent",
+        "WBP_Result"
+      ]
+    },
+    {
+      "step_id": "M4-08",
+      "title": "Clash FAILURE -> the exact seven-step recovery",
+      "missing": [
+        "LS_FinalClash",
+        "BTTask_WaitIndefinite"
+      ]
+    },
+    {
+      "step_id": "M4-09",
+      "title": "Loss condition and WBP_Result",
+      "missing": [
+        "WBP_Result"
+      ]
+    },
+    {
+      "step_id": "M4-10",
+      "title": "LS_VanguardEntrance (abbreviated, skippable)",
+      "missing": [
+        "LS_VanguardEntrance",
+        "PS_VanguardEntrance",
+        "PS_VanguardCombatMark",
+        "BP_PresentationSubsystem"
+      ]
+    },
+    {
+      "step_id": "M5-01",
+      "title": "Fill RequestHitStop / RequestTimeDilation (hit-stop & time-dilation tuning)",
+      "missing": [
+        "BP_PresentationSubsystem"
+      ]
+    },
+    {
+      "step_id": "M5-02",
+      "title": "Fill RequestCameraShake + camera choreography",
+      "missing": [
+        "BP_PresentationSubsystem"
+      ]
+    },
+    {
+      "step_id": "M5-03",
+      "title": "Fill RequestVFX with authored Niagara systems",
+      "missing": [
+        "BP_PresentationSubsystem"
+      ]
+    },
+    {
+      "step_id": "M5-04",
+      "title": "Fill RequestSound + full sound design and mix",
+      "missing": [
+        "BP_PresentationSubsystem"
+      ]
+    },
+    {
+      "step_id": "M5-05",
+      "title": "Arena environmental reaction (R6)",
+      "missing": [
+        "L_ShatteredRing"
+      ]
+    },
+    {
+      "step_id": "M5-06",
+      "title": "Final character treatment for Echo, Nova, Crimson Vanguard",
+      "missing": [
+        "DA_FighterProfile"
+      ]
+    },
+    {
+      "step_id": "M5-07",
+      "title": "Full-fidelity Final Clash choreography",
+      "missing": [
+        "LS_FinalClash"
+      ]
+    },
+    {
+      "step_id": "M5-08",
+      "title": "The editorial character-selection interface",
+      "missing": [
+        "WBP_CharacterSelect",
+        "DA_FighterProfile",
+        "L_ShatteredRing",
+        "DT_VanguardAttacks",
+        "BT_CrimsonVanguard",
+        "BP_PresentationSubsystem",
+        "ANS_Recover",
+        "ANS_ComboLink"
+      ]
+    }
+  ],
+  "selected": {
+    "step_id": "M1-21",
+    "title": "Gray-box L_ShatteredRing",
+    "missing": [
+      "L_ShatteredRing",
+      "PS_VanguardEntrance",
+      "PS_VanguardCombatMark"
+    ]
+  },
+  "aliases_applied": {
+    "BP_PlayerFighter": {
+      "shipped_as": "BP_ThirdPersonCharacter",
+      "reason": "The prototype built the player on the Third Person template character rather than a fresh Blueprint. Same role, different asset name."
+    },
+    "BP_CrimsonVanguard": {
+      "shipped_as": "BP_VanguardProxy",
+      "reason": "The rival ships as a proxy actor driven by external movement and attack drivers, rather than the single self-contained Blueprint the sequence planned."
+    }
+  }
+}

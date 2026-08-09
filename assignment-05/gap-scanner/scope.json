@@ -1,0 +1,34 @@
+{
+  "description": "Configuration for gap_scan.py. Everything the scanner is not allowed to infer for itself lives here, so that a judgement call is a line in a file rather than a branch in code.",
+
+  "asset_prefixes": [
+    "BP", "ABP", "WBP", "UI", "L", "Lvl", "DT", "BT", "BB", "BTTask",
+    "BTService", "DA", "NS", "AM", "MM", "AN", "ANS", "GE", "GA", "PS",
+    "IA", "IMC", "LS", "S", "E"
+  ],
+
+  "not_deliverables": [
+    "S_VanguardAttackDef",
+    "E_AttackId",
+    "E_DuelPhase"
+  ],
+  "_not_deliverables_note": "UserDefinedStruct and UserDefinedEnum assets cannot be created through the Unreal MCP server -- that is a manual editor step for the human. Counting them as agent-closable gaps would rank work the agent is structurally unable to do.",
+
+  "owned_steps": ["M1-21"],
+  "_owned_steps_note": "The agentic-workflow side of this project owns the arena pipeline and the agent orchestration. M1-21 (gray-box L_ShatteredRing) is the only build step inside that boundary. Every other step -- player, rival, camera, combat, HUD, presentation -- belongs to the gameplay owner, and the work split exists so two people never edit the same binary Unreal asset. Ownership filters the ranked list; it never reorders it.",
+
+  "aliases": {
+    "BP_PlayerFighter": {
+      "shipped_as": "BP_ThirdPersonCharacter",
+      "reason": "The prototype built the player on the Third Person template character rather than a fresh Blueprint. Same role, different asset name."
+    },
+    "BP_CrimsonVanguard": {
+      "shipped_as": "BP_VanguardProxy",
+      "reason": "The rival ships as a proxy actor driven by external movement and attack drivers, rather than the single self-contained Blueprint the sequence planned."
+    },
+    "L_ShatteredRing": {
+      "shipped_as": null,
+      "reason": "Not built. Lvl_DuelGraybox is a flat-ground camera and locomotion test level, not the Shattered Ring -- it is a duplicate of the Third Person template map with the raised platform removed, and carries none of the arena's authored geometry. Treating it as the arena would hide the gap this scan exists to find."
+    }
+  }
+}
