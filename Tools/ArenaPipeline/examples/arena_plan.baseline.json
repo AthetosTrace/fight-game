@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "plan_id": "baseline-graybox",
+  "description": "The arena as currently built (Lvl_DuelGraybox), expressed as a plan. Used as the known-good reference the generator is measured against.",
+  "generated_by": "hand-authored from docs/agent/PROTOTYPE_BLACKBOARD.md 13.2 and 14.1",
+  "attempt": 0,
+  "floor": {
+    "long_axis_cm": 4000.0,
+    "short_axis_cm": 4000.0,
+    "z_cm": 0.0
+  },
+  "combat_axis": {
+    "axis": "X",
+    "min_cm": -650.0,
+    "max_cm": 650.0
+  },
+  "ceiling_cm": 450.0,
+  "spawns": {
+    "player": { "x_cm": 0.0, "y_cm": 0.0, "z_cm": 94.0, "yaw_deg": 0.0 },
+    "opponent": { "x_cm": 350.0, "y_cm": 0.0, "z_cm": 90.0, "yaw_deg": 180.0 }
+  },
+  "obstacles": [
+    { "name": "CornerPillar_NE", "x_cm": 1200.0, "y_cm": 1200.0, "blocking": true, "in_camera_corridor": false },
+    { "name": "CornerPillar_NW", "x_cm": -1200.0, "y_cm": 1200.0, "blocking": true, "in_camera_corridor": false }
+  ],
+  "boundaries": [
+    { "name": "Wall_East", "x_cm": 1800.0 },
+    { "name": "Wall_West", "x_cm": -1800.0 }
+  ]
+}
