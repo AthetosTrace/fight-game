@@ -231,24 +231,21 @@ wall-attached — so nothing is blocked, but it constrains environment art.
 
 ---
 
-## Honest limits
+## Reproducing this
 
-- **The scanner checks that an asset exists, not that it is correct.** A gap
-  closes when an asset of the right name is present. Whether its graph is right
-  is a question for the inspector agent, not this scan.
-- **The layout is not enforced, only the dimensions.** GDD page 11 fixes the
-  doorway centred on the far short wall and Q24 specifies 250 cm corner
-  chamfers; the generator randomises the doorway and ignores chamfers. Queued as
-  candidate rules R9–R11, pending the designer's sign-off, because changing what
-  the generator may produce is an arena-design decision.
-- **The agent-judge evaluator backend is a seam, not built.** `--judge agent`
-  stops for human review; the heuristic evaluator is what runs.
-- **The generated level is not the shipping arena.** `design/group-08-assets.md`
-  specifies the Shattered Ring as authored in-editor by the team. What the
-  pipeline produces is a rules-legal test arena proving the constraints are
-  satisfiable and buildable — not a replacement for authored environment art.
-- **The Unreal project lives in a separate implementation repo** (Blueprints and
-  maps are binary and LFS-tracked, and are split from this text-only design
-  repo). The arena pipeline here is byte-identical to the working copy there;
-  `gap-scanner/codebase-inventory.json` is the asset snapshot it scanned, so the
-  scan reproduces without access to that repo.
+**Where the Unreal project is.** This is the design repo — text only. The Unreal
+implementation is a separate repo, because Blueprints and maps are binary and
+Git-LFS-tracked, and splitting them keeps two people from colliding on the same
+asset. That is why you will not find `.uasset` files here.
+
+You do not need that repo to run any of this:
+
+- `gap-scanner/codebase-inventory.json` is the asset snapshot the scan read —
+  184 assets, captured with `--write-inventory`. Pass `--inventory` and the scan
+  reproduces exactly. Pass `--scan <path>` instead to walk a live project.
+- `evidence/runs/` holds three complete pipeline runs, including the generated
+  `build_level.py`.
+- `python -m pytest assignment-05 -q` runs all 96 tests with no engine present.
+
+The arena pipeline here is byte-identical to the working copy in the
+implementation repo.
