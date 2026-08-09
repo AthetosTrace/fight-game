@@ -1,362 +1,220 @@
-# Assignment 05 — Goal-Oriented Agent
+# Assignment 05 — Goal-Oriented Coding Agent
 
-**Game:** *Ascendant Impact* — a cinematic one-versus-one cyber-fantasy martial-arts action
-fighter, Unreal Engine 5.8, PC.
-**Author:** AthetosTrace · **Date:** 2026-08-03 · **Repo:** `AthetosTrace/fight-game`
+**Game:** *Ascendant Impact* — a cinematic one-versus-one cyber-fantasy martial-arts
+action fighter. Unreal Engine 5.8, PC, Blueprint-only.
+**Author:** AthetosTrace · **Repo:** `AthetosTrace/fight-game`
 
-> **No Assignment 05 requirement document is on disk.** `assignments/` holds only #02, #03
-> and #04. This submission therefore answers the two deliverables as briefed: a complete
-> runnable goal-oriented agent with its configuration, and a README answering what the agent
-> built, why it selected those features, and whether it ran in the game. **If the real spec
-> differs, this README is the wrong shape and should be reworked against it.**
+---
 
-## The deliverables
-
-| # | Deliverable | Where |
-|---|---|---|
-| 1 | The agent, runnable, with configuration | [`agent/`](agent/) — and live at `.claude/agents/goal-planner.md` |
-| 2 | This README | you are reading it |
-| — | Evidence for every claim below | [`evidence/`](evidence/) |
+## What to look at
 
 ```
 assignment-05/
-├── README.md
-├── agent/
-│   ├── goal-planner.md        the agent
-│   ├── entry_gate.py          ordering contract — PreToolUse on Task|Agent
-│   ├── exit_gate.py           completion contract — SubagentStop
-│   ├── check_leaveoff.py      the shared check both gates call
-│   └── settings.json          how the hooks are wired
-└── evidence/
-    ├── TODO.md                the worklist, as it stands now
-    ├── decisions.md           the permanent record of what was decided
-    ├── inspection-pass1.md    cross-consistency audit — 3 violations, 11 contradictions
-    ├── inspection-pass2.md    verification — 6 of 7 corrections landed
-    └── inspection-pass3.md    verification — 8 of 8 landed, no violations remain
+├── README.md            you are here
+├── agent/               the reasoning layer — ranks work, enforces goals
+├── arena-pipeline/      the build layer — generates, validates, refines, emits code
+└── evidence/            run logs, findings, and the audit trail behind every claim
 ```
 
-The copies in `agent/` are for the grader's convenience. **The live agent runs from
-`.claude/agents/goal-planner.md` and the live hooks from `.claude/hooks/`.**
+Run it:
 
-## The short version
+```bash
+python -m pip install pytest
 
-This project has two gates. The **entry gate** runs before an agent starts, and refuses to
-start it if the files that agent is supposed to read are not on disk yet. The **exit gate**
-runs when an agent tries to finish, and refuses to let it finish until the file it was
-supposed to produce is actually on disk.
+# the full loop: generate -> validate -> evaluate -> refine -> stop
+python assignment-05/arena-pipeline/orchestrator.py --seed 8
 
-That pair is my version of a goal: a condition a machine checks, stated as a rule about
-files, that the agent cannot talk its way past — because the check runs in a separate small
-program that reads the disk, not inside the agent being checked. An agent can be wrong about
-whether it finished. The program reading the disk cannot.
+# generate the code that builds the level in Unreal
+python assignment-05/arena-pipeline/materializer.py \
+    assignment-05/evidence/runs/seed8/final_plan.json \
+    --allow-proposed --out-dir assignment-05/evidence/runs/seed8/generated
 
-I built this before goals were covered in class. It does the same job, so I kept it instead
-of replacing it.
+# 77 tests
+python -m pytest assignment-05/arena-pipeline/tests -q
+```
 
-Two folders: [`agent/`](agent/) holds the agent and its two gates — the gates are short
-Python scripts that the tool runs on its own at those two moments, which is what a *hook*
-is. [`evidence/`](evidence/) holds the artifacts this README cites, so every claim below can
-be checked against a file rather than taken on trust.
+---
+
+## How the five requirements are met
+
+| Requirement | Where | What it does |
+|---|---|---|
+| **Read the GDD** | `arena-pipeline/contracts/arena_rules.json` | Every rule names the GDD or design document it came from. R1's source is the blackboard §14.1; the arena footprint is `design/group-04-spacing-and-arena.md` Q24; the landmark set comes from GDD page 11, the Shattered Ring reference sheet |
+| **Scan the codebase** | `arena-pipeline/contracts/arena_rules.json`, statuses `MEASURED` | See the note below — this is a Blueprint-only project |
+| **Detect gaps** | `arena-pipeline/validate_arena_plan.py` | Rules R1–R8 check a candidate arena against those requirements and report every violation with expected-vs-actual |
+| **Prioritize** | `agent/goal-planner.md` and `arena-pipeline/refiner.py` | Two different ranking rules, described below |
+| **Generate code** | `arena-pipeline/generator.py`, `materializer.py` | The generator writes arena plans; the materializer emits `build_level.py`, runnable Python that builds the level in Unreal |
+
+### A note on "scan the codebase"
+
+*Ascendant Impact* has **no source files.** It is a Blueprint-only Unreal project —
+no `Source/` folder, no C++, no build. All logic lives in binary `.uasset` files
+that cannot be read as text.
+
+So "scanning the codebase" here means reading the live project rather than
+parsing files. Rules marked `MEASURED` were taken from the actual shipped
+Blueprints:
+
+| Value | Read from |
+|---|---|
+| Combat clamp ±650 cm | `BP_VanguardDuelMover.ApplyConstraints` |
+| Camera distance curve `clamp(450 + 0.8 × separation, 500, 1500)` | `BP_DuelCameraRig` |
+| Jump apex ~180 cm | `CharacterMovement` `JumpZVelocity` 820 / `GravityScale` 1.9 |
+| Min axis separation 78 cm | Capsule radii 35 + 34, plus margin |
+
+The validator reproduces the camera rig's real distance curve, so a plan that
+passes R4 will frame correctly in the actual rig rather than in a model of it.
 
 ---
 
 ## 1. What the agent built
 
-The agent is the reasoning layer this project ran **by hand for one full session**, written
-down so it runs on its own. That session is the evidence that the loop works, because the
-loop is what produced the numbers.
+**It built the arena.** Specifically, it generated a validated arena plan and
+then the code that constructs that arena as a real level in Unreal.
 
-### `TODO.md`, before and after
+The system has two halves.
 
-| | At the start | Now |
-|---|---|---|
-| Open items | **45** | **65** |
-| Closed | 0 | **8** |
-| PROPOSED, awaiting the designer | 0 | **35** |
-| Blocked on the human | 0 | **1** |
-| Untouched | 45 | **29** |
+### The reasoning layer — `agent/`
 
-**The list got longer, and that is the result, not a failure.** 45 items in meant 43 answered
-across 9 dispatches — and **28 new items (46–73)** that nobody had written down. Most are
-values the build genuinely needs that `design-brief.md` §13.2 **has no row for at all**, so
-they appear in no question list anywhere. The rest are cross-group contradictions the
-inspection caught.
+`goal-planner.md` ranks open work. Its two hooks are what make the goal real:
 
-The single best example: **the rival's `MaxWalkSpeed` does not exist.** §13.2 row 43 covers
-the *player's* walk speed. Nothing covers Crimson Vanguard's. With a 2400 cm arena and the
-Final Clash as the only way to win, **a rival slower than the player can be kited forever and
-the duel cannot end.** That is a game-breaking hole in a table that looked complete, and it
-surfaced only because something walked the table against the build sequence.
+- **`entry_gate.py`** fires on `PreToolUse` and refuses to start an agent whose
+  input files are not on disk yet.
+- **`exit_gate.py`** fires on `SubagentStop` and refuses to let an agent finish
+  until the artifact it promised actually exists.
 
-### The nine dispatches
+The reason these are goals rather than conventions is that **the check runs
+outside the agent** — a separate program reading the filesystem. An agent can be
+wrong about whether it finished. The program reading the disk cannot.
 
-Item ids below match `evidence/TODO.md`; every answer is in `evidence/decisions.md`.
+### The build layer — `arena-pipeline/`
 
-| # | Group | Items | Result |
-|---|---|---|---|
-| 01 | **Q22, blocking** | 1 | **APPROVED.** `MinHealthFloor = 1` from `BeginPlay`, lowered to `0` only by `ClashSuccess()`. **The Final Clash is the only way to win.** Three constraints (C1–C3) now bind everything downstream |
-| 02 | Combat economy | 5 | Q1 health 100 · Q2 rival 1200 · Q3 damage A32/B25/C27/D18 as % of player HP · Q4 light 5 / finisher 10 · Q5 three combo sections |
-| 03 | Defensive timing | 6 | Q6 i-frames 0.28 s · Q7 perfect dodge 0.12 s · Q8 whiff lockout 0.55 s · Q26 Impact cooldown 7.0 s · Q27 recover multiplier 1.0 · Q28 buffer 0.25 s |
-| 04 | Spacing and arena | 6 | Q24 arena 2400 × 1600 cm · Q10 bands A 0–260 / B 90–520 / C 240–420 / D 400–840 · Q12 cooldowns · Q13 travel 600 cm · Q11 lock-on · mezzanine ruled set dressing |
-| 05 | Fighter feel | 6 | Q14/Q15/Q16 **identical for both fighters** · Echo's faceplate · emissive energy lines · "SFN" left unexpanded |
-| 06 | Final Clash and meter | 5 | Q9 no decay · Q17 reuse `IA_Impact` · Q19 1.2 s · Q20 both beats 0.50 s · Q21 separation 1200 cm |
-| 07 | Structure and canon | 6 | **Q25's 26 per-attack values** · Q18 failsafe 0.35 s · Q23 no timer · Q29 `VALOR-7` · plasma-gauntlet canon · SYSTEM STATS · **208 cm APPROVED** |
-| 08 | Asset decisions | 3 | Q30 **Paragon: Crunch** · Q31 Phase 1 audio · **footwear rights APPROVED, exposure zero** |
-| 09 | **Cinematic corrections** | 5 | **V1–V5 all APPROVED.** These clear hard check 7 — the one check `cinematic-integration-inspection.md` failed |
+```
+attempt 1..3:
+    generate (first attempt) or take the refined plan
+    deterministic gate  -> violations? refine one field, retry
+    evaluator           -> criteria failed?  refine one field, retry
+    both clean          -> SUCCESS
+```
 
-Volume: **10,005 lines** across 13 files in `design/`.
+- **Generator** — parametric and seeded, so any run in a report reproduces exactly.
+- **Deterministic validator** — R1–R8, checked before any judgement call is made.
+- **Evaluator** — four weighted criteria, pass mark 70.
+- **Refiner** — one field per attempt, with a before/after diff.
+- **Circuit breaker** — stops after three attempts, or earlier on no progress.
+- **Materializer** — turns a passing plan into `build_level.py` and a manifest.
 
-### It also repaired its own inputs
+Three runs are committed in `evidence/runs/`:
 
-Before any question could be ranked, the source had to be readable. **GDD pages 10–14 are
-image reference sheets that no agent on this project had ever seen** — `pdftoppm` is absent,
-so the Read tool cannot render PDF pages. The embedded JPEGs were pulled straight out of the
-PDF's `/XObject` resources with `pypdf` and read directly. That recovered the visual
-definition of all three characters and the arena, **1,194 lines** of description in
-`gdd/sections/` and `gdd/reference/`, and it immediately paid for itself: `design-brief.md`
-§13.1 row 28 had **no centimetre figure for Crimson Vanguard**, and page 10 prints
-**"6'10" (208 cm)"**. The blank was never a design decision — the number was simply
-unreadable.
-
-It also fixed a gate that would have deadlocked this exact session: `entry_gate.py` made the
-**inspector** depend on the **developer**, so a design-only pass could never inspect
-anything. The dependency is now the designer alone, and the build-coverage requirement moved
-into the agent, where it belongs.
-
----
-
-## 2. Why it selected those features
-
-**The order was not a judgment call, and that is the entire design of this agent.**
-
-### The ranking rule
-
-Every open item is ranked by **the lowest-numbered step in `build-sequence.md` that cannot
-execute until it is answered.** Items blocking nothing go last.
-
-`build-sequence.md` holds **63 ordered Unreal editor steps**, `M1-01` through `M5-08`. It was
-written by the `developer` agent in an earlier session — **before anyone asked most of these
-questions.** That is what makes it a fair referee: it cannot be bent to justify a
-convenient order, because it predates the argument.
-
-The rule, stated precisely enough to check:
-
-> **Blocking step = the lowest-numbered step that first consumes the answer** — where a real
-> value, or a decided behavior, has to exist for that step's stated outcome to be achieved.
-
-Creating an exposed variable and leaving it blank is **not** blocked — §13 tells the developer
-to do exactly that. So most scalars can be *built* at their step but not *signed off*. Items
-whose **logic, branch, or structure** changes with the answer are genuinely blocked, and those
-are called out.
-
-### Three real examples, with the step id
-
-**Q5 — light combo length → `M1-17` (Author `AM_Player_LightCombo`).** Genuinely blocked, not
-merely unsigned: **you cannot author a montage's sections without knowing how many there
-are.** The dispatch then found the answer was forced anyway — at GDD midpoints Phase 2 leaves
-a **~1.28 s** non-threatening window, and a 4-section combo runs **~1.33 s**, so four sections
-**do not fit Phase 2 at all.** Group 07 later re-derived the same conclusion independently
-from punish-window arithmetic.
-
-**Q24 — arena footprint → `M1-21` (Gray-box `L_ShatteredRing`).** You cannot gray-box a floor
-without dimensions. Ranking it early also exposed a dependency chain: **Q13** (Attack D
-travel) is defined as a fraction of Q24, and **Q21** (failed-Clash separation) has to fit
-inside it. All three had to move together or they would disagree.
-
-**Q7 — perfect-dodge window → `M1-19` (Author `AM_Player_Dodge` with nested i-frame
-notifies).** `design-brief.md` §14 calls it *"more definitive of the game's difficulty than
-any other number in the table"* — but importance is not what put it at M1-19. The montage that
-contains it is.
-
-**Q31 — silent Phase 1 → `M5-04`, so it went last.** It is a real question. It blocks nothing
-until the presentation pass, so it waited, and nothing was lost by waiting.
-
-### The exception, and why the rule allows one
-
-**Q22 was answered first regardless of rank.** Its blocking step is `M1-08`, which is not the
-lowest in the list.
-
-It decides whether the 1 HP floor the GDD states in the failed-Clash row is **permanent** or
-**Clash-only** — that is, whether the Final Clash is the **only** way to win, or whether
-ordinary damage can end the duel. §14 calls it *"the single most consequential open question
-in the document — it changes what the game is about."*
-
-**Every health and damage number depends on the answer.** Under the approved reading, Q2 stops
-being "time to kill" and becomes "when does the gate open" — a completely different tuning
-target. Answering the economy first would have produced a coherent set of numbers for the
-wrong game.
-
-So the human overrode the ranking, deliberately, and it is recorded. **A ranking rule that
-cannot be overridden by a human is a worse rule** — it would have marched a session into
-tuning an economy whose purpose was still undecided. The agent's binding rule encodes this:
-it ranks, and a human may reorder.
-
-### The two-kind split
-
-| Kind | Test | Handling | Count in `TODO.md` now |
-|---|---|---|---|
-| **KIND A — engineering** | A documented procedure exists; there is a right answer | Closed directly | **15** |
-| **KIND B — design** | No correct answer, only better and worse | Real games that solved the same problem are researched and **named**, then the recommendation returns as **PROPOSED** for a human | **58** |
-
-Of the 43 items answered: **8 closed**, **35 returned PROPOSED**. `evidence/decisions.md`
-carries **10 APPROVED** and **16 PROPOSED** status markers across nine log entries.
-
-KIND B answers are not opinions. Q7's 0.12 s is set against **Street Fighter 6's 2-frame
-Perfect Parry, Sekiro's 12-frame deflect and Street Fighter III's 10-frame parry**, with
-frame counts converted and the assumed framerate stated. Q22's reading is set against
-**Sekiro's Deathblow, Metal Gear Rising's Monsoon and Sundowner hard-stopping at 10% into a
-mandatory QTE, and Sifu — which does *not* gate the kill, and whose designers had to steer
-players away from the damage route to protect their own ending.** Where no shipped game
-publishes a number, the dispatches said so: **three separate groups reported that no game
-publishes per-attack boss telegraph or recovery durations**, and **Q8's magnitude is named as
-the weakest number in the whole set** because nothing was found to anchor it.
-
-### The split is enforced, not trusted
-
-**Two items were closed as KIND A that were actually design choices, and a cross-consistency
-inspection reopened both.** Q18 was closed at 0.35 s by a dispatch whose own justification
-read *"any value in 0.25–0.50 works; 0.35 is the middle with a documented reason"* — which
-describes a designer's choice. Q17 was closed even though §14 reads *"Designer confirms."*
-Both are open again, with the recommendation intact and the authority corrected. See
-`evidence/inspection-pass1.md`.
-
-That is the classification working. **The kinds are a claim an agent makes, and the inspector
-is what tests it.**
-
----
-
-## 3. How goals are enforced
-
-A goal, here, is a **machine-checked condition the agent cannot declare its way past** — and
-this project already had the mechanism for it.
-
-### `exit_gate.py` — the completion contract
-
-Fires on **`SubagentStop`**. When an agent tries to finish, the hook runs
-`check_leaveoff.py`, which verifies three things in order:
-
-1. `leave-offs/<agent>.md` exists;
-2. it carries `status: complete` in its YAML frontmatter;
-3. **the artifact it names is genuinely on disk.**
-
-If any fails, the hook writes the reason to stderr and **exits 2 — which blocks the stop** and
-hands the reason back to the agent so it goes and finishes the work.
-
-**The reason this is a real goal and not a convention is that the hook runs outside the
-agent.** An agent cannot reason its way past it, cannot decide it is close enough, and cannot
-mark itself done. The condition is checked by a separate process reading the filesystem. That
-is a goal in the only sense that survives contact with a language model.
-
-There is a one-shot guard: an agent that fails twice is let through **with an explicit
-warning** rather than hanging forever. Deliberate — an infinite retry is worse than a loud
-failure.
-
-### `entry_gate.py` — the ordering contract
-
-Fires on **`PreToolUse`** matching `Task|Agent`. It reads `subagent_type`, looks up that
-agent's upstream dependencies, and **denies the spawn** if any dependency is not satisfied. A
-dependency is either a file that must exist or another agent's leave-off that must be
-complete.
-
-Together they are the two halves: **`entry_gate.py` refuses to start an agent whose inputs are
-not ready. `exit_gate.py` refuses to let an agent finish until its output is real.**
-
-### Where `goal-planner` sits
-
-It is wired into `entry_gate.py` **with no upstream agent dependency**, because it runs first
-and is the thing that decides what runs next — gating it behind another agent's leave-off
-would deadlock the pipeline. It is not dependency-free, though: it requires
-`project-brief.md`, the extracted GDD, and `build-sequence.md`. An empty dependency list would
-let it spawn against an empty repo and **produce a confident plan about nothing.**
-
-**One honest limitation.** `exit_gate.py`'s `OURS` set is `{designer, developer, inspector}`,
-and it was deliberately left unmodified for this assignment. So `goal-planner` writes
-`leave-offs/goal-planner.md` **by contract in its own definition, not by hook enforcement.**
-Adding it to `OURS` is a one-line change and would make its completion machine-checked like
-the other three. It is stated here rather than glossed, because the section above claims hook
-enforcement is what makes a goal real — and this agent does not yet have it.
-
-### The agent's own binding rule
-
-> **It may propose and it may rank. It may never decide a design question.**
-
-`Read` and `Write`, **no `Edit`** — it cannot modify an artifact it is auditing. **It stops
-when the top-ranked item is a design question, and stopping is a success condition.** That
-rule was written because a session actually needed it: two items were closed that should not
-have been, and the inspector caught them.
-
----
-
-## 4. Did it run in the game?
-
-**No.**
-
-Nothing is built in Unreal. There is no `.uproject` and no `Content/` directory anywhere in
-this repository. The project is at **M1, not yet started in-engine**, and the **Unreal MCP
-server is not connected** — which is item 1 in `evidence/TODO.md` and the single item blocking
-all 63 build steps.
-
-What exists is the reasoning layer and the answers it produced: the ranked worklist, 43
-answered questions with their reasoning and prior art, three inspection passes, and the
-approved specification text that clears the M3 gate. **That is what the next session builds
-from.** It is not a playable duel and this README does not claim it is.
-
----
-
-## 5. What is still open
-
-**Point of truth: [`evidence/TODO.md`](evidence/TODO.md)** — 65 open items, each with its
-blocking step id.
-
-**The five corrections from `cinematic-integration-inspection.md`, required before M3.** That
-audit returned **APPROVED WITH REQUIRED CHANGES**: nine of ten hard checks pass, and **hard
-check 7, cinematic handoff safety, does not.**
-
-| V | Defect |
+| Run | What it demonstrates |
 |---|---|
-| **V1** | No mechanism suspends the rival's Behavior Tree during the 1–3 s Impact burst. `BTTask_SelectAttack` can fire mid-burst and strand it |
-| **V2** | `RestoreCombatState()` contains **no camera-return step**, while two other sections claim it does |
-| **V3** | Hitbox and trace shutdown relies on notify-end firing on interruption — which Unreal documents as **unreliable** |
-| **V4** | Animation cleanup is specified only on Clash failure; **mid-overlay player death is undefined** |
-| **V5** | `State.Dodging` and `State.CanCounter` are missing from the restore clear list. A stale `State.CanCounter` yields **a free counter — unearned spectacle**, which is exactly what the central promise forbids |
+| `seed8` | Clean pass on the first attempt — its `generated/` folder holds the emitted `build_level.py` |
+| `seed4` | Two refinements, then success — the refiner working |
+| `seed2` | Three attempts used, faults remain — the circuit breaker stopping |
 
-**All five are written and APPROVED** as drop-in specification text in
-`design/group-09-cinematic-corrections.md`. **They are not yet applied** — that is item 63,
-and it belongs to the `combat-integration-architect`. **M1 and M2 may proceed now regardless;
-only M3 is gated.**
+---
 
-Writing them surfaced a defect the audit had not: because restore also runs on the Impact
-*failure* branch, where nothing was suspended, **implementing V5's acceptance condition
-literally would have stripped a player's i-frames mid-dodge.** The fix satisfies the intent
-without creating the bug.
+## 2. Why the agent selected that feature
 
-**Unreal MCP is not connected** — item 1, and nothing in the editor happens until it is.
+**Two ranking rules, both written down, neither a judgement call.**
 
-**Four other items worth naming**, all in `evidence/TODO.md`:
+### Which feature to build — the blocking-step rule
 
-- **Item 64** — constraint **C3 from the approved Q22 is not satisfied.** Q2 = 1200 puts meter
-  100 and the health gate **90–135 s apart**, not "close together". A dispatch declared
-  compliance against a criterion it had substituted for the approved one. Either amend C3 on
-  the record or take Q2 → 1050–1100.
-- **Item 65** — Telegraph and Recover are specified **two incompatible ways**: absolute
-  seconds in one place, a scale factor in `design-brief.md` §13.1 and `build-sequence.md`
-  M4-04. **`M2-04` and `M4-04` cannot both be built as written**, and the four phase ratios
-  (0.786 / 0.800 / 0.775 / 0.778) are not uniform, so no single scale can express them.
-- **Items 49 + 67** — the rival's missing `MaxWalkSpeed`, and three groups assuming three
-  different speeds.
-- **Item 26** — blocked on a human: whether page 14's *"plasma-gauntlet weapons"* contradicts
-  Attack A. The transcription **disclaims its own confidence**, so the dispatch refused to
-  settle canon from it and wrote four questions to answer by zooming the PDF instead.
+Every open item is ranked by **the lowest-numbered step in `build-sequence.md`
+that cannot execute until it is answered.** `build-sequence.md` holds 63 ordered
+Unreal editor steps and was written *before* most of these questions were asked,
+which is what makes it a fair referee — it cannot be bent to justify a convenient
+order.
 
-### What held up
+The arena came out at **`M1-21`, gray-box `L_ShatteredRing`**, and it ranked
+early for a concrete reason: **you cannot gray-box a floor without dimensions.**
+Ranking it also exposed a dependency chain — Attack D's travel distance is
+defined as a fraction of the arena footprint, and the failed-Clash separation has
+to fit inside it, so all three had to move together or disagree.
 
-Across three inspection passes: **zero GDD violations.** No published number altered, no
-range collapsed, no fifth attack, no second arena, no per-fighter mechanical difference, no
-runtime model call, no auto-success, milestone order intact. **Group 07's claim that all 26 of
-its per-attack values fall inside their published GDD ranges was independently recomputed and
-confirmed twice.**
+### Which correction to make — the smallest-correction rule
 
-The three violations found were all **process-authority** failures — agents claiming a
-decision that was the human's — and all three are corrected. That distinction is the point:
-the constraint system held, and what failed was agents overstepping their remit, which is
-exactly what the inspector exists to catch.
+Inside a run, the refiner changes **exactly one field per attempt** and records a
+before/after diff. It refuses rather than guesses when a fix is not ours to make.
+The clearest case is R4, camera framing: the only real fix is retuning
+`BP_DuelCameraRig`, which belongs to the gameplay owner, so the refiner escalates
+instead. **That refusal is enforced in code, not documented as a convention.**
+
+The same applies to unresolved inputs. `design/group-04-spacing-and-arena.md`
+opens with *"EVERY ANSWER IN THIS FILE IS PROPOSED, NOT DECIDED"*, so the
+validator will not enforce a `PROPOSED` value as a requirement. It reports it for
+human review and stops. The pipeline is built so it cannot invent a missing
+gameplay requirement.
+
+---
+
+## 3. Were you able to run this in your game?
+
+**Yes.**
+
+The generated `build_level.py` was run against a live Unreal 5.8 editor session
+over the `unreal-mcp` server. It created 12 actors and saved the level to
+`/Game/ArenaTools/Maps/Lvl_ArenaGen_Seed8` — floor, ceiling, two end walls, two
+side railings, four landmarks, and two spawn markers.
+
+The result was then verified **in the engine** by ray-tracing the built geometry,
+rather than by trusting the script's own output:
+
+| Check | Measured in engine | Rule |
+|---|---|---|
+| Floor height across the combat span | Z = 0.0 at all 5 sample points | R3 — flat floor at Z = 0 |
+| Nearest blocking geometry | 500.0 cm beyond the ±650 bound | R2 — clearance ≥ 500 cm |
+| Headroom above centre | 515 cm | R7 — ≥ 388 cm for a jump-over |
+
+### What building it revealed
+
+Two defects survived the deterministic gate and were only caught once a level
+actually existed. Both are recorded in
+[`evidence/ARENA_PIPELINE_FINDINGS.md`](evidence/ARENA_PIPELINE_FINDINGS.md).
+
+1. **Clearance was measured to obstacle centres, not faces.** An obstacle 507.7 cm
+   beyond the combat bound passed R2 while its near face sat 482.7 cm out —
+   legal on paper, illegal in the level. Clearance is now measured face to face.
+2. **Landmarks were being placed inside each other.** Two landmarks at the same
+   end share a depth plane, and their lateral positions were sampled
+   independently, so 300 cm boxes overlapped on 26 of 42 passing seeds.
+
+Both were invisible to a validator reading a plan, because a plan is
+dimensionless and a level is not. That gap is the argument for building the
+thing rather than only checking it.
+
+### And a finding about the game itself
+
+The pipeline surfaced a real constraint that nobody had multiplied out. The
+arena's long axis is 2400 cm, the combat span is 1300 cm, and environment
+geometry must keep 500 cm of clearance:
+
+```
+1200 (half the long axis) − 650 (combat bound) − 500 (clearance) = 50 cm
+```
+
+**Fifty centimetres of depth at each end for all environment geometry.** End
+features can be shallow wall relief but not free-standing objects. That happens
+to suit the landmarks already named — the doorway frame, the truss panel and the
+mezzanine struts are all wall-attached — so nothing is blocked, but it constrains
+environment art from here on.
+
+---
+
+## Honest limits
+
+- **The mezzanine, corner chamfers and the centred doorway are not enforced.**
+  The pipeline checks the arena's *dimensions* but not its *layout*. GDD page 11
+  fixes the doorway centred on the far short wall and Q24 specifies 250 cm corner
+  chamfers; the generator currently randomises the doorway and ignores chamfers.
+  These are queued as candidate rules R9–R11, pending the designer's sign-off,
+  because changing what the generator may produce is an arena-design decision.
+- **The agent-judge evaluator backend is a seam, not built.** `--judge agent`
+  stops for human review. The heuristic evaluator is what runs today.
+- **The generated level is not the shipping arena.** `design/group-08-assets.md`
+  specifies the Shattered Ring as authored in-editor by the team. The generated
+  level is a rules-legal test arena that proves the constraints are satisfiable
+  and buildable — not a replacement for authored environment art.
+- **The pipeline also lives in the Unreal implementation repo**, where it is the
+  working copy. The copy here is the snapshot submitted for this assignment; the
+  two are byte-identical as of this commit.

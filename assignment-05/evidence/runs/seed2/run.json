@@ -1,0 +1,520 @@
+{
+  "run_id": "seed2",
+  "seed": 2,
+  "judge": "heuristic",
+  "rules_version": "0.1.0",
+  "max_attempts": 3,
+  "attempts_used": 3,
+  "stop_reason": "CIRCUIT_BREAKER_MAX_ATTEMPTS",
+  "final_plan": {
+    "schema_version": "1.0.0",
+    "plan_id": "gen-seed2",
+    "seed": 2,
+    "generated_by": "Tools/ArenaPipeline/generator.py",
+    "provenance": {
+      "floor_footprint": "design/group-04-spacing-and-arena.md Q24 - header states EVERY ANSWER IN THIS FILE IS PROPOSED, NOT DECIDED",
+      "combat_span": "docs/agent/PROTOTYPE_BLACKBOARD.md 14.1 - CombatAxisMin/Max = +/-650, max legal separation 1300",
+      "resolutions_applied": [
+        "U1",
+        "U2"
+      ]
+    },
+    "floor": {
+      "long_axis_cm": 2400.0,
+      "short_axis_cm": 1600.0,
+      "z_cm": 0.0
+    },
+    "combat_axis": {
+      "axis": "X",
+      "min_cm": -650.0,
+      "max_cm": 650.0
+    },
+    "ceiling_cm": 380.0,
+    "obstacle_extents": {
+      "depth_cm": 50.0,
+      "width_cm": 300.0,
+      "height_cm": 300.0,
+      "status": "PROPOSED"
+    },
+    "camera": {
+      "near_wall_culled": true
+    },
+    "spawns": {
+      "player": {
+        "x_cm": -205.2,
+        "y_cm": 0.0,
+        "z_cm": 94.0,
+        "yaw_deg": 0.0
+      },
+      "opponent": {
+        "x_cm": 144.8,
+        "y_cm": 0.0,
+        "z_cm": 90.0,
+        "yaw_deg": 180.0
+      }
+    },
+    "obstacles": [
+      {
+        "name": "Doorway_Frame",
+        "x_cm": 1175.0,
+        "y_cm": -480.2,
+        "blocking": true,
+        "in_camera_corridor": false
+      },
+      {
+        "name": "Truss_Panel",
+        "x_cm": -1175.0,
+        "y_cm": -207.6,
+        "blocking": true,
+        "in_camera_corridor": false
+      },
+      {
+        "name": "Mezzanine_Strut_A",
+        "x_cm": 1175.0,
+        "y_cm": 384.4,
+        "blocking": true,
+        "in_camera_corridor": false
+      },
+      {
+        "name": "Mezzanine_Strut_B",
+        "x_cm": -1175.0,
+        "y_cm": 362.1,
+        "blocking": true,
+        "in_camera_corridor": false
+      }
+    ],
+    "boundaries": [
+      {
+        "name": "Wall_DoorwayEnd",
+        "axis": "x",
+        "x_cm": 1200.0
+      },
+      {
+        "name": "Wall_TrussEnd",
+        "axis": "x",
+        "x_cm": -1200.0
+      },
+      {
+        "name": "Railing_North",
+        "axis": "y",
+        "x_cm": 0.0,
+        "y_cm": 800.0
+      },
+      {
+        "name": "Railing_South",
+        "axis": "y",
+        "x_cm": 0.0,
+        "y_cm": -800.0
+      }
+    ]
+  },
+  "attempts": [
+    {
+      "attempt": 1,
+      "plan": {
+        "schema_version": "1.0.0",
+        "plan_id": "gen-seed2",
+        "seed": 2,
+        "generated_by": "Tools/ArenaPipeline/generator.py",
+        "provenance": {
+          "floor_footprint": "design/group-04-spacing-and-arena.md Q24 - header states EVERY ANSWER IN THIS FILE IS PROPOSED, NOT DECIDED",
+          "combat_span": "docs/agent/PROTOTYPE_BLACKBOARD.md 14.1 - CombatAxisMin/Max = +/-650, max legal separation 1300",
+          "resolutions_applied": [
+            "U1",
+            "U2"
+          ]
+        },
+        "floor": {
+          "long_axis_cm": 2400.0,
+          "short_axis_cm": 1600.0,
+          "z_cm": 0.0
+        },
+        "combat_axis": {
+          "axis": "X",
+          "min_cm": -650.0,
+          "max_cm": 650.0
+        },
+        "ceiling_cm": 380.0,
+        "obstacle_extents": {
+          "depth_cm": 50.0,
+          "width_cm": 300.0,
+          "height_cm": 300.0,
+          "status": "PROPOSED"
+        },
+        "camera": {
+          "near_wall_culled": true
+        },
+        "spawns": {
+          "player": {
+            "x_cm": -205.2,
+            "y_cm": 0.0,
+            "z_cm": 94.0,
+            "yaw_deg": 0.0
+          },
+          "opponent": {
+            "x_cm": 205.2,
+            "y_cm": 0.0,
+            "z_cm": 90.0,
+            "yaw_deg": 180.0
+          }
+        },
+        "obstacles": [
+          {
+            "name": "Doorway_Frame",
+            "x_cm": 1175.0,
+            "y_cm": -480.2,
+            "blocking": true,
+            "in_camera_corridor": false
+          },
+          {
+            "name": "Truss_Panel",
+            "x_cm": -1160.3,
+            "y_cm": -207.6,
+            "blocking": true,
+            "in_camera_corridor": false
+          },
+          {
+            "name": "Mezzanine_Strut_A",
+            "x_cm": 1175.0,
+            "y_cm": 384.4,
+            "blocking": true,
+            "in_camera_corridor": false
+          },
+          {
+            "name": "Mezzanine_Strut_B",
+            "x_cm": -1175.0,
+            "y_cm": 362.1,
+            "blocking": true,
+            "in_camera_corridor": false
+          }
+        ],
+        "boundaries": [
+          {
+            "name": "Wall_DoorwayEnd",
+            "axis": "x",
+            "x_cm": 1200.0
+          },
+          {
+            "name": "Wall_TrussEnd",
+            "axis": "x",
+            "x_cm": -1200.0
+          },
+          {
+            "name": "Railing_North",
+            "axis": "y",
+            "x_cm": 0.0,
+            "y_cm": 800.0
+          },
+          {
+            "name": "Railing_South",
+            "axis": "y",
+            "x_cm": 0.0,
+            "y_cm": -800.0
+          }
+        ]
+      },
+      "violations": [
+        {
+          "rule_id": "R2",
+          "message": "obstacle 'Truss_Panel' crowds the combat bound",
+          "expected": ">= 500.0 cm clearance",
+          "actual": "485.3 cm"
+        },
+        {
+          "rule_id": "R6",
+          "message": "spawns are further apart than the approved opening distance",
+          "expected": "<= 350.0 cm",
+          "actual": "410.4 cm"
+        },
+        {
+          "rule_id": "R7",
+          "message": "not enough headroom for a jump-over",
+          "expected": ">= 388.0 cm",
+          "actual": "380.0 cm"
+        }
+      ],
+      "human_review": [],
+      "decisions_pending_confirmation": [
+        "U1 resolved by us, awaiting Anthony Travieso: Not a conflict - the two values describe different things. combat_axis (+/-650, span 1300) is the FIGHTER CLAMP enforced by BP_VanguardDuelMover.ApplyConstraints. Q24's 2400x1600 is the ARENA FLOOR FOOTPRINT. The generator targets a 2400x1600 room containing a centred 1300 cm combat span.",
+        "U2 resolved by us, awaiting Anthony Travieso: The camera corridor excludes BLOCKING GAMEPLAY GEOMETRY only. The arena's own near side wall is exempt when flagged cullable, using standard fighting-game near-wall culling."
+      ],
+      "failure_keys": [
+        "R2",
+        "R6",
+        "R7"
+      ],
+      "refinement": {
+        "applied": true,
+        "change": {
+          "field": "obstacles[Truss_Panel].x_cm",
+          "before": -1160.3,
+          "after": -1175.0,
+          "reason": "pushed out to the minimum clearance"
+        },
+        "refused": null
+      },
+      "outcome": "REFINED"
+    },
+    {
+      "attempt": 2,
+      "plan": {
+        "schema_version": "1.0.0",
+        "plan_id": "gen-seed2",
+        "seed": 2,
+        "generated_by": "Tools/ArenaPipeline/generator.py",
+        "provenance": {
+          "floor_footprint": "design/group-04-spacing-and-arena.md Q24 - header states EVERY ANSWER IN THIS FILE IS PROPOSED, NOT DECIDED",
+          "combat_span": "docs/agent/PROTOTYPE_BLACKBOARD.md 14.1 - CombatAxisMin/Max = +/-650, max legal separation 1300",
+          "resolutions_applied": [
+            "U1",
+            "U2"
+          ]
+        },
+        "floor": {
+          "long_axis_cm": 2400.0,
+          "short_axis_cm": 1600.0,
+          "z_cm": 0.0
+        },
+        "combat_axis": {
+          "axis": "X",
+          "min_cm": -650.0,
+          "max_cm": 650.0
+        },
+        "ceiling_cm": 380.0,
+        "obstacle_extents": {
+          "depth_cm": 50.0,
+          "width_cm": 300.0,
+          "height_cm": 300.0,
+          "status": "PROPOSED"
+        },
+        "camera": {
+          "near_wall_culled": true
+        },
+        "spawns": {
+          "player": {
+            "x_cm": -205.2,
+            "y_cm": 0.0,
+            "z_cm": 94.0,
+            "yaw_deg": 0.0
+          },
+          "opponent": {
+            "x_cm": 205.2,
+            "y_cm": 0.0,
+            "z_cm": 90.0,
+            "yaw_deg": 180.0
+          }
+        },
+        "obstacles": [
+          {
+            "name": "Doorway_Frame",
+            "x_cm": 1175.0,
+            "y_cm": -480.2,
+            "blocking": true,
+            "in_camera_corridor": false
+          },
+          {
+            "name": "Truss_Panel",
+            "x_cm": -1175.0,
+            "y_cm": -207.6,
+            "blocking": true,
+            "in_camera_corridor": false
+          },
+          {
+            "name": "Mezzanine_Strut_A",
+            "x_cm": 1175.0,
+            "y_cm": 384.4,
+            "blocking": true,
+            "in_camera_corridor": false
+          },
+          {
+            "name": "Mezzanine_Strut_B",
+            "x_cm": -1175.0,
+            "y_cm": 362.1,
+            "blocking": true,
+            "in_camera_corridor": false
+          }
+        ],
+        "boundaries": [
+          {
+            "name": "Wall_DoorwayEnd",
+            "axis": "x",
+            "x_cm": 1200.0
+          },
+          {
+            "name": "Wall_TrussEnd",
+            "axis": "x",
+            "x_cm": -1200.0
+          },
+          {
+            "name": "Railing_North",
+            "axis": "y",
+            "x_cm": 0.0,
+            "y_cm": 800.0
+          },
+          {
+            "name": "Railing_South",
+            "axis": "y",
+            "x_cm": 0.0,
+            "y_cm": -800.0
+          }
+        ]
+      },
+      "violations": [
+        {
+          "rule_id": "R6",
+          "message": "spawns are further apart than the approved opening distance",
+          "expected": "<= 350.0 cm",
+          "actual": "410.4 cm"
+        },
+        {
+          "rule_id": "R7",
+          "message": "not enough headroom for a jump-over",
+          "expected": ">= 388.0 cm",
+          "actual": "380.0 cm"
+        }
+      ],
+      "human_review": [],
+      "decisions_pending_confirmation": [
+        "U1 resolved by us, awaiting Anthony Travieso: Not a conflict - the two values describe different things. combat_axis (+/-650, span 1300) is the FIGHTER CLAMP enforced by BP_VanguardDuelMover.ApplyConstraints. Q24's 2400x1600 is the ARENA FLOOR FOOTPRINT. The generator targets a 2400x1600 room containing a centred 1300 cm combat span.",
+        "U2 resolved by us, awaiting Anthony Travieso: The camera corridor excludes BLOCKING GAMEPLAY GEOMETRY only. The arena's own near side wall is exempt when flagged cullable, using standard fighting-game near-wall culling."
+      ],
+      "failure_keys": [
+        "R6",
+        "R7"
+      ],
+      "refinement": {
+        "applied": true,
+        "change": {
+          "field": "spawns.opponent.x_cm",
+          "before": 205.2,
+          "after": 144.8,
+          "reason": "pulled to the widest legal opening distance"
+        },
+        "refused": null
+      },
+      "outcome": "REFINED"
+    },
+    {
+      "attempt": 3,
+      "plan": {
+        "schema_version": "1.0.0",
+        "plan_id": "gen-seed2",
+        "seed": 2,
+        "generated_by": "Tools/ArenaPipeline/generator.py",
+        "provenance": {
+          "floor_footprint": "design/group-04-spacing-and-arena.md Q24 - header states EVERY ANSWER IN THIS FILE IS PROPOSED, NOT DECIDED",
+          "combat_span": "docs/agent/PROTOTYPE_BLACKBOARD.md 14.1 - CombatAxisMin/Max = +/-650, max legal separation 1300",
+          "resolutions_applied": [
+            "U1",
+            "U2"
+          ]
+        },
+        "floor": {
+          "long_axis_cm": 2400.0,
+          "short_axis_cm": 1600.0,
+          "z_cm": 0.0
+        },
+        "combat_axis": {
+          "axis": "X",
+          "min_cm": -650.0,
+          "max_cm": 650.0
+        },
+        "ceiling_cm": 380.0,
+        "obstacle_extents": {
+          "depth_cm": 50.0,
+          "width_cm": 300.0,
+          "height_cm": 300.0,
+          "status": "PROPOSED"
+        },
+        "camera": {
+          "near_wall_culled": true
+        },
+        "spawns": {
+          "player": {
+            "x_cm": -205.2,
+            "y_cm": 0.0,
+            "z_cm": 94.0,
+            "yaw_deg": 0.0
+          },
+          "opponent": {
+            "x_cm": 144.8,
+            "y_cm": 0.0,
+            "z_cm": 90.0,
+            "yaw_deg": 180.0
+          }
+        },
+        "obstacles": [
+          {
+            "name": "Doorway_Frame",
+            "x_cm": 1175.0,
+            "y_cm": -480.2,
+            "blocking": true,
+            "in_camera_corridor": false
+          },
+          {
+            "name": "Truss_Panel",
+            "x_cm": -1175.0,
+            "y_cm": -207.6,
+            "blocking": true,
+            "in_camera_corridor": false
+          },
+          {
+            "name": "Mezzanine_Strut_A",
+            "x_cm": 1175.0,
+            "y_cm": 384.4,
+            "blocking": true,
+            "in_camera_corridor": false
+          },
+          {
+            "name": "Mezzanine_Strut_B",
+            "x_cm": -1175.0,
+            "y_cm": 362.1,
+            "blocking": true,
+            "in_camera_corridor": false
+          }
+        ],
+        "boundaries": [
+          {
+            "name": "Wall_DoorwayEnd",
+            "axis": "x",
+            "x_cm": 1200.0
+          },
+          {
+            "name": "Wall_TrussEnd",
+            "axis": "x",
+            "x_cm": -1200.0
+          },
+          {
+            "name": "Railing_North",
+            "axis": "y",
+            "x_cm": 0.0,
+            "y_cm": 800.0
+          },
+          {
+            "name": "Railing_South",
+            "axis": "y",
+            "x_cm": 0.0,
+            "y_cm": -800.0
+          }
+        ]
+      },
+      "violations": [
+        {
+          "rule_id": "R7",
+          "message": "not enough headroom for a jump-over",
+          "expected": ">= 388.0 cm",
+          "actual": "380.0 cm"
+        }
+      ],
+      "human_review": [],
+      "decisions_pending_confirmation": [
+        "U1 resolved by us, awaiting Anthony Travieso: Not a conflict - the two values describe different things. combat_axis (+/-650, span 1300) is the FIGHTER CLAMP enforced by BP_VanguardDuelMover.ApplyConstraints. Q24's 2400x1600 is the ARENA FLOOR FOOTPRINT. The generator targets a 2400x1600 room containing a centred 1300 cm combat span.",
+        "U2 resolved by us, awaiting Anthony Travieso: The camera corridor excludes BLOCKING GAMEPLAY GEOMETRY only. The arena's own near side wall is exempt when flagged cullable, using standard fighting-game near-wall culling."
+      ],
+      "failure_keys": [
+        "R7"
+      ],
+      "outcome": "CIRCUIT_BREAKER_MAX_ATTEMPTS"
+    }
+  ]
+}

@@ -1,0 +1,148 @@
+{
+  "schema_version": "1.0.0",
+  "rules_version": "0.1.0",
+  "description": "Deterministic arena rules for Ascendant Impact. Every value is sourced from a project document. Nothing here is invented. Values with status PROPOSED are NOT approved requirements and are rejected under --require-approved.",
+  "status_legend": {
+    "MEASURED": "Read from the shipped build or its blackboard record. Factual.",
+    "APPROVED": "Signed off by the designer of record in design/decisions.md.",
+    "PROPOSED": "Recommended by a design dispatch but NOT decided. Requires human approval.",
+    "DERIVED": "Computed from MEASURED/APPROVED values by documented arithmetic."
+  },
+  "unresolved": [
+    {
+      "id": "U1",
+      "question": "Does the generator target the built combat span (1300 cm) or the designed playable long axis (2400 cm)?",
+      "conflict": {
+        "built": "combat_axis span 1300 cm (CombatAxisMin/Max +/-650), PROTOTYPE_BLACKBOARD.md 14.1, marked provisional",
+        "designed": "playable floor long axis 2400 cm, design/group-04-spacing-and-arena.md Q24, marked PROPOSED"
+      },
+      "owner": "Anthony Travieso",
+      "blocks": ["R1", "R2", "R4"],
+      "resolution": {
+        "decision": "Not a conflict - the two values describe different things. combat_axis (+/-650, span 1300) is the FIGHTER CLAMP enforced by BP_VanguardDuelMover.ApplyConstraints. Q24's 2400x1600 is the ARENA FLOOR FOOTPRINT. The generator targets a 2400x1600 room containing a centred 1300 cm combat span.",
+        "evidence": "Room half-long-axis 1200 minus combat bound 650 = 550 cm, which satisfies R2's 500 cm clearance requirement. The two independently sourced numbers nest with 50 cm to spare.",
+        "cost_if_reversed": "A 2400 cm combat span needs half-width 1250, so MaxCameraDistance must rise from 1500 to ~2404 (1250/0.52). At FOV 55 that shrinks the fighters substantially.",
+        "decided_by": "AthetosTrace pipeline side, 2026-08-09",
+        "status": "PENDING_CONFIRMATION",
+        "confirm_with": "Anthony Travieso"
+      }
+    },
+    {
+      "id": "U2",
+      "question": "Confirm camera exclusion volume as an explicit spec. Camera parameters are measured, but 'where geometry may not be placed relative to the camera rig' has never been written down.",
+      "owner": "Anthony Travieso",
+      "blocks": ["R5"],
+      "resolution": {
+        "decision": "The camera corridor excludes BLOCKING GAMEPLAY GEOMETRY only. The arena's own near side wall is exempt when flagged cullable, using standard fighting-game near-wall culling.",
+        "evidence": "At max separation the camera sits ~1457 cm back (1490 * cos 12deg). The designed short axis is 1600 cm (+/-800), so the camera is ~650 cm outside the side wall of an enclosed interior hall. Demanding a ~2900 cm deep room to avoid this would contradict the Shattered Ring reference.",
+        "cost_if_reversed": "Either widen the arena short axis to ~2915 cm, or cap fighter separation so the camera stays inside the shell.",
+        "decided_by": "AthetosTrace pipeline side, 2026-08-09",
+        "status": "PENDING_CONFIRMATION",
+        "confirm_with": "Anthony Travieso"
+      }
+    }
+  ],
+  "rules": [
+    {
+      "id": "R1",
+      "name": "combat_axis_span",
+      "description": "The combat axis must span at least the maximum legal fighter separation.",
+      "min_combat_span_cm": 1300.0,
+      "status": "MEASURED",
+      "source": "docs/agent/PROTOTYPE_BLACKBOARD.md 14.1 - CombatAxisMin/Max = +/-650, max legal separation 1300"
+    },
+    {
+      "id": "R2",
+      "name": "geometry_clearance",
+      "description": "Blocking geometry must stay clear of the combat bounds by this margin.",
+      "min_clearance_beyond_bound_cm": 500.0,
+      "status": "MEASURED",
+      "source": "docs/agent/PROTOTYPE_BLACKBOARD.md 14.1 - nearest environment at |X|~1200 keeps >=500 cm clearance"
+    },
+    {
+      "id": "R3",
+      "name": "flat_combat_floor",
+      "description": "Floor top sits at Z=0 across the combat span, with no blocking geometry inside the combat volume. The graybox arena was built by deleting the raised platform for exactly this reason.",
+      "floor_z_cm": 0.0,
+      "floor_z_tolerance_cm": 2.0,
+      "status": "MEASURED",
+      "source": "docs/agent/PROTOTYPE_BLACKBOARD.md 13.2 - floor top at exactly Z=0 verified by trace_world; 17 platform actors removed. Reference sheet: 'central floor is completely clear'."
+    },
+    {
+      "id": "R4",
+      "name": "camera_framing",
+      "description": "At maximum fighter separation the camera must still frame both fighters. half_width = distance * tan(fov/2 * aspect factor) ~= distance * 0.52.",
+      "fov_deg": 55.0,
+      "half_width_per_distance": 0.52,
+      "base_camera_distance_cm": 450.0,
+      "distance_per_separation": 0.8,
+      "min_camera_distance_cm": 500.0,
+      "max_camera_distance_cm": 1500.0,
+      "fighter_body_margin_cm": 50.0,
+      "status": "MEASURED",
+      "source": "docs/agent/PROTOTYPE_BLACKBOARD.md 14.2 - FOV 55, half-width ~= distance*0.52, DistancePerSeparation 0.8, MaxCameraDistance 1500, MinCameraDistance 500, BaseCameraDistance 450"
+    },
+    {
+      "id": "R5",
+      "name": "camera_corridor",
+      "description": "The camera sits off the combat plane in depth. No blocking gameplay geometry may occlude the corridor between the camera and the fighter midpoint. If the floor is too shallow to contain the camera at its worst-case pull-back, the near side wall must be flagged cullable (standard fighting-game near-wall culling) - see resolution U2.",
+      "side_angle_deg": 12.0,
+      "allow_near_wall_culling": true,
+      "status": "DERIVED",
+      "source": "Derived from PROTOTYPE_BLACKBOARD.md 14.2 SideAngleDegrees 12, MaxCameraDistance 1500, and the camera distance curve in R4. Exclusion semantics resolved in U2."
+    },
+    {
+      "id": "R6",
+      "name": "spawn_placement",
+      "description": "Two spawns on the combat axis, on the floor, facing each other, separated within the legal band.",
+      "min_axis_separation_cm": 78.0,
+      "max_spawn_separation_cm": 350.0,
+      "required_player_yaw_deg": 0.0,
+      "required_opponent_yaw_deg": 180.0,
+      "yaw_tolerance_deg": 1.0,
+      "status": "MEASURED",
+      "source": "docs/agent/PROTOTYPE_BLACKBOARD.md 15 - MinAxisSeparation 78 (capsule radii 35+34 plus margin); 13.2 - PlayerStart (0,0,94) yaw 0 and BP_VanguardProxy (350,0,90) yaw 180"
+    },
+    {
+      "id": "R7",
+      "name": "jump_headroom",
+      "description": "Player jump-over side switching must not clip overhead geometry.",
+      "jump_apex_cm": 180.0,
+      "character_height_cm": 208.0,
+      "status": "MEASURED",
+      "source": "docs/agent/PROTOTYPE_BLACKBOARD.md 23 - JumpZVelocity 820 / GravityScale 1.9, apex ~180 cm, airtime ~0.9 s. Character height 208 cm APPROVED in design/decisions.md item 28."
+    },
+    {
+      "id": "R8",
+      "name": "boundary_containment",
+      "description": "Perimeter geometry must lie outside the combat bounds, never inside the fighting space.",
+      "status": "MEASURED",
+      "source": "docs/agent/PROTOTYPE_BLACKBOARD.md 13.2 - 4000x4000 floor kept, perimeter walls at +/-1800-2000, corner pillars at |X|>=1200"
+    }
+  ],
+  "materializer": {
+    "note": "Graybox visual extents used to turn a dimensionless plan into placed actors. These are NOT design decisions and carry no gameplay authority - they exist so the realised geometry can be face-checked against R2/R3/R8. The plan schema states obstacle and boundary positions as points; every number here is the pipeline's own placeholder and must be confirmed before any of it is treated as an arena spec.",
+    "unit_cube_asset": "/Engine/BasicShapes/Cube",
+    "unit_cube_size_cm": 100.0,
+    "floor_thickness_cm": 20.0,
+    "wall_thickness_cm": 40.0,
+    "railing_thickness_cm": 20.0,
+    "railing_height_cm": 120.0,
+    "obstacle_depth_cm": 50.0,
+    "obstacle_width_cm": 300.0,
+    "obstacle_height_cm": 300.0,
+    "player_start_class": "/Script/Engine.PlayerStart",
+    "opponent_marker_class": "/Script/Engine.TargetPoint",
+    "status": "PROPOSED",
+    "source": "Pipeline graybox placeholder, AthetosTrace 2026-08-09. obstacle_depth_cm 50 is the widest end-wall relief the 2400 cm long axis can hold while preserving R2's 500 cm clearance: half-long 1200 minus combat bound 650 leaves a 550 cm annulus, of which 500 is reserved, so 50 cm remains."
+  },
+  "design_targets": {
+    "note": "From design/group-04-spacing-and-arena.md Q24. PROPOSED, not decided. Used only when --allow-proposed is passed.",
+    "playable_long_axis_cm": 2400.0,
+    "playable_short_axis_cm": 1600.0,
+    "corner_chamfer_leg_cm": 250.0,
+    "wall_height_to_mezzanine_cm": 450.0,
+    "status": "PROPOSED",
+    "source": "design/group-04-spacing-and-arena.md Q24 - header states EVERY ANSWER IN THIS FILE IS PROPOSED, NOT DECIDED"
+  }
+}
