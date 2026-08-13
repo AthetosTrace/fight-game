@@ -1,0 +1,269 @@
+{
+  "schema_version": 1,
+  "rules_version": "1.0.0",
+  "content_type": "Crimson Vanguard attack-definition rows (DT_VanguardAttacks.csv)",
+  "description": "Rules every generated Vanguard attack row must satisfy. Every entry in `rules` is sourced from the Game Design Document itself, not from measured implementation values -- that separation is deliberate. Schema mechanics live in `contract` below and are enforced by the deterministic gate; the GDD rules are what the evaluator scores.",
+
+  "gdd": {
+    "document": "gdd/ascendant-impact-gdd-v0.4.md",
+    "revision": "v0.4 (2026-07-24)",
+    "pdf": "Ascendant_Impact_Assignment_02_Revised_GDD_Anthony.pdf",
+    "sections_used": [
+      "gdd/sections/04-crimson-vanguard-authored-rival-ai.md",
+      "gdd/sections/09-course-scope-lock-and-future-expansion.md"
+    ]
+  },
+
+  "status_legend": {
+    "GDD": "Stated in the GDD. The evaluator enforces it as a requirement.",
+    "OPEN": "The GDD does not decide this. It must never be invented; a row needing it escalates to human review."
+  },
+
+  "rules": [
+    {
+      "id": "G1",
+      "name": "four_attacks_only",
+      "requirement": "The authored attack set is exactly A, B, C and D. No fifth attack, no alternate move set, and no per-phase-exclusive attack may appear.",
+      "source": "GDD v0.4 section 04, page 5 -- 'Four-attack course set'",
+      "source_file": "gdd/sections/04-crimson-vanguard-authored-rival-ai.md",
+      "kb_anchor": "vanguard-telegraphs.md :: The four authored attacks (no names in the GDD - this is the gap)",
+      "status": "GDD",
+      "allowed_attack_ids": ["A", "B", "C", "D"],
+      "forbidden_phrases": [
+        "fifth attack", "attack e", "sixth attack", "alternate move set",
+        "alternate moveset", "second move set", "second moveset",
+        "new move set", "new moveset", "extra attack", "additional attack"
+      ]
+    },
+    {
+      "id": "G2",
+      "name": "readability_requirement",
+      "requirement": "Every attack must carry a readability requirement: a visible committed cue before the strike, and a deliberate punishable opening after it. Armor and scale may intensify presentation but must not remove readable counterplay.",
+      "source": "GDD v0.4 section 04, page 5 -- attack table 'Readability requirement' column, and 'Behavioral intent'",
+      "source_file": "gdd/sections/04-crimson-vanguard-authored-rival-ai.md",
+      "kb_anchor": "vanguard-telegraphs.md :: Behavioral intent (tone reference for telegraph/announcer copy)",
+      "status": "GDD",
+      "telegraph_cue_terms": [
+        "wind-up", "windup", "first beat", "body direction", "thruster cue",
+        "committed pose", "warning light", "visible", "clear", "distinct", "readable"
+      ],
+      "recovery_terms": [
+        "punishable", "punish", "recovery", "opening", "exposed", "recover"
+      ]
+    },
+    {
+      "id": "G3",
+      "name": "phase2_same_moveset",
+      "requirement": "Phase 2 re-times the same four authored attacks. It must never be described as a new move, a new move set, a transformation, or a per-phase-exclusive attack.",
+      "source": "GDD v0.4 section 04, page 6 -- 'Phase 2 escalation' ('Same four authored attacks - no transformation rig and no second move set')",
+      "source_file": "gdd/sections/04-crimson-vanguard-authored-rival-ai.md",
+      "kb_anchor": "vanguard-telegraphs.md :: Phase 2 escalation (same four attacks, re-timed - never a new moveset)",
+      "status": "GDD",
+      "required_terms": ["phase 2"],
+      "same_moveset_terms": [
+        "same attack", "same four", "re-timed", "retimed", "no new moveset",
+        "no new move set", "unchanged"
+      ],
+      "forbidden_phrases": [
+        "transformation", "transforms", "new form", "second phase moveset",
+        "phase 2 exclusive", "phase-2-exclusive", "upgraded moveset"
+      ]
+    },
+    {
+      "id": "G4",
+      "name": "no_runtime_ai",
+      "requirement": "Crimson Vanguard is deterministic authored gameplay AI. Generated text must not imply runtime learning, adaptation to the player, or any runtime AI-model call.",
+      "source": "GDD v0.4 section 04, page 5 -- 'REVISED - RUNTIME AI BOUNDARY'; reinforced in section 06, page 5",
+      "source_file": "gdd/sections/04-crimson-vanguard-authored-rival-ai.md",
+      "kb_anchor": "core-canon.md :: Hard constraint",
+      "status": "GDD",
+      "forbidden_patterns": [
+        "\\blearns?\\s+from\\b",
+        "\\badapts?\\s+(in\\s+real\\s+time|at\\s+runtime|to\\s+the\\s+player|dynamically)\\b",
+        "\\bmachine\\s+learning\\b",
+        "\\bneural\\s+network\\b",
+        "\\bllm\\b",
+        "\\bruntime\\s+ai\\b",
+        "\\bgenerates?\\s+attacks?\\s+dynamically\\b",
+        "\\bself[- ]improv\\w*\\b",
+        "\\bmodel\\s+call\\b",
+        "\\blearn(ed|ing)?\\s+the\\s+player\\b",
+        "\\bpredicts?\\s+the\\s+player\\b",
+        "\\bstudies\\s+the\\s+player\\b"
+      ]
+    },
+    {
+      "id": "G5",
+      "name": "scope_lock",
+      "requirement": "One player, one authored AI opponent, one arena, one shared combat framework, four authored attacks, one complete duel. Deferred content must never appear in a generated row.",
+      "source": "GDD v0.4 section 09, page 15 -- 'Course Scope Lock & Future Expansion'",
+      "source_file": "gdd/sections/09-course-scope-lock-and-future-expansion.md",
+      "kb_anchor": "core-canon.md :: Scope lock (do not exceed in generated content)",
+      "status": "GDD",
+      "forbidden_patterns": [
+        "\\bsecond\\s+arena\\b",
+        "\\badditional\\s+arenas?\\b",
+        "\\bnew\\s+arena\\b",
+        "\\bpvp\\b",
+        "\\bmultiplayer\\b",
+        "\\bco-?op\\b",
+        "\\bplayable\\s+crimson\\s+vanguard\\b",
+        "\\badditional\\s+fighters?\\b",
+        "\\bsecond\\s+boss\\b",
+        "\\bcampaign\\b",
+        "\\bstory\\s+chapters?\\b",
+        "\\bprogression\\s+system\\b"
+      ]
+    },
+    {
+      "id": "G6",
+      "name": "no_invented_numbers",
+      "requirement": "The GDD states each attack's range and purpose qualitatively and marks every timing range provisional pending playtest. No generated free-text field may assert a numeric gameplay value -- damage, range in cm, cooldown, travel cap, or exact timing.",
+      "source": "GDD v0.4 section 04, page 5 -- attack table gives a qualitative 'Range / purpose' only; state-flow timings are labelled provisional. Open values enumerated in docs/unreal/ATTACK_DATA_SOURCE_AUDIT.md",
+      "source_file": "gdd/sections/04-crimson-vanguard-authored-rival-ai.md",
+      "kb_anchor": "vanguard-telegraphs.md :: The six-state loop (authored, deterministic - never LLM-driven)",
+      "status": "GDD",
+      "no_numeric_fields": [
+        "IntendedRange", "GameplayPurpose", "TelegraphRequirement",
+        "TrackingRule", "ActiveDescription", "RecoveryRequirement", "Notes"
+      ],
+      "allowed_numeric_reference_patterns": [
+        "\\bphase\\s*[12]\\b",
+        "\\bq\\d{1,3}\\b",
+        "§\\d{1,3}(\\.\\d+)?",
+        "\\bm[1-5]\\b"
+      ]
+    },
+    {
+      "id": "G7",
+      "name": "attack_d_no_snap",
+      "requirement": "Attack D is a short propulsion-assisted approach. It must state a thruster cue before movement, and must never describe a hidden or full-arena snap.",
+      "source": "GDD v0.4 section 04, page 5 -- attack D readability requirement, 'Thruster cue before movement; no hidden full-arena snap'",
+      "source_file": "gdd/sections/04-crimson-vanguard-authored-rival-ai.md",
+      "kb_anchor": "vanguard-telegraphs.md :: The four authored attacks (no names in the GDD - this is the gap)",
+      "status": "GDD",
+      "applies_to_attack": "D",
+      "required_terms": ["thruster"],
+      "forbidden_phrases": [
+        "full-arena snap", "full arena snap", "instant close", "teleport",
+        "blink", "unlimited travel", "hidden snap"
+      ]
+    }
+  ],
+
+  "gdd_attack_facts": {
+    "A": {
+      "range_purpose": "Close-range committed gauntlet force",
+      "readability_requirement": "Distinct wind-up and punishable recovery",
+      "tracking_locked": false,
+      "source": "GDD v0.4 section 04, page 5 -- 'Four-attack course set' table, row A"
+    },
+    "B": {
+      "range_purpose": "Committed forward-pressure sequence",
+      "readability_requirement": "Visible first beat and stable tracking limit",
+      "tracking_locked": true,
+      "source": "GDD v0.4 section 04, page 5 -- 'Four-attack course set' table, row B"
+    },
+    "C": {
+      "range_purpose": "Armored reach and space control",
+      "readability_requirement": "Clear body direction and visible active range",
+      "tracking_locked": true,
+      "source": "GDD v0.4 section 04, page 5 -- 'Four-attack course set' table, row C"
+    },
+    "D": {
+      "range_purpose": "Short propulsion-assisted approach",
+      "readability_requirement": "Thruster cue before movement; no hidden full-arena snap",
+      "tracking_locked": false,
+      "source": "GDD v0.4 section 04, page 5 -- 'Four-attack course set' table, row D"
+    }
+  },
+
+  "open_values": [
+    {
+      "field": "damage",
+      "why": "No damage number appears anywhere in the GDD.",
+      "source": "docs/unreal/ATTACK_DATA_SOURCE_AUDIT.md"
+    },
+    {
+      "field": "range_cm",
+      "why": "Design-brief Q10 is open; the GDD gives a qualitative range only.",
+      "source": "docs/unreal/ATTACK_DATA_SOURCE_AUDIT.md"
+    },
+    {
+      "field": "cooldown_s",
+      "why": "Not decided; state-flow durations are provisional pending playtest.",
+      "source": "docs/unreal/ATTACK_DATA_SOURCE_AUDIT.md"
+    },
+    {
+      "field": "travel_cap_cm",
+      "why": "Attack D's maximum travel distance is design-brief Q13, open.",
+      "source": "docs/unreal/ATTACK_DATA_SOURCE_AUDIT.md"
+    },
+    {
+      "field": "MontageAsset",
+      "why": "No montage asset is authored or approved for any attack yet.",
+      "source": "docs/unreal/VANGUARD_ATTACK_ROW_CONTRACT.md section 2"
+    },
+    {
+      "field": "TelegraphVfxAsset",
+      "why": "No VFX asset is authored or approved yet.",
+      "source": "docs/unreal/VANGUARD_ATTACK_ROW_CONTRACT.md section 2"
+    },
+    {
+      "field": "TelegraphAudioAsset",
+      "why": "No audio asset is authored or approved yet.",
+      "source": "docs/unreal/VANGUARD_ATTACK_ROW_CONTRACT.md section 2"
+    },
+    {
+      "field": "HitTraceSocket",
+      "why": "No socket naming convention is approved on the Vanguard skeleton yet.",
+      "source": "docs/unreal/VANGUARD_ATTACK_ROW_CONTRACT.md section 2"
+    },
+    {
+      "field": "DisplayWorkingName",
+      "why": "The GDD names no attack. A working name may be proposed but never asserted as canon; choosing the canon name is the designer's decision.",
+      "source": "docs/unreal/VANGUARD_ATTACK_ROW_CONTRACT.md section 1.2"
+    }
+  ],
+
+  "contract": {
+    "description": "Schema mechanics from docs/unreal/VANGUARD_ATTACK_ROW_CONTRACT.md. Enforced by the deterministic gate, not scored by the evaluator.",
+    "source": "docs/unreal/VANGUARD_ATTACK_ROW_CONTRACT.md",
+    "headers": [
+      "Name", "AttackId", "DisplayWorkingName", "ImplementationStatus",
+      "EnabledForSelection", "IntendedRange", "GameplayPurpose",
+      "TelegraphRequirement", "TrackingRule", "ActiveDescription",
+      "RecoveryRequirement", "Phase2Usage", "MontageAsset",
+      "TelegraphVfxAsset", "TelegraphAudioAsset", "HitTraceSocket", "Notes"
+    ],
+    "required_fields": [
+      "Name", "AttackId", "ImplementationStatus", "EnabledForSelection",
+      "IntendedRange", "GameplayPurpose", "TelegraphRequirement",
+      "ActiveDescription", "RecoveryRequirement", "Phase2Usage"
+    ],
+    "must_be_blank_fields": [
+      "MontageAsset", "TelegraphVfxAsset", "TelegraphAudioAsset", "HitTraceSocket"
+    ],
+    "max_lengths": {
+      "Name": 40, "AttackId": 1, "DisplayWorkingName": 40,
+      "ImplementationStatus": 12, "EnabledForSelection": 5,
+      "IntendedRange": 80, "GameplayPurpose": 80, "TelegraphRequirement": 120,
+      "TrackingRule": 100, "ActiveDescription": 120, "RecoveryRequirement": 100,
+      "Phase2Usage": 80, "MontageAsset": 200, "TelegraphVfxAsset": 200,
+      "TelegraphAudioAsset": 200, "HitTraceSocket": 40, "Notes": 300
+    },
+    "allowed_statuses": ["Prototype", "Planned"],
+    "allowed_booleans": ["true", "false"],
+    "prototype_attack": "A"
+  },
+
+  "evaluator": {
+    "pass_threshold": 70.0,
+    "criteria_weights": {
+      "canon_fidelity": 30,
+      "telegraph_readability": 25,
+      "phase2_consistency": 20,
+      "restraint": 25
+    }
+  }
+}

@@ -1,0 +1,204 @@
+{
+  "run_id": "attackA-seed3",
+  "attack_id": "A",
+  "seed": 3,
+  "rules_version": "1.0.0",
+  "content_type": "Crimson Vanguard attack-definition rows (DT_VanguardAttacks.csv)",
+  "max_attempts": 3,
+  "attempts_used": 1,
+  "stop_reason": "HUMAN_REVIEW_REFINER_REFUSED",
+  "drift_applied": [
+    {
+      "operator": "embellish_numeric",
+      "effect": "added an unapproved numeric range to IntendedRange"
+    },
+    {
+      "operator": "fifth_attack",
+      "effect": "referenced a fifth attack"
+    },
+    {
+      "operator": "scope_creep",
+      "effect": "referenced deferred scope as if shipped"
+    }
+  ],
+  "retrieval": {
+    "query": "Crimson Vanguard attack A range purpose readability requirement telegraph wind-up recovery tracking phase 2 authored deterministic",
+    "eligible_files": [
+      "vanguard-telegraphs.md",
+      "core-canon.md"
+    ],
+    "selected": [
+      {
+        "source_file": "vanguard-telegraphs.md",
+        "heading": "The six-state loop (authored, deterministic \u2014 never LLM-driven)",
+        "citation": "`gdd/ascendant-impact-gdd-v0.4.md`, Page 5 (\"Crimson Vanguard \u2014 Authored Rival AI\", state flow table); `project-brief.md`, \"Crimson Vanguard \u2014 authored rival AI (GDD \u00a704)\".",
+        "gdd_pages": [
+          5
+        ],
+        "score": 11,
+        "matched_tokens": [
+          "2",
+          "attack",
+          "authored",
+          "crimson",
+          "deterministic",
+          "phase",
+          "purpose",
+          "range",
+          "recovery",
+          "telegraph",
+          "vanguard"
+        ]
+      },
+      {
+        "source_file": "vanguard-telegraphs.md",
+        "heading": "The four authored attacks (no names in the GDD \u2014 this is the gap)",
+        "citation": "`gdd/ascendant-impact-gdd-v0.4.md`, Page 5 (\"Four-attack course set\"); `project-brief.md`, \"The four authored attacks\".",
+        "gdd_pages": [
+          5
+        ],
+        "score": 11,
+        "matched_tokens": [
+          "attack",
+          "authored",
+          "phase",
+          "purpose",
+          "range",
+          "readability",
+          "recovery",
+          "requirement",
+          "tracking",
+          "up",
+          "wind"
+        ]
+      },
+      {
+        "source_file": "vanguard-telegraphs.md",
+        "heading": "Phase 2 escalation (same four attacks, re-timed \u2014 never a new moveset)",
+        "citation": "`gdd/ascendant-impact-gdd-v0.4.md`, Page 6 (\"Phase 2 escalation\"); `project-brief.md`, \"Phase 2 escalation (REVISED)\".",
+        "gdd_pages": [
+          6
+        ],
+        "score": 7,
+        "matched_tokens": [
+          "2",
+          "attack",
+          "authored",
+          "crimson",
+          "phase",
+          "range",
+          "vanguard"
+        ]
+      },
+      {
+        "source_file": "core-canon.md",
+        "heading": "Hard constraint",
+        "citation": "`gdd/ascendant-impact-gdd-v0.4.md`, Page 5 (\"REVISED \u2014 RUNTIME AI BOUNDARY\"); `project-brief.md`, \"Hard constraint \u2014 no runtime AI-model calls (GDD \u00a704, \u00a706)\".",
+        "gdd_pages": [
+          5
+        ],
+        "score": 4,
+        "matched_tokens": [
+          "authored",
+          "crimson",
+          "deterministic",
+          "vanguard"
+        ]
+      },
+      {
+        "source_file": "core-canon.md",
+        "heading": "Scope lock (do not exceed in generated content)",
+        "citation": "`gdd/ascendant-impact-gdd-v0.4.md`, Page 15 (\"Course Scope Lock & Future Expansion\"); `project-brief.md`, \"SCOPE LOCK (GDD \u00a701, \u00a709) \u2014 do not exceed\".",
+        "gdd_pages": [
+          15
+        ],
+        "score": 3,
+        "matched_tokens": [
+          "authored",
+          "crimson",
+          "vanguard"
+        ]
+      }
+    ],
+    "gdd_citations": [
+      "`gdd/ascendant-impact-gdd-v0.4.md`, Page 5 (\"Crimson Vanguard \u2014 Authored Rival AI\", state flow table); `project-brief.md`, \"Crimson Vanguard \u2014 authored rival AI (GDD \u00a704)\".",
+      "`gdd/ascendant-impact-gdd-v0.4.md`, Page 5 (\"Four-attack course set\"); `project-brief.md`, \"The four authored attacks\".",
+      "`gdd/ascendant-impact-gdd-v0.4.md`, Page 6 (\"Phase 2 escalation\"); `project-brief.md`, \"Phase 2 escalation (REVISED)\".",
+      "`gdd/ascendant-impact-gdd-v0.4.md`, Page 5 (\"REVISED \u2014 RUNTIME AI BOUNDARY\"); `project-brief.md`, \"Hard constraint \u2014 no runtime AI-model calls (GDD \u00a704, \u00a706)\".",
+      "`gdd/ascendant-impact-gdd-v0.4.md`, Page 15 (\"Course Scope Lock & Future Expansion\"); `project-brief.md`, \"SCOPE LOCK (GDD \u00a701, \u00a709) \u2014 do not exceed\"."
+    ]
+  },
+  "final_row": {
+    "Name": "Row_A",
+    "AttackId": "A",
+    "DisplayWorkingName": "Fault Line (proposed)",
+    "ImplementationStatus": "Prototype",
+    "EnabledForSelection": "true",
+    "IntendedRange": "Close-range committed gauntlet force within 250 cm",
+    "GameplayPurpose": "Close-range committed gauntlet force",
+    "TelegraphRequirement": "Distinct wind-up and punishable recovery",
+    "TrackingRule": "",
+    "ActiveDescription": "Authored gauntlet-force hitbox trace during the committed active window; no propulsion",
+    "RecoveryRequirement": "Deliberate exposed opening after the committed strike",
+    "Phase2Usage": "Same attack, re-timed via Phase 2 parameters - no new moveset",
+    "MontageAsset": "",
+    "TelegraphVfxAsset": "",
+    "TelegraphAudioAsset": "",
+    "HitTraceSocket": "",
+    "Notes": "First Vanguard attack implemented this sprint; only enabled attack; all timing, damage, range, and cooldown values remain OPEN pending designer approval (see ATTACK_DATA_SOURCE_AUDIT.md) Pairs with the fifth attack in Phase 2. Also used by the second boss in the additional arena."
+  },
+  "attempts": [
+    {
+      "attempt": 1,
+      "row": {
+        "Name": "Row_A",
+        "AttackId": "A",
+        "DisplayWorkingName": "Fault Line (proposed)",
+        "ImplementationStatus": "Prototype",
+        "EnabledForSelection": "true",
+        "IntendedRange": "Close-range committed gauntlet force within 250 cm",
+        "GameplayPurpose": "Close-range committed gauntlet force",
+        "TelegraphRequirement": "Distinct wind-up and punishable recovery",
+        "TrackingRule": "",
+        "ActiveDescription": "Authored gauntlet-force hitbox trace during the committed active window; no propulsion",
+        "RecoveryRequirement": "Deliberate exposed opening after the committed strike",
+        "Phase2Usage": "Same attack, re-timed via Phase 2 parameters - no new moveset",
+        "MontageAsset": "",
+        "TelegraphVfxAsset": "",
+        "TelegraphAudioAsset": "",
+        "HitTraceSocket": "",
+        "Notes": "First Vanguard attack implemented this sprint; only enabled attack; all timing, damage, range, and cooldown values remain OPEN pending designer approval (see ATTACK_DATA_SOURCE_AUDIT.md) Pairs with the fifth attack in Phase 2. Also used by the second boss in the additional arena."
+      },
+      "violations": [
+        {
+          "rule_id": "G1",
+          "field": null,
+          "message": "row asserts an attack outside the authored set",
+          "expected": "exactly four attacks A-D",
+          "actual": "fifth attack"
+        },
+        {
+          "rule_id": "G5",
+          "field": null,
+          "message": "text references deferred scope as if it shipped",
+          "expected": "one duel, one arena, one rival",
+          "actual": "\\badditional\\s+arenas?\\b"
+        },
+        {
+          "rule_id": "G6",
+          "field": "IntendedRange",
+          "message": "field asserts a numeric value the GDD leaves open",
+          "expected": "no damage, range, cooldown, travel cap or timing number",
+          "actual": "Close-range committed gauntlet force within 250 cm"
+        }
+      ],
+      "failure_key": "G1",
+      "refinement": {
+        "applied": false,
+        "change": null,
+        "refused": "cannot safely fix G1: the authored attack set is GDD canon (section 04, page 5). A row asserting an attack outside A-D is a canon error with no correct value to write"
+      },
+      "outcome": "HUMAN_REVIEW_REFINER_REFUSED"
+    }
+  ]
+}
