@@ -89,12 +89,33 @@ def test_max_attempts_is_reachable(rules_doc):
                for result in sweep(rules_doc))
 
 
-def test_refusal_is_reachable_and_names_the_open_decision(rules_doc):
+def test_refusal_is_a_guard_no_seed_reaches(rules_doc):
+    """The refusal path is documented as a guard, not a demonstrated outcome.
+
+    It used to fire on L3, back when that rule required a Final Clash line to
+    state both gate conditions -- unsatisfiable inside 36 characters without
+    printing the 25% threshold L4 forbids. Narrowing L3 removed the collision
+    and with it the only reachable refusal. What remains is the V2 guard, which
+    would fire if a required term could not fit its slot; no slot in this
+    contract is budgeted that tightly, so nothing reaches it.
+
+    Asserting the guard is unreached is the honest claim. Asserting it fires
+    would require manufacturing a slot to make it fire.
+    """
     refusals = [result for result in sweep(rules_doc)
                 if result["stop_reason"] == orchestrator.STOP_REFUSED]
-    assert refusals, "the refusal path is unreachable"
-    for result in refusals:
-        assert "designer" in result["attempts"][-1]["refinement"]["refused"]
+    assert not refusals, [r["run_id"] for r in refusals]
+
+
+def test_the_l3_collision_stays_fixed(rules_doc):
+    """A regression guard on the contradiction the pipeline found in my rules.
+
+    If L3 ever goes back to demanding both conditions be stated, this slot
+    becomes unsatisfiable again and every single-gate seed stops resolving.
+    """
+    for seed in SEEDS:
+        result = orchestrator.run(rules_doc, "final_clash_unlock", seed)
+        assert result["stop_reason"] != orchestrator.STOP_REFUSED, result["run_id"]
 
 
 def test_no_progress_is_unreachable_by_construction(rules_doc):
@@ -149,7 +170,9 @@ def test_the_report_renders_for_every_stop_reason(rules_doc):
         assert result["run_id"] in markdown
         assert "## Before and after" in markdown
         assert "SCORE: [" in markdown
-    assert len(seen) >= 3
+    # Two of the four stop reasons are reachable; the other two are guards
+    # (see the refusal and no-progress tests above).
+    assert seen == {orchestrator.STOP_SUCCESS, orchestrator.STOP_ATTEMPTS}
 
 
 def test_the_report_shows_the_gdd_line_behind_the_slot(rules_doc):

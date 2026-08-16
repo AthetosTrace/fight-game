@@ -136,15 +136,25 @@ def test_an_over_long_banner_falls_back_to_the_canonical(rules_doc):
 # Refusals
 # ---------------------------------------------------------------------------
 
-def test_l3_is_refused_because_two_rules_collide(rules_doc):
-    """Stating both Final Clash gate conditions needs the 25% threshold, and L4
-    forbids printing it. Neither rule is wrong; the contract cannot satisfy
-    both, and that is the designer's call, not the refiner's."""
+def test_l3_drops_the_single_gate_claim(rules_doc):
+    """L3 was originally written as "state both gate conditions", which cannot
+    be done in 36 characters without printing the 25% threshold L4 forbids. The
+    pipeline surfaced that contradiction; the fix was to narrow the rule rather
+    than escalate it. The banner only fires once both conditions already hold,
+    so it announces readiness instead of teaching the gate."""
     result = refiner.refine(line("final_clash_unlock", "METER FULL - CLASH READY"),
                             fault("L3", evidence="meter full - clash ready"), rules_doc)
-    assert not result.applied
-    assert "L3" in result.refused
-    assert "designer" in result.refused
+    assert result.applied
+    assert result.line["text"] == rules_doc["slots"]["final_clash_unlock"]["canonical"]
+
+
+def test_l3_result_satisfies_l4(rules_doc, rubric_judge):
+    """The whole point of narrowing L3: its correction must not trip L4."""
+    result = refiner.refine(line("final_clash_unlock", "METER FULL - CLASH READY"),
+                            fault("L3", evidence="meter full - clash ready"), rules_doc)
+    rescored = evaluator.evaluate(result.line, rules_doc, rubric_judge)
+    assert rescored["faults"] == []
+    assert rescored["score"] == 10.0
 
 
 def test_an_unknown_rule_is_refused_rather_than_guessed(rules_doc):
@@ -182,6 +192,6 @@ def test_every_applied_change_records_a_before_and_after(rules_doc):
 
 
 def test_a_refusal_carries_no_line(rules_doc):
-    result = refiner.refine(line("final_clash_unlock", "METER FULL - CLASH READY"),
-                            fault("L3"), rules_doc)
+    result = refiner.refine(line("loss_screen", "anything"), fault("ZZ9"), rules_doc)
     assert result.line is None
+    assert result.change is None

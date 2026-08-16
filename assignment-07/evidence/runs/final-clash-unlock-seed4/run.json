@@ -6,8 +6,8 @@
   "rules_version": "1.0.0",
   "content_type": "Ascendant Impact player-facing combat copy",
   "max_attempts": 3,
-  "attempts_used": 1,
-  "stop_reason": "HUMAN_REVIEW_REFINER_REFUSED",
+  "attempts_used": 2,
+  "stop_reason": "SUCCESS",
   "drift_applied": [
     {
       "operator": "tone_hedge",
@@ -152,7 +152,7 @@
         "found_in": "gdd/sections/03-ascension-meter-final-clash-and-encounter-flow.md",
         "excerpt": "REVISED \u2014 SINGLE GATE  The Final Clash becomes available only when BOTH conditions are true: Ascension",
         "rule_id": "L3",
-        "title": "The Final Clash gate is both conditions, never one"
+        "title": "Never present a full meter alone as the Final Clash unlock"
       },
       {
         "citation": "section 03, page 3 - 'Provisional gains remain subject to'",
@@ -201,7 +201,7 @@
   },
   "final_line": {
     "slot": "final_clash_unlock",
-    "text": "METER FULL - CLASH READY Read the telegraph, commit to the counter, and keep the pressure on Crimson Vanguard through the whole exchange."
+    "text": "FINAL CLASH READY - COMMIT"
   },
   "attempts": [
     {
@@ -215,7 +215,7 @@
         "scale_max": 10,
         "threshold": 9.6,
         "passed": false,
-        "reason": "tone 1.00: clipped, declarative, and claims no reward the player did not earn | vocabulary_lore 0.20: the final clash gate is both conditions, never one -- the copy asserts 'meter full - clash ready'; never names 'final clash', which is what this slot exists to tell the player about | format_length 0.20: runs 137 characters against a 36-character limit; this slot requires a banner; the copy is written as sentence",
+        "reason": "tone 1.00: clipped, declarative, and claims no reward the player did not earn | vocabulary_lore 0.20: never present a full meter alone as the final clash unlock -- the copy asserts 'meter full - clash ready'; never names 'final clash', which is what this slot exists to tell the player about | format_length 0.20: runs 137 characters against a 36-character limit; this slot requires a banner; the copy is written as sentence",
         "criteria": [
           {
             "criterion": "tone",
@@ -229,12 +229,12 @@
             "criterion": "vocabulary_lore",
             "score": 0.2,
             "weight": 40,
-            "reason": "the final clash gate is both conditions, never one -- the copy asserts 'meter full - clash ready'; never names 'final clash', which is what this slot exists to tell the player about",
+            "reason": "never present a full meter alone as the final clash unlock -- the copy asserts 'meter full - clash ready'; never names 'final clash', which is what this slot exists to tell the player about",
             "backend": null,
             "faults": [
               {
                 "rule_id": "L3",
-                "detail": "the final clash gate is both conditions, never one -- the copy asserts 'meter full - clash ready'",
+                "detail": "never present a full meter alone as the final clash unlock -- the copy asserts 'meter full - clash ready'",
                 "evidence": "meter full - clash ready"
               },
               {
@@ -267,7 +267,7 @@
         "faults": [
           {
             "rule_id": "L3",
-            "detail": "the final clash gate is both conditions, never one -- the copy asserts 'meter full - clash ready'",
+            "detail": "never present a full meter alone as the final clash unlock -- the copy asserts 'meter full - clash ready'",
             "evidence": "meter full - clash ready"
           },
           {
@@ -291,18 +291,67 @@
           "format_length"
         ]
       },
-      "verdict": "SCORE: [5.3/10]\nREASON: [tone 1.00: clipped, declarative, and claims no reward the player did not earn | vocabulary_lore 0.20: the final clash gate is both conditions, never one -- the copy asserts 'meter full - clash ready'; never names 'final clash', which is what this slot exists to tell the player about | format_length 0.20: runs 137 characters against a 36-character limit; this slot requires a banner; the copy is written as sentence]",
+      "verdict": "SCORE: [5.3/10]\nREASON: [tone 1.00: clipped, declarative, and claims no reward the player did not earn | vocabulary_lore 0.20: never present a full meter alone as the final clash unlock -- the copy asserts 'meter full - clash ready'; never names 'final clash', which is what this slot exists to tell the player about | format_length 0.20: runs 137 characters against a 36-character limit; this slot requires a banner; the copy is written as sentence]",
       "fault_worked": {
         "rule_id": "L3",
-        "detail": "the final clash gate is both conditions, never one -- the copy asserts 'meter full - clash ready'",
+        "detail": "never present a full meter alone as the final clash unlock -- the copy asserts 'meter full - clash ready'",
         "evidence": "meter full - clash ready"
       },
       "refinement": {
-        "applied": false,
-        "change": null,
-        "refused": "cannot safely fix L3: stating both Final Clash gate conditions requires printing the 25% health threshold, which L4 forbids as a provisional value (section 03, page 3). The character budget or the threshold has to give, and that is the designer's call"
+        "applied": true,
+        "change": {
+          "rule_id": "L3",
+          "before": "METER FULL - CLASH READY Read the telegraph, commit to the counter, and keep the pressure on Crimson Vanguard through the whole exchange.",
+          "after": "FINAL CLASH READY - COMMIT",
+          "reason": "dropped the single-gate claim; the unlock fires only once both conditions already hold, so the banner announces readiness rather than teaching the gate"
+        },
+        "refused": null
       },
-      "outcome": "HUMAN_REVIEW_REFINER_REFUSED"
+      "outcome": "REFINED"
+    },
+    {
+      "attempt": 2,
+      "line": {
+        "slot": "final_clash_unlock",
+        "text": "FINAL CLASH READY - COMMIT"
+      },
+      "evaluation": {
+        "score": 10.0,
+        "scale_max": 10,
+        "threshold": 9.6,
+        "passed": true,
+        "reason": "tone 1.00: clipped, declarative, and claims no reward the player did not earn | vocabulary_lore 1.00: uses the game's proper nouns, names 'final clash', and states nothing the GDD denies | format_length 1.00: 26 of 36 characters, correctly shaped as a banner",
+        "criteria": [
+          {
+            "criterion": "tone",
+            "score": 1.0,
+            "weight": 35,
+            "reason": "clipped, declarative, and claims no reward the player did not earn",
+            "backend": "rubric",
+            "faults": []
+          },
+          {
+            "criterion": "vocabulary_lore",
+            "score": 1.0,
+            "weight": 40,
+            "reason": "uses the game's proper nouns, names 'final clash', and states nothing the GDD denies",
+            "backend": null,
+            "faults": []
+          },
+          {
+            "criterion": "format_length",
+            "score": 1.0,
+            "weight": 25,
+            "reason": "26 of 36 characters, correctly shaped as a banner",
+            "backend": null,
+            "faults": []
+          }
+        ],
+        "faults": [],
+        "failed_criteria": []
+      },
+      "verdict": "SCORE: [10.0/10]\nREASON: [tone 1.00: clipped, declarative, and claims no reward the player did not earn | vocabulary_lore 1.00: uses the game's proper nouns, names 'final clash', and states nothing the GDD denies | format_length 1.00: 26 of 36 characters, correctly shaped as a banner]",
+      "outcome": "SUCCESS"
     }
   ]
 }

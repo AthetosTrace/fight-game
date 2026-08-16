@@ -10,8 +10,8 @@ import judge as judge_module
 # The factory
 # ---------------------------------------------------------------------------
 
-def test_both_backends_are_registered():
-    assert set(judge_module.BACKENDS) == {"rubric", "claude"}
+def test_all_backends_are_registered():
+    assert set(judge_module.BACKENDS) == {"rubric", "claude", "session"}
 
 
 def test_unknown_backend_raises():
@@ -174,6 +174,64 @@ def test_claude_backend_surfaces_a_refusal_rather_than_indexing_content(rules_do
     with pytest.raises(RuntimeError, match="declined"):
         judge_module.ClaudeJudge(client=Client()).score(
             line("loss_screen", "anything"), rules_doc)
+
+
+# ---------------------------------------------------------------------------
+# The session backend -- replayed Claude verdicts
+# ---------------------------------------------------------------------------
+
+def test_session_backend_replays_a_recorded_verdict(rules_doc):
+    session = judge_module.get_judge("session")
+    verdict = session.score(
+        line("meter_feedback_counter", "Counter landed. Ascension rising."), rules_doc)
+    assert verdict.score == 1.0
+    assert verdict.backend == "session"
+
+
+def test_session_backend_records_the_model_it_came_from():
+    assert judge_module.get_judge("session").model == judge_module.CLAUDE_MODEL
+
+
+def test_session_backend_refuses_to_guess(rules_doc):
+    """Strict on purpose. Falling back to the rubric would silently mix a
+    deterministic verdict into a run labelled model-graded, and the label would
+    then be a lie for some fraction of the lines.
+
+    This strictness earned its keep during the build: it caught an intermediate
+    line in the seed-33 chain that had been recorded from a guess rather than
+    from the run.
+    """
+    session = judge_module.get_judge("session")
+    with pytest.raises(RuntimeError, match="no recorded Claude verdict"):
+        session.score(line("loss_screen", "a line nobody has judged"), rules_doc)
+
+
+def test_claude_catches_off_brand_copy_the_phrase_list_cannot(rules_doc, rubric_judge):
+    """The argument for the pluggable judge, asserted rather than claimed.
+
+    'Better luck next time' uses no banned word, no exclamation mark, and no
+    hedge, so the rubric scores it clean. It is still consoling copy that
+    attributes the outcome to luck, in a game whose fiction frames the duel as
+    a combat evaluation.
+    """
+    session = judge_module.get_judge("session")
+    off_brand = line("loss_screen", "Better luck next time. Crimson Vanguard still stands.")
+    assert rubric_judge.score(off_brand, rules_doc).score == 1.0
+    assert session.score(off_brand, rules_doc).score < 0.5
+
+
+def test_the_two_backends_agree_on_the_canonical_lines(rules_doc, rubric_judge, slots):
+    """Where a recorded verdict exists for a canonical line, the model and the
+    rubric must not disagree -- a divergence there would mean one of them has
+    the register wrong."""
+    session = judge_module.get_judge("session")
+    for slot in slots:
+        canonical = line(slot, rules_doc["slots"][slot]["canonical"])
+        try:
+            recorded = session.score(canonical, rules_doc)
+        except RuntimeError:
+            continue
+        assert recorded.score == rubric_judge.score(canonical, rules_doc).score == 1.0, slot
 
 
 def test_claude_backend_reports_a_missing_sdk_clearly():

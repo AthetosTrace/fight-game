@@ -38,8 +38,11 @@ python assignment-07/pipeline/evaluator.py meter_feedback_counter "Nice work! As
 # 1200 runs, checking which stop reasons are reachable and which invariants hold
 python assignment-07/pipeline/sweep.py --seeds 200
 
-# 134 tests, no engine, no network, no API key
-# -> 132 passed, 2 skipped (the two that exercise the Anthropic SDK bindings)
+# the same loop, graded by real Claude Opus 5 tone verdicts
+python assignment-07/pipeline/orchestrator.py --slot impact_window_prompt --seed 33 --judge session
+
+# 141 tests, no engine, no network, no API key
+# -> 139 passed, 2 skipped (the two that exercise the Anthropic SDK bindings)
 python -m pytest assignment-07/pipeline/tests -q
 ```
 
@@ -51,6 +54,7 @@ assignment-07/
 │   ├── contracts/style_rules.json  the same guide as data — every rule cites a GDD section and page
 │   ├── prompts/evaluator.md        the evaluator's prompt (a submitted deliverable)
 │   ├── prompts/refiner.md          the refiner's prompt (a submitted deliverable)
+│   ├── verdicts/claude_session.json  tone verdicts Claude Opus 5 actually produced
 │   ├── retrieval.py                resolves every citation against gdd/sections/ and verifies it
 │   ├── generator.py                writes a canon-faithful line, then drifts it under a seed
 │   ├── judge.py                    the tone judge — `rubric` (offline) or `claude` (Opus 5)
@@ -58,7 +62,7 @@ assignment-07/
 │   ├── refiner.py                  smallest rewrite that clears one fault, or a refusal
 │   ├── orchestrator.py             the loop and the circuit breaker
 │   ├── sweep.py                    reachability and invariant sweep
-│   └── tests/                      134 tests
+│   └── tests/                      141 tests
 └── evidence/runs/                  six committed runs + the sweep
 ```
 
@@ -143,17 +147,41 @@ lore are lookups; length and shape are arithmetic.
 
 - **`rubric`** (default) — deterministic, offline, no key. Scores the markers
   Pillar 1 and the GDD's register forbid.
-- **`claude`** — sends [`prompts/evaluator.md`](pipeline/prompts/evaluator.md) to
-  **Claude Opus 5** and reads back a structured verdict.
+- **`session`** — replays tone verdicts **Claude Opus 5 actually produced** for
+  these lines, reading the rendered evaluator prompt verbatim. Model-graded and
+  still reproducible offline.
+- **`claude`** — the live path: sends the same prompt to the Anthropic API and
+  reads back a structured verdict. Needs `pip install anthropic` and a key.
 
 `rubric` is the default because **committed evidence has to be regenerable by
-anyone who clones this repo** — a run report nobody can reproduce is not
-evidence. To run the model-backed judge:
+anyone who clones this repo** — a run report nobody can reproduce is not evidence.
 
-```bash
-python -m pip install anthropic     # then set ANTHROPIC_API_KEY
-python assignment-07/pipeline/orchestrator.py --slot loss_screen --seed 12 --judge claude
-```
+### Where the model beats the phrase list
+
+[`evidence/claude-judge/`](evidence/claude-judge/README.md) scores the same lines
+both ways. Two of them the rubric passes at **1.00** and Claude fails:
+
+| Copy | rubric | claude |
+|---|---:|---:|
+| `Better luck next time. Crimson Vanguard still stands.` | 1.00 | **0.40** |
+| `The Clash broke. Shake it off and get back in there.` | 1.00 | **0.30** |
+
+Neither uses a banned word, an exclamation mark, or a hedge — so `T1`'s phrase
+list has nothing to catch. Both are still wrong for this game. Claude's reason on
+the first one:
+
+> Opens with 'Better luck next time', which consoles the player and attributes
+> the outcome to luck; Pillar 1 makes deliberate decisions the thing that earns
+> rewards, and the fiction frames this as a combat evaluation rather than a roll
+> of the dice, so the consoling register is off-brand (T1).
+
+That is the argument for making tone pluggable rather than hard-coding it, and
+`test_claude_catches_off_brand_copy_the_phrase_list_cannot` asserts it rather
+than leaving it as a claim.
+
+A full run graded entirely by those verdicts is committed at
+[`impact-window-prompt-seed33-session`](evidence/runs/impact-window-prompt-seed33-session/run.md)
+— 5.0 → 7.0 → 10.0.
 
 Both prompts are submitted deliverables in their own right — the assignment asks
 for the evaluator's and refiner's prompts, not only their output.
@@ -231,23 +259,30 @@ word — but I would have shipped the guide without noticing, and every banner i
 the game would have inherited a limit that was silently one word tighter than
 documented.
 
-**2. Two of my own rules cannot both be satisfied.** `L3` requires a Final Clash
-unlock line to state **both** gate conditions. `L4` forbids printing provisional
-numbers. Inside `final_clash_unlock`'s 36-character budget, stating the health
-condition requires printing **25%**. Neither rule is wrong; together they are
-unsatisfiable.
+**2. Two of my own rules could not both be satisfied.** `L3` as first written
+required a Final Clash unlock line to **state** both gate conditions. `L4`
+forbids printing provisional numbers. Inside `final_clash_unlock`'s 36-character
+budget, stating the health condition means printing **25%**. The two rules were
+unsatisfiable together.
 
 I did not notice writing them. The refiner did, on the first seed that produced a
-single-gate line — and it **refused** rather than picking a winner:
+single-gate line, and it refused to pick a winner.
 
-> `cannot safely fix L3: stating both Final Clash gate conditions requires
-> printing the 25% health threshold, which L4 forbids as a provisional value
-> (section 03, page 3). The character budget or the threshold has to give, and
-> that is the designer's call`
+**The fix was to correct the rule, not to escalate the collision.** `L3` was
+over-specified. That banner only fires once *both* conditions already hold, so
+the copy never needed to enumerate the gate — it only needed to stop crediting
+the meter alone. Narrowing `L3` from a requirement into a prohibition dissolves
+the contradiction: no character-budget change, no decision about printing 25%,
+and the correction becomes mechanical.
 
-See [`evidence/runs/final-clash-unlock-seed4/`](evidence/runs/final-clash-unlock-seed4/run.md).
-The decision — raise the budget, or approve 25% as shipped copy — is still open
-and is the designer's.
+That seed now resolves cleanly to `FINAL CLASH READY - COMMIT` — see
+[`evidence/runs/final-clash-unlock-seed4/`](evidence/runs/final-clash-unlock-seed4/run.md).
+`test_the_l3_collision_stays_fixed` fails if `L3` ever regresses.
+
+This is the part worth taking seriously. A style guide is a set of rules written
+by hand, and hand-written rule sets contradict themselves. Running one as code
+over a thousand generated lines is how you find out **before** the copy ships,
+not after.
 
 ---
 
@@ -268,17 +303,21 @@ line behind the slot it generated.
 
 ## What the refiner will not do
 
-It refuses rather than guesses, and a refusal is a legitimate outcome:
+It refuses rather than guesses:
 
-- **`L3`** — the rule collision above.
-- **`V2`, when the required term will not fit** — the remaining fix is a shorter
-  name for the system, and `CLAUDE.md` records Crimson Vanguard's shorter
-  in-combat UI label as an open gap. (A guard; no seed reaches it.)
+- **`V2`, when the required term will not fit** — the only remaining fix is a
+  shorter name for the system, and `CLAUDE.md` records Crimson Vanguard's shorter
+  in-combat UI label as an open gap. Inventing one would settle a designer's
+  decision by accident.
 - **Any fault it cannot locate** — silence is not a correction.
 
+**Both are guards, and no seed in the 1200-run sweep reaches either.** The one
+refusal that *was* reachable fired on the `L3`/`L4` collision, and narrowing `L3`
+removed it. Asserting the guard is unreached is the honest claim; asserting it
+fires would mean manufacturing a slot to make it fire.
+
 Three open values are enumerated in the contract, each with the reason it is open
-and the document that says so. No successful run across the 1200-run sweep fills
-one.
+and the document that says so. No successful run across the sweep fills one.
 
 ---
 
@@ -290,8 +329,10 @@ one.
 | [`phase2-callout-seed40`](evidence/runs/phase2-callout-seed40/run.md) | `SUCCESS` (3) | **Example 2 — vocabulary** |
 | [`meter-feedback-counter-seed119`](evidence/runs/meter-feedback-counter-seed119/run.md) | `SUCCESS` (2) | **Example 3 — format and length** |
 | [`clash-failure-recovery-seed69`](evidence/runs/clash-failure-recovery-seed69/run.md) | `SUCCESS` (3) | **Example 4 — three lore breaks a style checker would pass** |
-| [`final-clash-unlock-seed4`](evidence/runs/final-clash-unlock-seed4/run.md) | `HUMAN_REVIEW_REFINER_REFUSED` | Two rules that cannot both hold |
+| [`final-clash-unlock-seed4`](evidence/runs/final-clash-unlock-seed4/run.md) | `SUCCESS` (2) | The seed that exposed the `L3`/`L4` contradiction, now resolving |
 | [`clash-failure-recovery-seed2`](evidence/runs/clash-failure-recovery-seed2/run.md) | `SUCCESS` (1) | A clean line, no drift — the evaluator accepts good copy |
+| [`impact-window-prompt-seed33-session`](evidence/runs/impact-window-prompt-seed33-session/run.md) | `SUCCESS` (3) | The same loop graded by real Claude Opus 5 verdicts |
+| [`claude-judge/`](evidence/claude-judge/README.md) | — | Rubric vs Claude on the same lines, and the two the phrase list misses |
 | [`breaker-reachability`](evidence/runs/breaker-reachability/sweep.md) | — | 1200 runs: which stops fire, and two invariants |
 
 ---
@@ -302,9 +343,9 @@ one.
 
 | Stop reason | Runs | Share |
 |---|---:|---:|
-| `SUCCESS` | 949 | 79.1% |
+| `SUCCESS` | 973 | 81.1% |
 | `CIRCUIT_BREAKER_MAX_ATTEMPTS` | 227 | 18.9% |
-| `HUMAN_REVIEW_REFINER_REFUSED` | 24 | 2.0% |
+| `HUMAN_REVIEW_REFINER_REFUSED` | **0** | 0.0% |
 | `CIRCUIT_BREAKER_NO_PROGRESS` | **0** | 0.0% |
 
 Assignment 06 ended by proving its no-progress breaker unreachable rather than
@@ -338,7 +379,7 @@ value the designer never approved.
 | Criterion | Pts | Where it is satisfied |
 |---|---:|---|
 | Capstone-anchored style guide | 4.5 | [`STYLE-GUIDE.md`](STYLE-GUIDE.md) and [`contracts/style_rules.json`](pipeline/contracts/style_rules.json). Eleven rules across **four** constraint types — tone, vocabulary, lore, formatting/length — against a required three. Every rule cites a GDD section, page, and verbatim wording; `retrieval.py` verifies all seventeen citations and a test fails the build otherwise. |
-| Evaluator and refiner loop | 3.0 | `SCORE: [X/10]` + `REASON` from [`evaluator.py`](pipeline/evaluator.py); [`refiner.py`](pipeline/refiner.py) rewrites from the reason alone; [`orchestrator.py`](pipeline/orchestrator.py) runs it unattended with a circuit breaker. 134 tests. |
+| Evaluator and refiner loop | 3.0 | `SCORE: [X/10]` + `REASON` from [`evaluator.py`](pipeline/evaluator.py); [`refiner.py`](pipeline/refiner.py) rewrites from the reason alone; [`orchestrator.py`](pipeline/orchestrator.py) runs it unattended with a circuit breaker. Runnable against a deterministic judge or against real Claude Opus 5 verdicts. 141 tests. |
 | Before / after demonstration | 2.0 | Examples 1–3 above cover tone, vocabulary, and formatting/length; Example 4 adds lore. All six runs committed under `evidence/runs/`. |
 | Pipeline connection | 0.5 | The single sentence above. |
 

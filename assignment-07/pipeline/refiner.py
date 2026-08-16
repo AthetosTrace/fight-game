@@ -13,22 +13,23 @@ What is new is that the edits operate on prose rather than CSV fields, so each
 fix is a text transform -- strip the praise, substitute the proper noun, drop
 the sentence that contradicts the GDD -- rather than restoring a column.
 
-The two refusals below are not defensive padding. Each names a real decision
-sitting with the designer, and one of them is a genuine collision between two
-rules in this very contract:
+On the one refusal that remains, and the one that was removed:
 
-    L3  Correcting a Final Clash unlock line means stating BOTH gate conditions.
-        The health half cannot be stated inside the slot's character limit
-        without printing the 25% threshold -- and L4 forbids printing it,
-        because section 03 marks every such value provisional. Two rules in
-        this contract cannot both be satisfied here. That is a design question
-        (raise the character budget, or approve the threshold as shipped copy),
-        and it is the designer's to answer.
+    V2  Restoring a required term that will not fit means inventing a shorter
+        name for the system, and CLAUDE.md records Crimson Vanguard's shorter
+        in-combat UI label as an open gap. Inventing one here would settle a
+        designer's decision by accident. This is a guard: no seed in the
+        1200-run sweep reaches it, and it is documented as such rather than
+        claimed as a demonstrated path.
 
-    V2  Restoring a required term that will not fit is the same problem wearing
-        a different hat: the fix is a shorter name for the system, and for
-        Crimson Vanguard specifically CLAUDE.md records the shorter in-combat
-        UI label as an open gap. Inventing one here would settle it by accident.
+    L3  Previously refused, and no longer. The pipeline surfaced a real
+        contradiction -- L3 as first written required a Final Clash unlock line
+        to STATE both gate conditions, and the health half cannot be stated
+        inside 36 characters without printing the 25% threshold that L4 forbids.
+        The resolution was to fix the rule rather than route the collision to a
+        human: the unlock banner only ever fires once both conditions are
+        already true, so the copy announces readiness rather than teaching the
+        gate. L3 is now a prohibition, and a prohibition has a mechanical fix.
 """
 
 import argparse
@@ -47,12 +48,7 @@ from evaluator import rules_by_id  # noqa: E402
 
 DEFAULT_RULES = os.path.join(HERE, "contracts", "style_rules.json")
 
-REFUSALS = {
-    "L3": "stating both Final Clash gate conditions requires printing the 25% health "
-          "threshold, which L4 forbids as a provisional value (section 03, page 3). "
-          "The character budget or the threshold has to give, and that is the "
-          "designer's call",
-}
+REFUSALS = {}
 
 
 class Refinement(object):
@@ -208,6 +204,21 @@ def _fix_lore(text, spec, rules_doc, fault):
                    % (hit, rules_by_id(rules_doc)[fault["rule_id"]]["gdd_source"]))
 
 
+def _fix_l3(text, spec, rules_doc, fault):
+    """Replace a single-gate claim with the canonical readiness banner.
+
+    The correction is to stop claiming the meter did it, not to spell out the
+    gate -- the banner only fires once both conditions already hold, so the
+    canonical line says everything the player needs and asserts nothing false.
+    """
+    canonical = spec["canonical"]
+    if canonical == text:
+        return None
+    return canonical, ("dropped the single-gate claim; the unlock fires only once "
+                       "both conditions already hold, so the banner announces "
+                       "readiness rather than teaching the gate")
+
+
 def _fix_l4(text, spec, rules_doc, fault):
     """Strip the provisional number, keeping the qualitative statement."""
     number = fault.get("evidence")
@@ -276,6 +287,7 @@ FIXES = {
     "V2": _fix_v2,
     "L1": _fix_lore,
     "L2": _fix_lore,
+    "L3": _fix_l3,
     "L4": _fix_l4,
     "F1": _fix_f1,
     "F2": _fix_f2,

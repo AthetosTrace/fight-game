@@ -222,7 +222,49 @@ class ClaudeJudge(object):
                        fix_hint="apply the evaluator's reason to the line")
 
 
-BACKENDS = {"rubric": RubricJudge, "claude": ClaudeJudge}
+# ---------------------------------------------------------------------------
+# Backend 3 -- recorded Claude verdicts
+# ---------------------------------------------------------------------------
+
+VERDICTS_PATH = os.path.join(HERE, "verdicts", "claude_session.json")
+
+
+class SessionJudge(object):
+    """Replays tone verdicts Claude Opus 5 actually produced for these lines.
+
+    The `claude` backend above is the live path, and it cannot be exercised
+    without an API key -- which means it cannot produce committed evidence that
+    someone else can regenerate. This backend closes that gap from the other
+    side: the verdicts in verdicts/claude_session.json were produced by Claude
+    Opus 5 reading the rendered output of prompts/evaluator.md, and replaying
+    them makes a model-graded run reproducible offline.
+
+    It is deliberately **strict**. Falling back to the rubric on a miss would
+    silently mix a deterministic verdict into a run labelled model-graded, and
+    the label would then be a lie for some fraction of the lines.
+    """
+
+    name = "session"
+
+    def __init__(self, path=VERDICTS_PATH):
+        with open(path, "r", encoding="utf-8") as handle:
+            document = json.load(handle)
+        self.model = document["model"]
+        self._recorded = {
+            (entry["slot"], entry["text"]): entry for entry in document["verdicts"]
+        }
+
+    def score(self, line, rules_doc):
+        entry = self._recorded.get((line["slot"], line["text"]))
+        if entry is None:
+            raise RuntimeError(
+                "no recorded Claude verdict for %s / %r -- record one in %s or run "
+                "with --judge rubric" % (line["slot"], line["text"], VERDICTS_PATH))
+        return Verdict(entry["score"], entry["reason"], self.name,
+                       fix_hint="apply the evaluator's reason to the line")
+
+
+BACKENDS = {"rubric": RubricJudge, "claude": ClaudeJudge, "session": SessionJudge}
 
 
 def get_judge(name):

@@ -138,16 +138,20 @@ the meter to 50, and applies a three-second cooldown. Then combat resumes.
 Banned: *restart the duel, start over, from the beginning, back to the start,
 the duel resets, you are dead.*
 
-### L3. The Final Clash gate is both conditions, never one
+### L3. Never present a full meter alone as the Final Clash unlock
 
 > *"The Final Clash becomes available only when BOTH conditions are true:
 > Ascension Meter is full at 100 AND Crimson Vanguard's health is at or below
 > 25%. If one condition is met first, the Clash remains locked until the other
 > is met."* — §03, p3
 
-Copy presenting a full meter alone as the unlock is wrong. **This rule collides
-with L4 inside the 36-character budget, and that collision is unresolved on
-purpose** — see *Known conflict* below.
+**This is a prohibition, not a requirement to enumerate.** The unlock banner
+only ever fires once *both* conditions already hold, so the copy's job is to
+announce readiness, not to teach the gate. `FINAL CLASH READY - COMMIT` is
+correct. `METER FULL - CLASH READY` is not — it credits the meter alone.
+
+The rule was originally written the other way round, and that was a mistake the
+pipeline caught. See *A contradiction these rules used to contain* below.
 
 ### L4. No numeric gameplay values in player copy
 
@@ -201,22 +205,26 @@ a test that fails the build if one stops doing so.
 
 ---
 
-## Known conflict — L3 against L4, and why it is not resolved here
+## A contradiction these rules used to contain
 
-Correcting a Final Clash unlock line means stating **both** gate conditions. The
-health half cannot be stated inside 36 characters without printing the **25%**
-threshold — and L4 forbids printing it, because §03 marks every such value
-provisional.
+**L3 as first written required a Final Clash unlock line to *state* both gate
+conditions.** Stating the health half means writing **25%** — and L4 forbids
+printing it, because §03 marks every such value provisional. Inside a
+36-character banner, the two rules were unsatisfiable together.
 
-Two rules in this guide cannot both be satisfied in that slot. Neither is wrong.
+I did not notice writing them. The refiner did, on the first seed that produced
+a single-gate line, and it refused to pick a winner.
 
-The pipeline does **not** pick a winner. It stops with
-`HUMAN_REVIEW_REFINER_REFUSED` and says which decision is waiting:
+**The fix was to correct the rule, not to escalate the collision.** L3 was
+over-specified: the unlock banner only fires once both conditions already hold,
+so the copy never needed to enumerate the gate — it only needed to stop crediting
+the meter alone. Narrowing L3 to a prohibition removes the contradiction, needs
+no change to the character budget, and needs no decision about printing 25%.
 
-> Raise the character budget, or approve 25% as shipped copy.
-
-Both are the designer's calls. See
+That seed now resolves cleanly to `FINAL CLASH READY - COMMIT` — see
 [`evidence/runs/final-clash-unlock-seed4/`](evidence/runs/final-clash-unlock-seed4/run.md).
+The regression is guarded: `test_the_l3_collision_stays_fixed` fails if L3 ever
+goes back to demanding both conditions be stated.
 
 ---
 

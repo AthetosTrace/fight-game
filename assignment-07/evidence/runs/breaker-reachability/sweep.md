@@ -4,19 +4,18 @@
 
 | Stop reason | Runs | Share | First seen |
 |---|---:|---:|---|
-| `SUCCESS` | 949 | 79.1% | `clash_failure_recovery` seed 1 |
+| `SUCCESS` | 973 | 81.1% | `clash_failure_recovery` seed 1 |
 | `CIRCUIT_BREAKER_MAX_ATTEMPTS` | 227 | 18.9% | `clash_failure_recovery` seed 3 |
-| `HUMAN_REVIEW_REFINER_REFUSED` | 24 | 2.0% | `final_clash_unlock` seed 4 |
+| `HUMAN_REVIEW_REFINER_REFUSED` | 0 | 0.0% | **never** |
 | `CIRCUIT_BREAKER_NO_PROGRESS` | 0 | 0.0% | **never** |
 
 ## Refusals, by the rule that caused them
 
-| Rule | Runs |
-|---|---:|
-| `L3` | 24 |
+None.
 
 ## Unreached stop reasons
 
+- `HUMAN_REVIEW_REFINER_REFUSED`
 - `CIRCUIT_BREAKER_NO_PROGRESS`
 
 `CIRCUIT_BREAKER_NO_PROGRESS` is unreachable, and structurally so rather than by luck. A run only reaches the no-progress check after a refinement was *applied*, every applied refinement changes the text, and the fix for a fault always removes that fault's evidence — which is what the signature is built from. Two consecutive attempts therefore cannot share a signature.
@@ -36,7 +35,7 @@ It is kept anyway. It costs nothing, and it is the guard that would catch a futu
 | Slot | `SUCCESS` | `CIRCUIT_BREAKER_MAX_ATTEMPTS` | `HUMAN_REVIEW_REFINER_REFUSED` | `CIRCUIT_BREAKER_NO_PROGRESS` |
 |---|---:|---:|---:|---:|
 | `clash_failure_recovery` | 161 | 39 | 0 | 0 |
-| `final_clash_unlock` | 148 | 28 | 24 | 0 |
+| `final_clash_unlock` | 172 | 28 | 0 | 0 |
 | `impact_window_prompt` | 161 | 39 | 0 | 0 |
 | `loss_screen` | 158 | 42 | 0 | 0 |
 | `meter_feedback_counter` | 161 | 39 | 0 | 0 |

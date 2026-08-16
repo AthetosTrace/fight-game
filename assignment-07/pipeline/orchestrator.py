@@ -127,8 +127,13 @@ def run(rules_doc, slot, seed, max_attempts=MAX_ATTEMPTS, judge_name="rubric",
         attempts.append(record)
         line = refinement.line
 
+    # The judge is part of the run's identity once it stops being the default:
+    # two runs of the same slot and seed under different tone backends are
+    # different results, and writing them to one directory loses one of them.
+    suffix = "" if judge_name == "rubric" else "-%s" % judge_name
+
     return {
-        "run_id": "%s-seed%d" % (slot.replace("_", "-"), seed),
+        "run_id": "%s-seed%d%s" % (slot.replace("_", "-"), seed, suffix),
         "slot": slot,
         "seed": seed,
         "judge": judge_name,

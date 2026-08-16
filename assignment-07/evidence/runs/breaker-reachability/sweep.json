@@ -12,12 +12,13 @@
   "judge": "rubric",
   "rules_version": "1.0.0",
   "outcomes": {
-    "SUCCESS": 949,
+    "SUCCESS": 973,
     "CIRCUIT_BREAKER_MAX_ATTEMPTS": 227,
-    "HUMAN_REVIEW_REFINER_REFUSED": 24,
+    "HUMAN_REVIEW_REFINER_REFUSED": 0,
     "CIRCUIT_BREAKER_NO_PROGRESS": 0
   },
   "unreached": [
+    "HUMAN_REVIEW_REFINER_REFUSED",
     "CIRCUIT_BREAKER_NO_PROGRESS"
   ],
   "first_seen": {
@@ -28,24 +29,17 @@
     "CIRCUIT_BREAKER_MAX_ATTEMPTS": {
       "slot": "clash_failure_recovery",
       "seed": 3
-    },
-    "HUMAN_REVIEW_REFINER_REFUSED": {
-      "slot": "final_clash_unlock",
-      "seed": 4
     }
   },
-  "refusal_rules": {
-    "L3": 24
-  },
+  "refusal_rules": {},
   "per_slot": {
     "clash_failure_recovery": {
       "SUCCESS": 161,
       "CIRCUIT_BREAKER_MAX_ATTEMPTS": 39
     },
     "final_clash_unlock": {
-      "SUCCESS": 148,
-      "CIRCUIT_BREAKER_MAX_ATTEMPTS": 28,
-      "HUMAN_REVIEW_REFINER_REFUSED": 24
+      "SUCCESS": 172,
+      "CIRCUIT_BREAKER_MAX_ATTEMPTS": 28
     },
     "impact_window_prompt": {
       "SUCCESS": 161,

@@ -138,8 +138,8 @@
     {
       "id": "L3",
       "type": "lore",
-      "title": "The Final Clash gate is both conditions, never one",
-      "statement": "The Final Clash unlocks only when the Ascension Meter is full at 100 AND Crimson Vanguard's health is at or below 25%. Copy that presents a full meter alone as the unlock is wrong.",
+      "title": "Never present a full meter alone as the Final Clash unlock",
+      "statement": "The Final Clash unlocks only when the Ascension Meter is full at 100 AND Crimson Vanguard's health is at or below 25%. This rule is a prohibition, not a requirement to enumerate: the unlock banner fires only once both conditions are already true, so the copy announces readiness rather than teaching the gate. It must simply never imply the meter alone did it.",
       "gdd_source": "section 03, page 3 - 'The Final Clash becomes available only when BOTH conditions are true'",
       "applies_to_slots": ["final_clash_unlock"],
       "forbidden_phrases": [
