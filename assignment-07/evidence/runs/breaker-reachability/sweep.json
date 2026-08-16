@@ -1,0 +1,69 @@
+{
+  "seeds_per_slot": 200,
+  "slots": [
+    "clash_failure_recovery",
+    "final_clash_unlock",
+    "impact_window_prompt",
+    "loss_screen",
+    "meter_feedback_counter",
+    "phase2_callout"
+  ],
+  "total_runs": 1200,
+  "judge": "rubric",
+  "rules_version": "1.0.0",
+  "outcomes": {
+    "SUCCESS": 949,
+    "CIRCUIT_BREAKER_MAX_ATTEMPTS": 227,
+    "HUMAN_REVIEW_REFINER_REFUSED": 24,
+    "CIRCUIT_BREAKER_NO_PROGRESS": 0
+  },
+  "unreached": [
+    "CIRCUIT_BREAKER_NO_PROGRESS"
+  ],
+  "first_seen": {
+    "SUCCESS": {
+      "slot": "clash_failure_recovery",
+      "seed": 1
+    },
+    "CIRCUIT_BREAKER_MAX_ATTEMPTS": {
+      "slot": "clash_failure_recovery",
+      "seed": 3
+    },
+    "HUMAN_REVIEW_REFINER_REFUSED": {
+      "slot": "final_clash_unlock",
+      "seed": 4
+    }
+  },
+  "refusal_rules": {
+    "L3": 24
+  },
+  "per_slot": {
+    "clash_failure_recovery": {
+      "SUCCESS": 161,
+      "CIRCUIT_BREAKER_MAX_ATTEMPTS": 39
+    },
+    "final_clash_unlock": {
+      "SUCCESS": 148,
+      "CIRCUIT_BREAKER_MAX_ATTEMPTS": 28,
+      "HUMAN_REVIEW_REFINER_REFUSED": 24
+    },
+    "impact_window_prompt": {
+      "SUCCESS": 161,
+      "CIRCUIT_BREAKER_MAX_ATTEMPTS": 39
+    },
+    "loss_screen": {
+      "SUCCESS": 158,
+      "CIRCUIT_BREAKER_MAX_ATTEMPTS": 42
+    },
+    "meter_feedback_counter": {
+      "SUCCESS": 161,
+      "CIRCUIT_BREAKER_MAX_ATTEMPTS": 39
+    },
+    "phase2_callout": {
+      "SUCCESS": 160,
+      "CIRCUIT_BREAKER_MAX_ATTEMPTS": 40
+    }
+  },
+  "rescore_failures": [],
+  "monotonicity_failures": []
+}
