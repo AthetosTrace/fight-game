@@ -1,0 +1,458 @@
+{
+  "run_id": "clash-failure-recovery-seed69",
+  "slot": "clash_failure_recovery",
+  "seed": 69,
+  "judge": "rubric",
+  "rules_version": "1.0.0",
+  "content_type": "Ascendant Impact player-facing combat copy",
+  "max_attempts": 3,
+  "attempts_used": 3,
+  "stop_reason": "SUCCESS",
+  "drift_applied": [
+    {
+      "operator": "lore_clash_restart",
+      "effect": "claimed a failed Clash restarts the duel (denied by GDD 03 p4)"
+    },
+    {
+      "operator": "lore_invent_number",
+      "effect": "printed a provisional tuning value as shipped copy"
+    },
+    {
+      "operator": "lore_meter_over_time",
+      "effect": "claimed the meter fills without active combat (denied by GDD 03 p3)"
+    }
+  ],
+  "retrieval": {
+    "slot": "clash_failure_recovery",
+    "moment": "The player attempts the Final Clash and fails; both fighters separate and combat resumes.",
+    "slot_citation": {
+      "citation": "section 03, page 4 - 'A failed Final Clash does not restart the duel'",
+      "section": 3,
+      "page": "4",
+      "quoted": [
+        "A failed Final Clash does not restart the duel"
+      ],
+      "verified": true,
+      "found_in": "gdd/sections/03-ascension-meter-final-clash-and-encounter-flow.md",
+      "excerpt": "PRESERVED \u2014 FAILED CLASH RECOVERY  A failed Final Clash does not restart the duel, kill the player"
+    },
+    "rules_in_force": [
+      "T1",
+      "T2",
+      "T3",
+      "V1",
+      "V2",
+      "L1",
+      "L2",
+      "L4",
+      "F1",
+      "F2"
+    ],
+    "rule_citations": [
+      {
+        "citation": "section 01, page 1 - Pillar 1 'Readable timing and deliberate decisions earn the strongest visual rewards'",
+        "section": 1,
+        "page": "1",
+        "quoted": [
+          "Readable timing and deliberate decisions earn the strongest visual rewards"
+        ],
+        "verified": true,
+        "found_in": "gdd/sections/01-executive-summary.md",
+        "excerpt": "1 Skill Creates Spectacle Readable timing and deliberate decisions earn the strongest visual rewards.",
+        "rule_id": "T1",
+        "title": "Spectacle is earned, never granted"
+      },
+      {
+        "citation": "section 01, page 1 - 'Choose an Ascendant operative. Survive one complete duel. Earn the spectacle.'",
+        "section": 1,
+        "page": "1",
+        "quoted": [
+          "Choose an Ascendant operative. Survive one complete duel. Earn the spectacle."
+        ],
+        "verified": true,
+        "found_in": "gdd/sections/01-executive-summary.md",
+        "excerpt": "Choose an Ascendant operative. Survive one complete duel. Earn the spectacle.",
+        "rule_id": "T2",
+        "title": "The register is clipped and declarative"
+      },
+      {
+        "citation": "section 01, page 1 - 'Choose an Ascendant operative. Survive one complete duel. Earn the spectacle.'",
+        "section": 1,
+        "page": "1",
+        "quoted": [
+          "Choose an Ascendant operative. Survive one complete duel. Earn the spectacle."
+        ],
+        "verified": true,
+        "found_in": "gdd/sections/01-executive-summary.md",
+        "excerpt": "Choose an Ascendant operative. Survive one complete duel. Earn the spectacle.",
+        "rule_id": "T3",
+        "title": "State facts, do not hedge"
+      },
+      {
+        "citation": "section 01, page 1 - 'The player selects Agent Echo or Agent Nova and enters the Shattered Ring to fight'",
+        "section": 1,
+        "page": "1",
+        "quoted": [
+          "The player selects Agent Echo or Agent Nova and enters the Shattered Ring to fight"
+        ],
+        "verified": true,
+        "found_in": "gdd/sections/01-executive-summary.md",
+        "excerpt": "REVISED \u2014 HIGH CONCEPT  The player selects Agent Echo or Agent Nova and enters the Shattered Ring to fight",
+        "rule_id": "V1",
+        "title": "Use the game's proper nouns, not genre defaults"
+      },
+      {
+        "citation": "section 03, page 4 - 'Readable armored pressure; onboarding Impact Window'",
+        "section": 3,
+        "page": "4",
+        "quoted": [
+          "Readable armored pressure; onboarding Impact Window"
+        ],
+        "verified": true,
+        "found_in": "gdd/sections/03-ascension-meter-final-clash-and-encounter-flow.md",
+        "excerpt": "Phase 1 Readable armored pressure; onboarding Impact Window",
+        "rule_id": "V2",
+        "title": "The slot's own subject must be named"
+      },
+      {
+        "citation": "section 03, page 3 - 'It does not fill from waiting or elapsed time'",
+        "section": 3,
+        "page": "3",
+        "quoted": [
+          "It does not fill from waiting or elapsed time"
+        ],
+        "verified": true,
+        "found_in": "gdd/sections/03-ascension-meter-final-clash-and-encounter-flow.md",
+        "excerpt": "combat decisions. It does not fill from waiting or elapsed time. Provisional gains remain subject to",
+        "rule_id": "L1",
+        "title": "The Ascension Meter is earned, never passive"
+      },
+      {
+        "citation": "section 03, page 4 - 'A failed Final Clash does not restart the duel'",
+        "section": 3,
+        "page": "4",
+        "quoted": [
+          "A failed Final Clash does not restart the duel"
+        ],
+        "verified": true,
+        "found_in": "gdd/sections/03-ascension-meter-final-clash-and-encounter-flow.md",
+        "excerpt": "PRESERVED \u2014 FAILED CLASH RECOVERY  A failed Final Clash does not restart the duel, kill the player",
+        "rule_id": "L2",
+        "title": "A failed Final Clash does not restart the duel"
+      },
+      {
+        "citation": "section 03, page 3 - 'Provisional gains remain subject to'",
+        "section": 3,
+        "page": "3",
+        "quoted": [
+          "Provisional gains remain subject to"
+        ],
+        "verified": true,
+        "found_in": "gdd/sections/03-ascension-meter-final-clash-and-encounter-flow.md",
+        "excerpt": "combat decisions. It does not fill from waiting or elapsed time. Provisional gains remain subject to",
+        "rule_id": "L4",
+        "title": "No numeric gameplay values in player copy"
+      },
+      {
+        "citation": "section 01, page 1 - Pillar 2 'VFX bursts punctuate combat without replacing it'",
+        "section": 1,
+        "page": "1",
+        "quoted": [
+          "VFX bursts punctuate combat without replacing it"
+        ],
+        "verified": true,
+        "found_in": "gdd/sections/01-executive-summary.md",
+        "excerpt": "2 Cinematic Rhythm Brief camera, hit-stop, impact-frame, and VFX bursts punctuate combat without replacing it.",
+        "rule_id": "F1",
+        "title": "Every slot has a hard character limit"
+      },
+      {
+        "citation": "section 01, page 1 - Pillar 2 'VFX bursts punctuate combat without replacing it'",
+        "section": 1,
+        "page": "1",
+        "quoted": [
+          "VFX bursts punctuate combat without replacing it"
+        ],
+        "verified": true,
+        "found_in": "gdd/sections/01-executive-summary.md",
+        "excerpt": "2 Cinematic Rhythm Brief camera, hit-stop, impact-frame, and VFX bursts punctuate combat without replacing it.",
+        "rule_id": "F2",
+        "title": "Two shapes, and a slot may only use its own"
+      }
+    ]
+  },
+  "original_line": {
+    "slot": "clash_failure_recovery",
+    "text": "The Clash broke. Return to neutral and rebuild Ascension. Start over from the beginning (25%). Wait for your meter to charge."
+  },
+  "final_line": {
+    "slot": "clash_failure_recovery",
+    "text": "The Clash broke. Return to neutral and rebuild Ascension."
+  },
+  "attempts": [
+    {
+      "attempt": 1,
+      "line": {
+        "slot": "clash_failure_recovery",
+        "text": "The Clash broke. Return to neutral and rebuild Ascension. Start over from the beginning (25%). Wait for your meter to charge."
+      },
+      "evaluation": {
+        "score": 4.8,
+        "scale_max": 10,
+        "threshold": 9.6,
+        "passed": false,
+        "reason": "tone 1.00: clipped, declarative, and claims no reward the player did not earn | vocabulary_lore 0.00: the ascension meter is earned, never passive -- the copy asserts 'wait for your meter'; a failed final clash does not restart the duel -- the copy asserts 'start over'; prints '(25%)', but section 03 marks every gain provisional and subject to playtest tuning | format_length 0.30: runs 125 characters against a 72-character limit; a sentence slot allows at most 2 sentences; this one runs 4",
+        "criteria": [
+          {
+            "criterion": "tone",
+            "score": 1.0,
+            "weight": 35,
+            "reason": "clipped, declarative, and claims no reward the player did not earn",
+            "backend": "rubric",
+            "faults": []
+          },
+          {
+            "criterion": "vocabulary_lore",
+            "score": 0.0,
+            "weight": 40,
+            "reason": "the ascension meter is earned, never passive -- the copy asserts 'wait for your meter'; a failed final clash does not restart the duel -- the copy asserts 'start over'; prints '(25%)', but section 03 marks every gain provisional and subject to playtest tuning",
+            "backend": null,
+            "faults": [
+              {
+                "rule_id": "L1",
+                "detail": "the ascension meter is earned, never passive -- the copy asserts 'wait for your meter'",
+                "evidence": "wait for your meter"
+              },
+              {
+                "rule_id": "L2",
+                "detail": "a failed final clash does not restart the duel -- the copy asserts 'start over'",
+                "evidence": "start over"
+              },
+              {
+                "rule_id": "L4",
+                "detail": "prints '(25%)', but section 03 marks every gain provisional and subject to playtest tuning",
+                "evidence": "(25%)"
+              }
+            ]
+          },
+          {
+            "criterion": "format_length",
+            "score": 0.3,
+            "weight": 25,
+            "reason": "runs 125 characters against a 72-character limit; a sentence slot allows at most 2 sentences; this one runs 4",
+            "backend": null,
+            "faults": [
+              {
+                "rule_id": "F1",
+                "detail": "runs 125 characters against a 72-character limit",
+                "evidence": 125
+              },
+              {
+                "rule_id": "F2",
+                "detail": "a sentence slot allows at most 2 sentences; this one runs 4",
+                "evidence": 4
+              }
+            ]
+          }
+        ],
+        "faults": [
+          {
+            "rule_id": "L1",
+            "detail": "the ascension meter is earned, never passive -- the copy asserts 'wait for your meter'",
+            "evidence": "wait for your meter"
+          },
+          {
+            "rule_id": "L2",
+            "detail": "a failed final clash does not restart the duel -- the copy asserts 'start over'",
+            "evidence": "start over"
+          },
+          {
+            "rule_id": "L4",
+            "detail": "prints '(25%)', but section 03 marks every gain provisional and subject to playtest tuning",
+            "evidence": "(25%)"
+          },
+          {
+            "rule_id": "F1",
+            "detail": "runs 125 characters against a 72-character limit",
+            "evidence": 125
+          },
+          {
+            "rule_id": "F2",
+            "detail": "a sentence slot allows at most 2 sentences; this one runs 4",
+            "evidence": 4
+          }
+        ],
+        "failed_criteria": [
+          "vocabulary_lore",
+          "format_length"
+        ]
+      },
+      "verdict": "SCORE: [4.8/10]\nREASON: [tone 1.00: clipped, declarative, and claims no reward the player did not earn | vocabulary_lore 0.00: the ascension meter is earned, never passive -- the copy asserts 'wait for your meter'; a failed final clash does not restart the duel -- the copy asserts 'start over'; prints '(25%)', but section 03 marks every gain provisional and subject to playtest tuning | format_length 0.30: runs 125 characters against a 72-character limit; a sentence slot allows at most 2 sentences; this one runs 4]",
+      "fault_worked": {
+        "rule_id": "L1",
+        "detail": "the ascension meter is earned, never passive -- the copy asserts 'wait for your meter'",
+        "evidence": "wait for your meter"
+      },
+      "refinement": {
+        "applied": true,
+        "change": {
+          "rule_id": "L1",
+          "before": "The Clash broke. Return to neutral and rebuild Ascension. Start over from the beginning (25%). Wait for your meter to charge.",
+          "after": "The Clash broke. Return to neutral and rebuild Ascension. Start over from the beginning (25%).",
+          "reason": "removed the claim 'wait for your meter', which contradicts section 03, page 3 - 'It does not fill from waiting or elapsed time'"
+        },
+        "refused": null
+      },
+      "outcome": "REFINED"
+    },
+    {
+      "attempt": 2,
+      "line": {
+        "slot": "clash_failure_recovery",
+        "text": "The Clash broke. Return to neutral and rebuild Ascension. Start over from the beginning (25%)."
+      },
+      "evaluation": {
+        "score": 5.2,
+        "scale_max": 10,
+        "threshold": 9.6,
+        "passed": false,
+        "reason": "tone 1.00: clipped, declarative, and claims no reward the player did not earn | vocabulary_lore 0.10: a failed final clash does not restart the duel -- the copy asserts 'start over'; prints '(25%)', but section 03 marks every gain provisional and subject to playtest tuning | format_length 0.30: runs 94 characters against a 72-character limit; a sentence slot allows at most 2 sentences; this one runs 3",
+        "criteria": [
+          {
+            "criterion": "tone",
+            "score": 1.0,
+            "weight": 35,
+            "reason": "clipped, declarative, and claims no reward the player did not earn",
+            "backend": "rubric",
+            "faults": []
+          },
+          {
+            "criterion": "vocabulary_lore",
+            "score": 0.1,
+            "weight": 40,
+            "reason": "a failed final clash does not restart the duel -- the copy asserts 'start over'; prints '(25%)', but section 03 marks every gain provisional and subject to playtest tuning",
+            "backend": null,
+            "faults": [
+              {
+                "rule_id": "L2",
+                "detail": "a failed final clash does not restart the duel -- the copy asserts 'start over'",
+                "evidence": "start over"
+              },
+              {
+                "rule_id": "L4",
+                "detail": "prints '(25%)', but section 03 marks every gain provisional and subject to playtest tuning",
+                "evidence": "(25%)"
+              }
+            ]
+          },
+          {
+            "criterion": "format_length",
+            "score": 0.3,
+            "weight": 25,
+            "reason": "runs 94 characters against a 72-character limit; a sentence slot allows at most 2 sentences; this one runs 3",
+            "backend": null,
+            "faults": [
+              {
+                "rule_id": "F1",
+                "detail": "runs 94 characters against a 72-character limit",
+                "evidence": 94
+              },
+              {
+                "rule_id": "F2",
+                "detail": "a sentence slot allows at most 2 sentences; this one runs 3",
+                "evidence": 3
+              }
+            ]
+          }
+        ],
+        "faults": [
+          {
+            "rule_id": "L2",
+            "detail": "a failed final clash does not restart the duel -- the copy asserts 'start over'",
+            "evidence": "start over"
+          },
+          {
+            "rule_id": "L4",
+            "detail": "prints '(25%)', but section 03 marks every gain provisional and subject to playtest tuning",
+            "evidence": "(25%)"
+          },
+          {
+            "rule_id": "F1",
+            "detail": "runs 94 characters against a 72-character limit",
+            "evidence": 94
+          },
+          {
+            "rule_id": "F2",
+            "detail": "a sentence slot allows at most 2 sentences; this one runs 3",
+            "evidence": 3
+          }
+        ],
+        "failed_criteria": [
+          "vocabulary_lore",
+          "format_length"
+        ]
+      },
+      "verdict": "SCORE: [5.2/10]\nREASON: [tone 1.00: clipped, declarative, and claims no reward the player did not earn | vocabulary_lore 0.10: a failed final clash does not restart the duel -- the copy asserts 'start over'; prints '(25%)', but section 03 marks every gain provisional and subject to playtest tuning | format_length 0.30: runs 94 characters against a 72-character limit; a sentence slot allows at most 2 sentences; this one runs 3]",
+      "fault_worked": {
+        "rule_id": "L2",
+        "detail": "a failed final clash does not restart the duel -- the copy asserts 'start over'",
+        "evidence": "start over"
+      },
+      "refinement": {
+        "applied": true,
+        "change": {
+          "rule_id": "L2",
+          "before": "The Clash broke. Return to neutral and rebuild Ascension. Start over from the beginning (25%).",
+          "after": "The Clash broke. Return to neutral and rebuild Ascension.",
+          "reason": "removed the claim 'start over', which contradicts section 03, page 4 - 'A failed Final Clash does not restart the duel'"
+        },
+        "refused": null
+      },
+      "outcome": "REFINED"
+    },
+    {
+      "attempt": 3,
+      "line": {
+        "slot": "clash_failure_recovery",
+        "text": "The Clash broke. Return to neutral and rebuild Ascension."
+      },
+      "evaluation": {
+        "score": 10.0,
+        "scale_max": 10,
+        "threshold": 9.6,
+        "passed": true,
+        "reason": "tone 1.00: clipped, declarative, and claims no reward the player did not earn | vocabulary_lore 1.00: uses the game's proper nouns, names 'clash', 'ascension', and states nothing the GDD denies | format_length 1.00: 57 of 72 characters, correctly shaped as a sentence",
+        "criteria": [
+          {
+            "criterion": "tone",
+            "score": 1.0,
+            "weight": 35,
+            "reason": "clipped, declarative, and claims no reward the player did not earn",
+            "backend": "rubric",
+            "faults": []
+          },
+          {
+            "criterion": "vocabulary_lore",
+            "score": 1.0,
+            "weight": 40,
+            "reason": "uses the game's proper nouns, names 'clash', 'ascension', and states nothing the GDD denies",
+            "backend": null,
+            "faults": []
+          },
+          {
+            "criterion": "format_length",
+            "score": 1.0,
+            "weight": 25,
+            "reason": "57 of 72 characters, correctly shaped as a sentence",
+            "backend": null,
+            "faults": []
+          }
+        ],
+        "faults": [],
+        "failed_criteria": []
+      },
+      "verdict": "SCORE: [10.0/10]\nREASON: [tone 1.00: clipped, declarative, and claims no reward the player did not earn | vocabulary_lore 1.00: uses the game's proper nouns, names 'clash', 'ascension', and states nothing the GDD denies | format_length 1.00: 57 of 72 characters, correctly shaped as a sentence]",
+      "outcome": "SUCCESS"
+    }
+  ]
+}

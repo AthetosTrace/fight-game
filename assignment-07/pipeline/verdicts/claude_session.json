@@ -1,0 +1,51 @@
+{
+  "backend": "session",
+  "model": "claude-opus-5",
+  "produced_by": "Claude Opus 5, via a Claude Code session, reading the rendered output of prompts/evaluator.md verbatim",
+  "produced_on": "2026-08-16",
+  "note": "Each verdict below is a real model judgement, not a simulated one. The prompt was rendered by judge.ClaudeJudge._render_prompt for the exact slot and text recorded, then answered against the 0.0-1.0 scale the prompt defines. Recording them makes the model-graded path reproducible offline, which the live API path is not.",
+  "verdicts": [
+    {
+      "slot": "loss_screen",
+      "text": "Better luck next time. Crimson Vanguard still stands.",
+      "score": 0.4,
+      "reason": "Opens with 'Better luck next time', which consoles the player and attributes the outcome to luck; Pillar 1 makes deliberate decisions the thing that earns rewards, and the fiction frames this as a combat evaluation rather than a roll of the dice, so the consoling register is off-brand (T1)."
+    },
+    {
+      "slot": "clash_failure_recovery",
+      "text": "The Clash broke. Shake it off and get back in there.",
+      "score": 0.3,
+      "reason": "'Shake it off and get back in there' is casual coaching in a cheerful sports-commentary register, which is warmer and chattier than the clipped declaratives the GDD's high-concept line establishes (T2 register, T1 in spirit)."
+    },
+    {
+      "slot": "meter_feedback_counter",
+      "text": "Counter landed. Ascension rising.",
+      "score": 1.0,
+      "reason": "Two clipped declaratives that state exactly what happened, with no praise, no hedging, and no punch-up punctuation -- clean against T1, T2, and T3."
+    },
+    {
+      "slot": "phase2_callout",
+      "text": "PHASE 2 - CRIMSON VANGUARD PRESSES HARDER",
+      "score": 1.0,
+      "reason": "A flat declarative statement of what the rival is now doing; it claims nothing on the player's behalf and carries no punch-up, so it is clean against T1, T2, and T3."
+    },
+    {
+      "slot": "impact_window_prompt",
+      "text": "Well done! impact window - strike now!",
+      "score": 0.0,
+      "reason": "Opens with 'Well done!', which congratulates the player for an Impact Window they have not yet executed (T1), and stacks two exclamation marks across a six-word prompt (T2) -- together this reads as a cheerful mobile-game voice rather than this game's register."
+    },
+    {
+      "slot": "impact_window_prompt",
+      "text": "WELL DONE IMPACT WINDOW - STRIKE NOW",
+      "score": 0.4,
+      "reason": "Still opens with 'WELL DONE', which congratulates the player for an Impact Window they have not yet executed (T1); the exclamation marks are gone so T2 is clean now, and the shouted casing is a shape question rather than a tone one."
+    },
+    {
+      "slot": "impact_window_prompt",
+      "text": "IMPACT WINDOW - STRIKE NOW",
+      "score": 1.0,
+      "reason": "A bare imperative naming the moment and the required action, with no praise, hedging, or punctuation punch-up -- clean against T1, T2, and T3."
+    }
+  ]
+}

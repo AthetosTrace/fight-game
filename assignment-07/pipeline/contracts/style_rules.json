@@ -1,0 +1,203 @@
+{
+  "rules_version": "1.0.0",
+  "content_type": "Ascendant Impact player-facing combat copy",
+  "source_of_truth": "Ascendant_Impact_Assignment_02_Revised_GDD_Anthony.pdf v0.4 (2026-07-24), extracted to gdd/",
+
+  "slots": {
+    "impact_window_prompt": {
+      "moment": "An Impact Window opens during the duel and the player must execute the timing input.",
+      "shape": "banner",
+      "max_chars": 28,
+      "canonical": "IMPACT WINDOW - STRIKE NOW",
+      "required_terms": ["impact window"],
+      "gdd_source": "section 03, page 3 - 'Impact Window success +20 Reward execution during an earned cinematic beat'"
+    },
+    "meter_feedback_counter": {
+      "moment": "The player converts an opening with a successful counter and the Ascension Meter rises.",
+      "shape": "sentence",
+      "max_chars": 40,
+      "canonical": "Counter landed. Ascension rising.",
+      "required_terms": ["ascension"],
+      "gdd_source": "section 03, page 3 - 'Successful counter +15 Reward converting the opening'"
+    },
+    "phase2_callout": {
+      "moment": "Crimson Vanguard reaches 50% health and Phase 2 begins.",
+      "shape": "banner",
+      "max_chars": 48,
+      "canonical": "PHASE 2 - CRIMSON VANGUARD PRESSES HARDER",
+      "required_terms": ["phase 2", "crimson vanguard"],
+      "gdd_source": "section 03, page 4 - 'Begins at 50% Crimson Vanguard health; same attacks, stronger pressure'"
+    },
+    "final_clash_unlock": {
+      "moment": "Ascension Meter is full at 100 AND Crimson Vanguard is at or below 25% health.",
+      "shape": "banner",
+      "max_chars": 36,
+      "canonical": "FINAL CLASH READY - COMMIT",
+      "required_terms": ["final clash"],
+      "gdd_source": "section 03, page 3 - 'The Final Clash becomes available only when BOTH conditions are true'"
+    },
+    "clash_failure_recovery": {
+      "moment": "The player attempts the Final Clash and fails; both fighters separate and combat resumes.",
+      "shape": "sentence",
+      "max_chars": 72,
+      "canonical": "The Clash broke. Return to neutral and rebuild Ascension.",
+      "required_terms": ["clash", "ascension"],
+      "gdd_source": "section 03, page 4 - 'A failed Final Clash does not restart the duel'"
+    },
+    "loss_screen": {
+      "moment": "The selected fighter's health reaches zero and the duel ends in a loss.",
+      "shape": "sentence",
+      "max_chars": 72,
+      "canonical": "The evaluation ends here. Crimson Vanguard still stands.",
+      "required_terms": ["crimson vanguard"],
+      "gdd_source": "section 03, page 4 - 'selected fighter health reaches zero'"
+    }
+  },
+
+  "rules": [
+    {
+      "id": "T1",
+      "type": "tone",
+      "title": "Spectacle is earned, never granted",
+      "statement": "Copy may state what the player achieved. It may not congratulate, cheer, or praise -- Pillar 1 makes the reward the spectacle itself, not applause.",
+      "gdd_source": "section 01, page 1 - Pillar 1 'Readable timing and deliberate decisions earn the strongest visual rewards'",
+      "forbidden_phrases": [
+        "great job", "nice work", "well done", "good job", "amazing",
+        "awesome", "incredible", "fantastic", "excellent", "brilliant",
+        "you're crushing it", "you got this", "keep it up", "way to go",
+        "nailed it", "impressive", "spectacular work", "wow"
+      ]
+    },
+    {
+      "id": "T2",
+      "type": "tone",
+      "title": "The register is clipped and declarative",
+      "statement": "No exclamation marks and no emoji. The GDD's own high-concept line sets the voice: three short declaratives, no punch-up.",
+      "gdd_source": "section 01, page 1 - 'Choose an Ascendant operative. Survive one complete duel. Earn the spectacle.'",
+      "max_exclamations": 0,
+      "forbidden_patterns": ["[\\u2600-\\u27bf]"]
+    },
+    {
+      "id": "T3",
+      "type": "tone",
+      "title": "State facts, do not hedge",
+      "statement": "Combat copy is read under pressure. It asserts what happened or what to do; it never hedges, suggests, or asks. This is the same register T2 protects, applied to mood rather than punctuation.",
+      "gdd_source": "section 01, page 1 - 'Choose an Ascendant operative. Survive one complete duel. Earn the spectacle.'",
+      "forbidden_phrases": [
+        "maybe", "perhaps", "you might want to", "try to", "you could",
+        "if you want", "probably", "sort of", "kind of"
+      ]
+    },
+    {
+      "id": "V1",
+      "type": "vocabulary",
+      "title": "Use the game's proper nouns, not genre defaults",
+      "statement": "Every system has a name the GDD fixed. Generic fighting-game vocabulary is off-brand by definition -- a stranger reading it could not tell which game it belongs to.",
+      "gdd_source": "section 01, page 1 - 'The player selects Agent Echo or Agent Nova and enters the Shattered Ring to fight'",
+      "substitutions": [
+        {"banned": ["super meter", "super bar", "power meter", "energy bar", "ultimate meter", "power bar", "meter bar"], "canon": "Ascension Meter"},
+        {"banned": ["quick time event", "quicktime event", "qte", "button prompt", "cinematic prompt"], "canon": "Impact Window"},
+        {"banned": ["ultimate", "ult", "finisher", "super move", "special move", "finishing move"], "canon": "Final Clash"},
+        {"banned": ["the boss", "the enemy", "the opponent", "the ai", "boss fight"], "canon": "Crimson Vanguard"},
+        {"banned": ["the stage", "the level", "the map", "the arena floor"], "canon": "the Shattered Ring"},
+        {"banned": ["round 2", "round two", "stage 2", "second stage"], "canon": "Phase 2"}
+      ]
+    },
+    {
+      "id": "V2",
+      "type": "vocabulary",
+      "title": "The slot's own subject must be named",
+      "statement": "Each slot exists to tell the player about one specific system. Copy that never names it has failed its job, however well written. The required terms are listed per slot in this contract.",
+      "gdd_source": "section 03, page 4 - 'Readable armored pressure; onboarding Impact Window'"
+    },
+    {
+      "id": "L1",
+      "type": "lore",
+      "title": "The Ascension Meter is earned, never passive",
+      "statement": "The meter is a visible 0-100 resource earned ONLY through active combat decisions. Copy implying otherwise teaches the player a rule this game does not have.",
+      "gdd_source": "section 03, page 3 - 'It does not fill from waiting or elapsed time'",
+      "forbidden_phrases": [
+        "fills over time", "charges over time", "builds over time",
+        "fills automatically", "charges automatically", "builds passively",
+        "regenerates", "recharges on its own", "wait for your meter",
+        "let it charge", "over time"
+      ]
+    },
+    {
+      "id": "L2",
+      "type": "lore",
+      "title": "A failed Final Clash does not restart the duel",
+      "statement": "Failure separates both fighters, preserves health with Crimson Vanguard held at a 1 HP floor, halves the meter, and returns to neutral. It does not restart, does not kill the player automatically, and does not strand anyone in a cinematic state.",
+      "gdd_source": "section 03, page 4 - 'A failed Final Clash does not restart the duel'",
+      "forbidden_phrases": [
+        "restart the duel", "restarting the duel", "start over", "starting over",
+        "from the beginning", "back to the start", "duel resets", "fight resets",
+        "try again from the top", "you are dead", "you die"
+      ]
+    },
+    {
+      "id": "L3",
+      "type": "lore",
+      "title": "Never present a full meter alone as the Final Clash unlock",
+      "statement": "The Final Clash unlocks only when the Ascension Meter is full at 100 AND Crimson Vanguard's health is at or below 25%. This rule is a prohibition, not a requirement to enumerate: the unlock banner fires only once both conditions are already true, so the copy announces readiness rather than teaching the gate. It must simply never imply the meter alone did it.",
+      "gdd_source": "section 03, page 3 - 'The Final Clash becomes available only when BOTH conditions are true'",
+      "applies_to_slots": ["final_clash_unlock"],
+      "forbidden_phrases": [
+        "meter full - clash ready", "meter is full, clash now",
+        "full meter unlocks", "fill the meter to unlock"
+      ]
+    },
+    {
+      "id": "L4",
+      "type": "lore",
+      "title": "No numeric gameplay values in player copy",
+      "statement": "Section 03 marks every meter gain provisional and subject to playtest tuning. Player-facing copy that prints a number promotes a provisional value to a shipped promise. This is the same restraint rule Assignment 06 enforced on the attack table.",
+      "gdd_source": "section 03, page 3 - 'Provisional gains remain subject to'",
+      "allowed_numeric_reference_patterns": ["phase\\s*2", "valor-7"]
+    },
+    {
+      "id": "F1",
+      "type": "format",
+      "title": "Every slot has a hard character limit",
+      "statement": "Pillar 2 says the game's flourishes punctuate combat without replacing it. On-screen text is bound by the same pillar: a line long enough to be read instead of fought is a line that replaced the combat. Each slot's limit is stated in this contract.",
+      "gdd_source": "section 01, page 1 - Pillar 2 'VFX bursts punctuate combat without replacing it'"
+    },
+    {
+      "id": "F2",
+      "type": "format",
+      "title": "Two shapes, and a slot may only use its own",
+      "statement": "A 'banner' is an all-caps HUD callout: at most six words, no terminal period. A 'sentence' is prose: begins with a capital, ends with a period, at most two sentences. Mixing the two breaks the HUD's visual grammar and costs the reader a beat mid-fight.",
+      "gdd_source": "section 01, page 1 - Pillar 2 'VFX bursts punctuate combat without replacing it'",
+      "banner_max_words": 6,
+      "sentence_max_sentences": 2
+    }
+  ],
+
+  "evaluator": {
+    "scale_max": 10,
+    "pass_threshold": 9.6,
+    "criteria_weights": {
+      "tone": 35,
+      "vocabulary_lore": 40,
+      "format_length": 25
+    }
+  },
+
+  "open_values": [
+    {
+      "field": "meter gain numbers",
+      "reason": "section 03 marks all gains provisional and subject to playtest tuning",
+      "document": "gdd/sections/03-ascension-meter-final-clash-and-encounter-flow.md"
+    },
+    {
+      "field": "Crimson Vanguard's shorter in-combat UI label",
+      "reason": "named as an open gap by CLAUDE.md; no GDD section fixes a short form",
+      "document": "CLAUDE.md - 'Gaps that are still open'"
+    },
+    {
+      "field": "Shattered Ring history and Project Valor-7 origin",
+      "reason": "the GDD defines neither; no agent may invent them",
+      "document": "CLAUDE.md - 'Gaps that are still open'"
+    }
+  ]
+}
