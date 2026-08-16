@@ -1,0 +1,48 @@
+{
+  "seeds_per_attack": 25000,
+  "attacks": [
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
+  "budgets": [
+    3,
+    12
+  ],
+  "total_runs": 200000,
+  "stop_reason_tally_by_budget": {
+    "3": {
+      "SUCCESS": 47808,
+      "HUMAN_REVIEW_REFINER_REFUSED": 43217,
+      "CIRCUIT_BREAKER_MAX_ATTEMPTS": 8975
+    },
+    "12": {
+      "SUCCESS": 53372,
+      "HUMAN_REVIEW_REFINER_REFUSED": 46628
+    }
+  },
+  "no_progress_hits": [],
+  "drift_coverage": {
+    "A": {
+      "distinct_drift_combinations": 128,
+      "last_new_combination_seed": 12489,
+      "saturation_margin_seeds": 12510
+    },
+    "B": {
+      "distinct_drift_combinations": 128,
+      "last_new_combination_seed": 12489,
+      "saturation_margin_seeds": 12510
+    },
+    "C": {
+      "distinct_drift_combinations": 128,
+      "last_new_combination_seed": 12489,
+      "saturation_margin_seeds": 12510
+    },
+    "D": {
+      "distinct_drift_combinations": 252,
+      "last_new_combination_seed": 14924,
+      "saturation_margin_seeds": 10075
+    }
+  }
+}

@@ -22,12 +22,12 @@ generates **Crimson Vanguard attack-definition rows** for `DT_VanguardAttacks.cs
 
 | Check | Result |
 |---|---|
-| Pipeline code | 1,614 lines across 7 modules |
-| Tests | **152 passing**, no engine, no network, no API key |
+| Pipeline code | 1,614 lines across 7 modules, plus the reachability sweep |
+| Tests | **153 passing**, no engine, no network, no API key |
 | Assignment 05 suite still green | **96 passing** — nothing regressed |
 | GDD rules in the contract | **7**, each citing a GDD section *and* page |
 | OPEN values that must never be invented | **9**, each with its reason and source |
-| Committed evidence runs | **6**, covering every stop reason |
+| Committed evidence runs | **6** single-seed + **1** 200,000-run reachability sweep |
 | Generated table vs `tools/validate_vanguard_attack_csv.py` | **PASS** |
 | Commits | `a2df9a4` (declaration, alone), `b892e5d` (pipeline) |
 
@@ -97,10 +97,19 @@ Both in the checking logic, both silent false negatives. Both fixed, both in the
 2. **Anthony has not been told this exists.** It respects the PAUSE and touches nothing of
    his, so it is not blocking — but the generated CSV is a thing he would want to know
    about before the DataTable route unpauses.
-3. **`CIRCUIT_BREAKER_NO_PROGRESS` never fires on a real seed.** It is covered by a test
-   that stubs a no-op refiner. Every real drift the generator produces is either fixable
-   or refused, so the guard is correct but currently unexercised in the committed runs.
-   Do not read the six runs as proving it.
+3. ~~**`CIRCUIT_BREAKER_NO_PROGRESS` never fires on a real seed.**~~ **RESOLVED
+   2026-08-16** — not by making it fire, but by proving it cannot.
+   `pipeline/sweep_reachability.py` sweeps all four attacks × 25,000 seeds × two attempt
+   budgets = **200,000 runs**, and the stop reason never appears. The sweep saturates the
+   generator's finite drift space (last new combination at seed 14,924, 10,000+ seeds of
+   margin), so this is the whole reachable space rather than a sample.
+
+   The cause is structural: the breaker trips only on an *applied* refinement that leaves
+   the failure signature unchanged, and the refiner has no such branch — it either
+   restores from canonical GDD facts, which always moves the signature, or it refuses.
+   `test_no_applied_refinement_ever_leaves_the_signature_unchanged` now asserts that
+   invariant, so the day a partial-fix branch appears the suite fails. The guard stays as
+   cheap protection. Evidence: `assignment-06/evidence/runs/circuit-breaker-reachability/`.
 
 ## Handoff to Assignment 07 — Style Guide Agent
 

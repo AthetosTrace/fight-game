@@ -41,6 +41,44 @@ class TestStopReasons:
         result = orchestrator.run(rules_doc, "A", seed=1, max_attempts=6)
         assert result["stop_reason"] == orchestrator.STOP_NO_PROGRESS
 
+    def test_no_applied_refinement_ever_leaves_the_signature_unchanged(self, rules_doc):
+        """Why the guard above needs a stub, and why no real seed reaches it.
+
+        The no-progress breaker trips only when the refiner *applies* a change
+        that leaves the failure signature identical. The real refiner has no
+        such path: every branch either restores a field from the canonical GDD
+        facts, which always moves the signature, or it refuses, which ends the
+        run as a human-review stop instead.
+
+        This asserts that invariant directly. The full-space version is
+        evidence/runs/circuit-breaker-reachability/ -- 200,000 runs, zero
+        no-progress stops. If a future refiner branch ever gains a partial-fix
+        path, this test fails and the guard stops being unreachable.
+        """
+        for attack_id in ("A", "B", "C", "D"):
+            for seed in range(60):
+                row = generator.generate(rules_doc, attack_id, seed)["row"]
+                previous = None
+                for _ in range(12):
+                    violations = evaluator.gate(row, rules_doc)
+                    evaluation = (evaluator.evaluate(row, rules_doc)
+                                  if not violations else None)
+                    if not violations and evaluation["passed"]:
+                        break
+                    signature = orchestrator._signature(violations, evaluation)
+                    assert signature != previous, (
+                        "attack %s seed %d repeated failure signature %r -- the "
+                        "refiner applied a no-op" % (attack_id, seed, signature))
+                    previous = signature
+
+                    failure_key, violation = orchestrator._next_failure(
+                        violations, evaluation)
+                    refinement = refiner.refine(
+                        row, failure_key, rules_doc, violation=violation)
+                    if not refinement.applied:
+                        break
+                    row = refinement.row
+
     def test_a_successful_run_ends_on_a_verified_row(self, rules_doc):
         result = orchestrator.run(rules_doc, "A", seed=2)
         assert evaluator.gate(result["final_row"], rules_doc) == []

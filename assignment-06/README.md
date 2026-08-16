@@ -48,7 +48,10 @@ python assignment-06/pipeline/emit_csv.py
 python tools/validate_vanguard_attack_csv.py \
     assignment-06/evidence/generated_DT_VanguardAttacks.csv
 
-# 152 tests, no engine, no network, no API key
+# which stop reasons can real output actually produce? (200,000 runs, ~20 min)
+python assignment-06/pipeline/sweep_reachability.py --seeds 25000
+
+# 153 tests, no engine, no network, no API key
 python -m pytest assignment-06/pipeline/tests -q
 ```
 
@@ -63,8 +66,9 @@ assignment-06/
 │   ├── refiner.py                    one field per attempt, or a refusal
 │   ├── orchestrator.py               the loop and the circuit breaker
 │   ├── emit_csv.py                   assembles the full four-row table
-│   └── tests/                        152 tests
-└── evidence/runs/                    six committed runs
+│   ├── sweep_reachability.py         which stop reasons the generator can reach
+│   └── tests/                        153 tests
+└── evidence/runs/                    six committed runs + one reachability sweep
 ```
 
 ---
@@ -215,6 +219,38 @@ one — there is a test for that.
 | [`attackA-seed4`](evidence/runs/attackA-seed4/run.md) | `CIRCUIT_BREAKER_MAX_ATTEMPTS` | Four drifts, three attempts, faults remain |
 | [`attackA-seed3`](evidence/runs/attackA-seed3/run.md) | `HUMAN_REVIEW_REFINER_REFUSED` | A fifth-attack reference — canon, not a field |
 | [`attackD-seed9`](evidence/runs/attackD-seed9/run.md) | `HUMAN_REVIEW_REFINER_REFUSED` | Attack D's travel cap is Q13, OPEN |
+
+### And one stop reason that never fires — measured, not assumed
+
+[`evidence/runs/circuit-breaker-reachability/`](evidence/runs/circuit-breaker-reachability/sweep.md)
+sweeps all four attacks across 25,000 seeds at two attempt budgets — **200,000 runs.**
+
+| Stop reason | budget 3 (shipped) | budget 12 (widened) |
+|---|---|---|
+| `SUCCESS` | 47,808 | 53,372 |
+| `HUMAN_REVIEW_REFINER_REFUSED` | 43,217 | 46,628 |
+| `CIRCUIT_BREAKER_MAX_ATTEMPTS` | 8,975 | **0** |
+| `CIRCUIT_BREAKER_NO_PROGRESS` | **0** | **0** |
+
+Drift is seeded, so the generator's output space is finite — and the sweep saturates
+it. The last *new* drift combination appears at seed 12,489 for attacks A–C and 14,924
+for D, leaving a margin of 10,000+ unused seeds. This is the whole reachable space, not
+a sample of it.
+
+**`CIRCUIT_BREAKER_NO_PROGRESS` never fires, and that is structural rather than lucky.**
+The guard trips only when the refiner *applies* a change that leaves the failure
+signature identical. The refiner has no such path: every branch either restores a field
+from the canonical GDD facts — which always moves the signature — or it refuses, which
+ends the run as a human-review stop instead. A no-op-but-applied refinement does not
+exist, so the guard is unreachable from generator output.
+
+The guard stays. It is cheap, and it is the right protection if a future refiner branch
+ever gains a partial-fix path.
+`test_no_applied_refinement_ever_leaves_the_signature_unchanged` asserts the invariant
+directly, so that branch would fail the suite the day it appears, and the breaker keeps
+its unit coverage through a stubbed stalling refiner. **The six single-seed runs above
+should not be read as proving this stop reason fires — this sweep is why that claim is
+not made.**
 
 ---
 
