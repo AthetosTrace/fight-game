@@ -51,7 +51,9 @@ and triggers rule 4.
   an answer. **It is not decided.** Its `TODO.md` entry stays open, marked PROPOSED,
   until the human designer approves or changes it. Only then is it deleted.
 
-**Nothing supersedes the GDD yet, so rule 4 has not fired.**
+**Rule 4 HAS fired, once.** The **2026-08-23 ship-scope decision (D1)** supersedes the
+GDD's Win / Loss row in §03. `TODO.md` carries the resulting *GDD is out of date* item.
+Every other entry in this file supersedes nothing.
 
 ## Corrections — 2026-08-03
 
@@ -72,6 +74,12 @@ The brief reserves the confirmation to the human. `TODO.md` item 6 restored.
 
 ### 3. Constraint C3 from the APPROVED Q22 is NOT satisfied
 
+> **RETIRED 2026-08-23 by D1.** C3 constrained the arrival of meter 100 against the ≤25%
+> health gate. Both are deferred future scope, so there is nothing left for C3 to
+> constrain. **`TODO.md` item 64 is closed by deferral, not by being answered** — if the
+> Final Clash is ever revived, this finding revives with it, unresolved. The analysis
+> below stands and was never wrong.
+
 C3 requires that **≤25% rival health and meter 100 arrive close together**. At Q2 = 1200
 meter 100 lands at ~0:40–1:25 and the health gate at ~2:53 — **90 to 135 seconds apart.**
 Group 02 said so plainly (*"They do not arrive close together"*) and then declared C3
@@ -89,6 +97,81 @@ the amended one. C3 came from the one decision carrying the designer's recorded 
 Recorded as `TODO.md` item 64. **No number was changed to produce this note.**
 
 ## Log
+
+### 2026-08-23 — Ship scope · D1–D4, the nine-day reduction
+
+- **Status:** **APPROVED — decided by the designer of record (AthetosTrace), 2026-08-23.**
+  Not a dispatch recommendation. No agent proposed these; the human made them in session
+  after being shown the calendar and the state of the build.
+- **Context:** nine days to the 1 September ship date. Anthony is unresponsive and the
+  project now has **one** commander and designer of record. The plan these four decisions
+  serve is [`SHIP-PLAN.md`](../SHIP-PLAN.md).
+- **Resolves:** the ship scope itself, which no Q number covered.
+
+**D1 — health-zero wins the duel. The Ascension Meter, Impact Windows and the Final
+Clash become deferred future scope.**
+
+- **Amends Q22** (2026-08-02, below), which is recorded as *settled and binding on every
+  downstream answer*. Q22 stands as the correct reading **of the GDD**; it is amended
+  here on ship-scope grounds, by the only person with the authority to amend it.
+- `MinHealthFloor` stays **0**. There is no double gate, no `ClashSuccess()` lowering it,
+  and no `BP_FinalClashDirector`. The rival dies at zero health like the player does.
+- **Q22's three constraints are released**, because the thing they constrained is gone:
+  **C1** (no meter decay) — moot, there is no meter. **C2** (HUD shows which gate is
+  locked) — moot, there are no gates. **C3** (Q2 tunes ≤25% health and meter 100 to
+  arrive together) — moot, which **retires open item 64** and the correction recorded
+  above it. Item 64 is closed by deferral, not by being answered.
+- **Supersedes GDD:** *"Win / Loss  Final Clash success / selected fighter health reaches
+  zero  Complete duel loop"* — `gdd/sections/03-ascension-meter-final-clash-and-encounter-flow.md`,
+  PDF pages 3–4. The GDD names exactly one win condition and this decision replaces it.
+  **`TODO.md` item added: the GDD is out of date.** Per rule 4 the PDF remains the source
+  of truth and is now **known-stale on this one row** — visibly, which is the acceptable
+  state, rather than silently, which is not.
+
+**D2 — the Vanguard gets three attacks. Phase 2 is optional, taken only if the calendar
+allows.**
+
+- Fast jab, mid swing (the strike that exists today), heavy. Range-gated weighted
+  selection with a no-repeat rule. Built on animations already in `game/Content`.
+- **Scopes** `game/AGENTS.md`'s *"only Attack A is enabled until its complete loop
+  passes"* to the **paused DataTable route**, which is the route it was written for. The
+  graybox `BP_VanguardBasicAttackDriver` — explicitly *"NOT Attack A"* since milestone 8 —
+  may carry three attacks.
+- **Within the scope lock**, which permits four authored rival attacks. Three is fewer,
+  not more.
+- **Every value stays provisional and pending playtest.** D2 authorizes the *count*, not
+  any number. The four working names (`Fault Line`, `Advance Line`, `Bulwark Reach`,
+  `Thruster Snap`) remain **proposed, not canon**.
+- **Supersedes GDD:** none. The GDD specifies four attacks; shipping three of a permitted
+  four under-fills a ceiling and contradicts nothing.
+
+**D3 — character look is a material-instance recolor. A free Fab or Mixamo character
+swap is optional.**
+
+- Crimson and dark for the Vanguard, cyan-white for Echo, as material instances on the
+  existing meshes. Zero rig risk, and it ships regardless.
+- The character swap is attempted **only from a finished duel**, and is the last thing cut
+  when a day slips — it is the item the designer of record most wants and the one most
+  able to break the animation path fifteen milestones validated.
+- Arena materials and lighting proceed independently: dressing proxies with free assets is
+  **asset selection**, which `CLAUDE.md` permits throughout M1–M4.
+- **Supersedes GDD:** none.
+
+**D4 — the `DT_VanguardAttacks` / `S_VanguardAttackDef` DataTable route stays paused
+permanently for this ship.**
+
+- Consequence: **Anthony's signed approval packet and the missing countersignature are
+  moot for the ship.** The route they authorize is not being taken. Nothing is revoked —
+  the signature stands on its own terms, over a road not travelled.
+- Consequence: **the five cinematic-restore corrections V1–V5 stop being a ship blocker.**
+  They correct a cinematic restore contract, and under D1 there is no cinematic restore.
+  They remain APPROVED and unapplied, correctly, as deferred-scope work.
+- **Supersedes GDD:** none. This pauses tooling, not design.
+
+**What D1–D4 do NOT do.** They do not change a tuning number, promote a proposed name to
+canon, touch the no-runtime-AI constraint, or widen the scope lock. Everything deferred is
+deferred **whole** — it is not partially built, and no agent may resume a piece of it
+without a new recorded decision here.
 
 ### 2026-08-02 — Group 09 · the five cinematic corrections (V1–V5)
 
@@ -519,8 +602,16 @@ unverified and is not load-bearing.*
 
 ### 2026-08-02 — Q22 · the 1 HP floor is permanent; the Final Clash is the only way to win
 
-- **Status:** **APPROVED** — accepted as proposed by the designer of record, 2026-08-02.
-  **This is now settled and binding on every downstream answer.**
+> **⚠ AMENDED 2026-08-23 by D1 — do not build from this entry.** The Final Clash is no
+> longer the win condition and is no longer in ship scope; **health zero wins.**
+> `MinHealthFloor` stays **0**, and constraints C1, C2 and C3 are released. The entry is
+> kept in full because its reasoning is correct about the GDD and will be the starting
+> point if the Final Clash is ever picked back up. See the **2026-08-23** entry at the top
+> of this log.
+
+- **Status:** **APPROVED 2026-08-02, then AMENDED 2026-08-23.** Accepted as proposed by
+  the designer of record on 2026-08-02; superseded on ship-scope grounds by the same
+  authority on 2026-08-23. **It is no longer binding on downstream answers.**
 - **Resolves:** TODO item 4 (Q22) · **BLOCKING** · KIND B · entry deleted from `TODO.md`
 - **Dispatch:** group 01 → `design/group-01-blocking-q22.md`
 - **Proposed decision:** reading **(b)**, sub-variant **(b2)** — `MinHealthFloor = 1` on
