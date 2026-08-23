@@ -1,13 +1,29 @@
 # Python hook bytecode — regenerated on every run, never source
 __pycache__/
 *.py[cod]
+.pytest_cache/
 
-# Unreal, when the project lands here
+# Unreal Engine generated directories — matched at any depth, so these catch
+# game/Intermediate/, game/Saved/, and so on.
 Binaries/
 Build/
 DerivedDataCache/
 Intermediate/
 Saved/
+Plugins/**/Binaries/
+Plugins/**/Intermediate/
+
+# The standalone UE template project that used to sit at FightGame/FightGame/.
+# Archived out of the repo on 2026-08-23; this entry stops it coming back.
+/FightGame/
+
+# IDE and toolchain noise
 *.sln
 *.suo
+*.sdf
+*.opensdf
+*.VC.db
+*.VC.opendb
+*.code-workspace
 .vs/
+.idea/
