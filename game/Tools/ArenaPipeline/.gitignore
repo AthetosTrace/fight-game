@@ -1,0 +1,5 @@
+# Python build artifacts from running the pipeline and its tests.
+# Scoped to this folder so the project's root .gitignore stays untouched.
+__pycache__/
+*.py[cod]
+.pytest_cache/
