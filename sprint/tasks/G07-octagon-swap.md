@@ -71,6 +71,12 @@ see it.
 - [ ] Vanguard mesh scale and anim class confirmed live on the placed instance, not just
       the CDO.
 - [ ] No geometry the player can get stuck on or escape through.
+      **This cannot be verified until `G05` closes X7.** After a knockout the mover's tick
+      stops, taking `ApplyConstraints` with it, so the arena clamp stops being enforced
+      entirely. In the flat graybox that is invisible. In the octagon it means a player who
+      just won can walk out of the combat strip and into the ramps, gallery and truss
+      walls — the exact failure this criterion exists to catch. Do not sign this off on a
+      build where X7 is still open.
 - [ ] `G05` and `G06` acceptance re-verified in the octagon.
 - [ ] Default map updated so a packaged build opens here.
 

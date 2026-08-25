@@ -14,7 +14,7 @@ Statuses: `todo` · `in-progress` · `blocked` · `done`
 |---|---|---|
 | **G — Game** | **`G02`** — Verify migration + first package | `G01` is done. This is the highest-risk unknown left: nothing has ever been packaged. |
 | **N — Narrative** | — | **Track complete.** Delivered in `AthetosTrace/ascendant-dm`. |
-| **Q — QA** | **`Q01`** — Agent design + code | In progress. Declaration and oracle written 24 Aug. |
+| **Q — QA** | **`Q03`** — README + triage | `Q01` and `Q02` are done; three live runs found two S1 defect classes. |
 
 ---
 
@@ -77,9 +77,22 @@ Three commits, clean, pushed. Engine in `dm/`, tests, and three recorded transcr
 
 | ID | Task | Status | Editor | Depends on |
 |---|---|---|---|---|
-| Q01 | Agent design and code | `in-progress` | no | — |
-| Q02 | Run against the build, produce the report | `todo` | runs | Q01, G05 |
+| Q01 | Agent design and code | `done` | no | — |
+| Q02 | Run against the build, produce the report | `done` | runs | Q01 |
 | Q03 | README, and triage findings into G tasks | `todo` | no | Q02 |
+
+**Three live runs landed in `e850938`** — seeds 3, 7 and 21, under
+`assignment-09/evidence/runs/`. Two defect classes, both `S1`:
+
+- **X7 — post-KO constraint loss. Reproduces on all three seeds.**
+  `BP_DuelKnockoutCoordinator.StopMover` disables the mover's tick, which stops
+  `ApplyConstraints` with it, so the arena clamp and the 78 cm minimum separation both stop
+  being enforced. Measured: player X 599.4, Vanguard KO'd at the bound X 650, separation
+  **50.6 cm against a 69 cm capsule contact**. → **`G05` owns the fix. It also gates `G07`'s
+  "nothing to get stuck on or escape through" criterion**, because in the octagon this means
+  walking out of the combat strip into the gallery and truss walls.
+- **B3 — capsule interpenetration** at `ApplyConstraints`, and a side-ownership break at
+  `UpdateSideOwnership` on seeds 7 and 21.
 
 ---
 
