@@ -31,12 +31,19 @@ claiming any criterion is met.
 | **#02** | Final GDD | **23 July 2026** | **DELIVERED** — GDD v0.4 on disk |
 | **#03** | Build an Agent Crew | **28 July 2026** | **DELIVERED** — all six agents ran to completion; six artifacts + six leave-offs on disk |
 | **#04** | Dynamic Content Pipeline | **30 July 2026** | **DELIVERED** — two independent submissions in `assignment-04/`, merged to `main` |
+| **#05** | Goal-Oriented Coding Agent | — | **DELIVERED** — `assignment-05/`: the `goal-planner` agent, the arena pipeline, the gap scanner |
+| **#06** | Generate–Evaluate–Refine pipeline | **18 August 2026** | **DELIVERED** — `assignment-06/`, built 12 August |
+| **#07** | Style Guide Agent | **20 August 2026** | **DELIVERED** — `assignment-07/`, graded with a real model |
 
-**All three coursework deadlines have passed and all three were met.** The only live
-date is the **1 September 2026** ship date. On session start, report today's date and
-**the days remaining to 1 September**; report the assignments as delivered unless a
-regrade or Assignment #05 changes that. Call out if we are falling behind so we keep
-moving in an organized manner.
+**Every coursework deadline so far has passed and every one was met.** The live date is
+the **1 September 2026** ship date. On session start, report today's date and **the days
+remaining to 1 September**, and report the assignments above as delivered.
+
+**⚠ Open question the repo cannot answer.** This branch is named `assignment-10/final-game`
+and the session is named for A10, but **`assignments/` holds requirement docs only for
+#02, #03 and #04** — there is nothing on disk for #08, #09 or #10. Treat 1 September as
+the ship date it has always been, and **ask the user for the #10 requirement doc rather
+than inferring what it wants.** Do not assume the final submission is only the build.
 
 ### The game ships 1 September 2026 — two phases
 Separate from the assignment deadlines above, **the playable game is due 1 September
@@ -64,6 +71,34 @@ gets named and a free fallback proposed — never assume a purchase.
 **When the calendar and the wish list disagree, a complete fought duel on 1 September
 beats a beautiful incomplete one.**
 
+### SHIP SCOPE — cut on 2026-08-23, and this is what "the game" now means
+
+**The plan is [`SHIP-PLAN.md`](SHIP-PLAN.md). Read it before dispatching anything.** It
+carries the day-by-day calendar, the task list T1–T8 / S1–S6 / P1–P2, and the risks. The
+four decisions behind it are **D1–D4**, recorded permanently in
+[`design/decisions.md`](design/decisions.md) and made by the designer of record on
+2026-08-23.
+
+| | Decision | What it means for dispatch |
+|---|---|---|
+| **D1** | **Health zero wins the duel.** The **Ascension Meter, Impact Windows and the Final Clash are deferred future scope.** | **Amends Q22**, which is on the record as *settled and binding*. `MinHealthFloor` stays **0**; C1, C2 and C3 are released; item 64 is closed by deferral. **This supersedes a GDD line — rule 4 has fired.** See item 75 in `TODO.md`. |
+| **D2** | **Three Vanguard attacks.** Phase 2 optional, only if the calendar allows. | Scopes `game/AGENTS.md`'s *"only Attack A is enabled"* to the paused DataTable route. The graybox driver may carry three. **Within the scope lock** (four permitted). Every value stays provisional. |
+| **D3** | **Material-instance recolor** is the character look. A free Fab/Mixamo swap is optional and last. | Arena materials and lighting proceed now as asset dressing. |
+| **D4** | **The `DT_VanguardAttacks` DataTable route stays paused permanently** for this ship. | Anthony's signed approval packet and the missing countersignature are **moot** — that road is not being taken. **V1–V5 stop being a ship blocker**: they correct a cinematic restore that no longer exists. |
+
+**Everything deferred is deferred whole.** It is not partially built, and **no agent may
+resume a piece of it without a new recorded decision in `design/decisions.md`.** An agent
+that builds a meter, an Impact Window, or a Final Clash has exceeded ship scope exactly as
+surely as one that builds a second arena.
+
+**The old plan is not deleted, and that is deliberate.** `design-brief.md`,
+`combat-integration-plan.md`, `build-sequence.md` and most of `TODO.md` still describe the
+full GDD game, including everything D1 deferred. They are **correct documents about a
+larger game than the one shipping on 1 September.** Read them as reference. When one of
+them disagrees with `SHIP-PLAN.md` about what to build in the next nine days,
+**`SHIP-PLAN.md` wins** — and when either disagrees with the GDD about what the *game is*,
+the GDD still wins, because deferring a feature is not the same as redesigning it.
+
 ### #03 — Build an Agent Crew (/10)
 | Criterion | Pts | Where it is satisfied |
 |---|---|---|
@@ -77,8 +112,13 @@ beats a beautiful incomplete one.**
 CHANGES**: the sandbox test and M1–M2 may proceed on the approved Blueprint-first
 foundation, while **M3 sign-off waits on the designer accepting five named
 corrections (V1–V5) to the cinematic restore contract** in
-`cinematic-integration-inspection.md`. Those five are still open and are the user's
-to accept or amend.
+`cinematic-integration-inspection.md`.
+
+**As of 2026-08-23 (D1/D4) V1–V5 are no longer a blocker on anything.** They correct a
+cinematic restore contract, and the cinematic restore is deferred future scope. They stay
+APPROVED and unapplied, which is the correct resting state for deferred work — **not an
+outstanding task, and not to be raised again as one.** The assignment grade is unaffected:
+the crew ran, the artifacts exist, and the verdict is what it is.
 
 ### #04 — Dynamic Content Pipeline (/10)
 A **separate** deliverable from the crew above. It reads the game docs before
@@ -187,6 +227,12 @@ arenas, more attacks, a second rival move set, multiplayer, progression, story �
 **deferred future scope**. Temper every specialist against this wall. A specialist
 that designs or builds a deferred feature has failed the task, not exceeded it.
 
+**The 2026-08-23 ship scope sits INSIDE this lock and is narrower still.** D1 additionally
+defers the Ascension Meter, Impact Windows and the Final Clash; D2 ships **three** of the
+four permitted rival attacks. Nothing about D1–D4 widens the lock — they only take less of
+what it already allowed. **Both walls apply.** A feature must clear the scope lock *and*
+be in ship scope before anyone builds it.
+
 ## HARD CONSTRAINT — no runtime AI-model calls
 The shipped game makes **NO runtime AI-model calls.** Crimson Vanguard is
 **deterministic authored logic** — a state machine or Behavior Tree. Generative
@@ -201,27 +247,53 @@ resolve a provisional value on its own authority — it surfaces the question in
 |---|---|---|
 | **M1** | Combat gray box | shared player framework, playable, untextured |
 | **M2** | Rival state loop | six-state rival cycling its four attacks |
-| **M3** | Impact handoff | Impact Windows, meter, counter / perfect-dodge scoring |
-| **M4** | Complete duel | Phase 2, win and loss outcomes, Final Clash incl. failure |
-| **M5** | Presentation pass | **only after M4 is stable** — this is **Phase 2** |
+| **M3** | Impact handoff | ~~Impact Windows, meter, counter / perfect-dodge scoring~~ — **DEFERRED WHOLE by D1.** What replaces it in ship scope: the player's dodge with i-frames (**T3**) |
+| **M4** | Complete duel | **REDEFINED by D1** — win and loss outcomes by health zero, plus restart. ~~Final Clash incl. failure~~ deferred; Phase 2 optional (**T7**) |
+| **M5** | Presentation pass | the **tuned** work only — hit-stop, camera choreography, VFX, sound (**S5**). **Still correctly locked behind a stable M4.** Arena, lighting, materials and recolor are asset dressing and run earlier (**S1–S4**) |
 
 **M1–M4 are Phase 1** (playable by 1 Sept, dressed with free proxy assets). **M5 is
 Phase 2.**
 
-**Current milestone as of 2026-08-02: M1, not yet started in-engine.** There is no
-`.uproject` and no `Content/` anywhere in this repo — nothing exists in Unreal yet.
-What *does* exist is everything needed to start: `build-sequence.md` (63 steps),
-`combat-integration-plan.md` (28 systems), and now
-`docs/unreal/ATTACK_A_IMPLEMENTATION_PLAN.md` plus `ATTACK_A_ACCEPTANCE_TESTS.md`.
-M5 remains correctly locked behind a stable M4.
+**⚠ The milestone numbers above describe the PLANNED architecture. The prototype took a
+different, working route, and the route it took is the one that ships.** Read the table as
+the ordering principle it is — gray box before rival loop before complete duel before
+polish — not as a list of assets to create.
 
-**The first playable objective** (from the pulled sprint handoff, compatible with
-M1–M2): Manny moves and locks onto a scaled red mannequin standing in for Crimson
-Vanguard; Vanguard performs one readable authored attack; the player dodges or
-counters, earns Ascension Meter, triggers one successful Impact Window, and both
-characters return safely to live combat. Proxy cast — Echo → **Manny**, Nova →
-**Quinn** (deferred until Echo proves the shared pipeline), Crimson Vanguard →
-scaled red mannequin, Shattered Ring → gray-box floor, walls, one doorway axis.
+### Current state as of 2026-08-23 — THE GAME EXISTS AND RUNS
+
+**The Unreal project is in this repository at [`game/`](game/)** — added as a subtree on
+2026-08-23, with Git LFS carrying the binary assets. `game/AscendantImpact.uproject`,
+UE 5.8, **Blueprint-only, no `Source/`**. Everything below has been built and validated in
+PIE across **fifteen milestones**. The authoritative running record is
+**[`game/docs/agent/PROTOTYPE_BLACKBOARD.md`](game/docs/agent/PROTOTYPE_BLACKBOARD.md)**,
+and `game/CLAUDE.md` is the operating guide for working inside the editor — including a
+long, hard-won list of Unreal MCP gotchas that will save hours. **Read both before any
+in-engine work.**
+
+**Working today:** player movement, jump-over with dynamic side switching, punch, health,
+hit-react, camera shake, ragdoll death · a Vanguard with range-band AI movement,
+directional locomotion, and **one** telegraphed strike that is interruptible before impact
+and honestly dodgeable in depth · a 2.5D duel camera rig with mutual facing and arena
+bounds ±650 · a duel HUD with both health bars · a knockout coordinator that drops either
+fighter at zero health · and a full **octagon arena blockout** (`Lvl_ArenaOctagon`,
+two-tier gallery, truss walls) generated by the scripts in `game/Tools/ArenaPipeline/`.
+
+**The two gaps that matter, and they are systems, not tuning:**
+
+1. **The player wins nearly every time.** Punch costs nothing and there is no dodge, block
+   or counter — mashing ends the fight. Fixed by **T2** and **T3** in `SHIP-PLAN.md`.
+2. **The Vanguard repeats one move forever.** No variety, no phase change, no punish.
+   Fixed by **T4** and **T5**.
+
+**Also missing:** win/loss resolution (at zero health a body drops and *nothing happens*),
+restart, round timer. Everything is gray prototype material, the duel still runs in the
+flat test box, the project default map is still the stock template level, and **the
+project has never once been packaged.**
+
+**Proxy cast, as actually built** — note this is the reverse of what earlier drafts of this
+file said: the **player** is `BP_ThirdPersonCharacter` on the **Quinn** mesh; **Crimson
+Vanguard** is `BP_VanguardProxy` on the **Manny** mesh at 1.1 uniform scale. Nova is not
+built and is out of ship scope.
 
 **On session start, report which milestone we are on** based on what is in
 `leave-offs/` and on disk. No step may depend on a later milestone, and **M5 work
@@ -257,9 +329,22 @@ Engine"*, **Experimental**, shipped in the engine at
    and not a long list of editor verbs.
 
 `ModelContextProtocol.GenerateClientConfig ClaudeCode` writes `.mcp.json` relative to the
-**Unreal project** directory, which is `FightGame/` — one level below the repo root where
-Claude Code needs it. **Check the path if you use the console command**; the committed
-`.mcp.json` at the repo root is the one that counts.
+**Unreal project** directory. **As of 2026-08-23 that directory is [`game/`](game/)**, not
+the `FightGame/` this file used to name — and both `.mcp.json` files now exist, at the repo
+root and at `game/.mcp.json`, pointing at the same `http://127.0.0.1:8000/mcp`. **Check
+the path if you use the console command**; the committed `.mcp.json` at the repo root is
+the one that counts for Claude Code.
+
+**A third trap, learned the hard way and recorded in `game/CLAUDE.md`: the PIE world
+advances in real time between MCP calls.** The authored Vanguard keeps striking an idle
+player while you deliberate, so a long test session drifts — the player can be knocked out
+between two tool calls. Read health and flags at each step, and restart PIE for clean
+phases. Related: **compiling a Blueprint while PIE is running silently kills Slate-injected
+input** for the rest of that session. Restart PIE after any mid-session compile before
+trusting an input-driven test.
+
+**One editor session at a time.** The user runs agents against a live editor; a second
+open copy of the project is how work gets lost.
 
 ## The pipeline
 
@@ -291,7 +376,21 @@ flowchart TD
     H --> B1[Unreal data bridge - see below]
 ```
 
-## The Unreal data bridge
+## The Unreal data bridge — ⛔ PAUSED PERMANENTLY FOR THIS SHIP (D4, 2026-08-23)
+
+> **Do not run any part of this. Do not import the DataTable. Do not resume the
+> `S_VanguardAttackDef` struct.** D4 paused the route permanently for the 1 September
+> ship; the three Vanguard attacks arrive on the graybox driver instead, under D2.
+>
+> **Consequence — the open approval is moot.** Anthony's signed approval packet and the
+> countersignature that was never given both concern a road that is not being taken.
+> Nothing is revoked; the signature simply stands over unused work. **Stop surfacing the
+> countersignature as an open item.**
+>
+> Everything below is kept **verbatim and correct** because the audit trail cites it, and
+> because the route is paused rather than deleted. Reviving it needs a new recorded
+> decision in `design/decisions.md`.
+
 Pulled in from Anthony's `planning/unreal-attack-a-integration` on **2026-08-02**.
 This is how design data actually reaches the engine. The workflow model is
 **Generate → Deterministic Validate → Agent Review → Human Review Queue**, and
@@ -324,6 +423,18 @@ with `EnabledForSelection = true`, and it must be Attack A. Enabling Attack B fo
 are all revised together.
 
 ## Authority — who the commander is
+
+**As of 2026-08-23 there is one authority, not two. Anthony is unresponsive and the
+project is proceeding without him.** The user is now **sole commander and sole designer of
+record**, and made D1–D4 in that capacity. This is not a dispute — it is a partner who
+stopped answering, and the work continues.
+
+**What that changes in practice:** an approval that was Anthony's to give and never came is
+**not a blocker any more** — it is a decision that falls to the user. Do not stall on one.
+Surface it, name it as theirs, and let them settle it. **What it does not change:** every
+document he authored stays verbatim, every signature he gave stands on its own terms, and
+nothing he wrote gets quietly rewritten to read as though the user wrote it.
+
 In **this** repository the commander and designer of record is **the user**, per
 "How you (the commander) operate this project" below. Documents pulled in from
 Anthony's repo — `CLAUDE_CODE_OVERNIGHT_WORK_ORDER_V2.md`,
@@ -453,31 +564,45 @@ unskippable, it belongs in `entry_gate.py`. Saying a contract-gated agent is
 - You are the **commander and organizer** for this project. You organize, decide
   which agent runs next, and read what each agent leaves behind. You do **not**
   do the specialist work yourself.
-- **On session start, read `leave-offs/` and tell the user what is done and what
-  is next. Do not wait to be asked.**
-- **Also on session start, report the current milestone (M1–M5)** and whether M5
-  is still correctly locked behind a stable M4.
-- **And on session start, report today's date and the days remaining to 1 September
-  2026.** All three coursework deadlines have passed and were met — report them as
-  delivered, not as countdowns, unless a regrade or Assignment #05 changes that.
-- **When you do not know what to run next, run the `goal-planner`.** It exists precisely
-  to answer that question: it diffs the GDD against `design/`, ranks what is left by the
-  lowest `build-sequence.md` step each item blocks, and stops at the first design
-  question. **It had not yet been run as of 2026-08-03.** Its output is
-  `design/goal-plan.md`.
+- **On session start, read these three, in this order:**
+  **1.** [`SHIP-PLAN.md`](SHIP-PLAN.md) — what we are building and on which day.
+  **2.** [`leave-offs/SESSION-RESUME.md`](leave-offs/SESSION-RESUME.md) — where the last
+  session stopped.
+  **3.** [`game/docs/agent/PROTOTYPE_BLACKBOARD.md`](game/docs/agent/PROTOTYPE_BLACKBOARD.md)
+  — what is actually live in the editor, and the MCP gotchas.
+  Then tell the user what is done and what is next. **Do not wait to be asked.**
+- **Also on session start, report today's date, the days remaining to 1 September 2026,
+  and which `SHIP-PLAN.md` task is next.** Report the milestone against the **redefined**
+  M1–M5 table above, and confirm M5's tuned work is still locked behind a stable M4.
+- **Report the coursework as delivered, not as countdowns** — #02 through #07 are all in.
+  If the user asks about #08–#10, say plainly that no requirement doc for them is on disk
+  and ask for it.
+- **When you do not know what to run next, read [`SHIP-PLAN.md`](SHIP-PLAN.md).** Until
+  1 September that file answers the question directly, by date and by task id. The
+  `goal-planner` is the tool for when there is no plan; there is a plan.
+  (For the record: the goal-planner **has** been run — see `leave-offs/STOP-2026-08-04.md`.
+  Its output is `design/goal-plan.md`, whose sections 5–8 were lost to a OneDrive rollback
+  and never recovered.)
 - **All six original agents have run.** The straight line is finished; there is no "next
   agent by gate" among them. The user tells you which phase we are in and you dispatch
   to match. If we are building, run the **developer**. If we are back in research and
   design (for example the M5 presentation pass), stop the developer and run the
   **designer**. **One specialist at a time.**
-- **35 items in `TODO.md` are PROPOSED and awaiting the designer.** Never build on a
-  PROPOSED value as though it were settled, and never let an agent promote one itself.
-- **The work is now in Unreal, not in more documents.** Default to executing
-  `docs/unreal/ATTACK_A_IMPLEMENTATION_PLAN.md` and `build-sequence.md` M1 steps
-  rather than commissioning another planning artifact. Another brief is not progress.
-- **Two approvals are open and both are the user's**: the five cinematic-restore
-  corrections V1–V5 gating M3 sign-off, and the countersignature on
-  `docs/unreal/VANGUARD_ATTACK_DATA_APPROVAL.md`. Surface them; never settle them.
+- **`TODO.md`'s 35 PROPOSED items are mostly moot for this ship** — read its 2026-08-23
+  banner first. Those attached to the meter, the Final Clash, Impact Windows or the
+  DataTable route are deferred with their systems; the rest were tuning values, and tuning
+  now happens in **T6**, in PIE, against a duel you can play. The old rule still holds
+  where an item is still live: **never build on a PROPOSED value as though it were
+  settled, and never let an agent promote one itself.**
+- **The work is in Unreal, in [`game/`](game/), not in more documents.** Default to
+  executing `SHIP-PLAN.md`'s next task through the Unreal MCP. **Another brief is not
+  progress**, and neither is another audit of briefs that already exist.
+  ⚠ `docs/unreal/ATTACK_A_IMPLEMENTATION_PLAN.md` is **no longer the thing to execute** —
+  it belongs to the route D4 paused.
+- **Both previously-open approvals are now closed, and neither should be surfaced again.**
+  V1–V5 and the `VANGUARD_ATTACK_DATA_APPROVAL.md` countersignature both concern work D1
+  and D4 deferred. **The live approvals are whatever `SHIP-PLAN.md` reaches next** — and
+  the tuning that comes out of T6, which remains the user's alone.
 - The user is the **designer of record**. Every number is theirs and provisional.
   Surface tuning questions to them; never let an agent settle one.
 - Keep the mermaid diagram current in **both** `CLAUDE.md` and `README.md`.

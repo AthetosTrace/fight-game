@@ -1,7 +1,54 @@
 # TODO — Ascendant Impact
 
 **66 open items** — **8 closed · 35 PROPOSED · 1 blocked on you · 30 untouched.**
-Last worked 2026-08-03.
+Last worked 2026-08-03. **Ship-scope reduction applied 2026-08-23 — read the next block
+before working any item below.**
+
+> ## ⛔ 2026-08-23 — most of this list is now OUT OF SHIP SCOPE
+>
+> The designer of record made four decisions on 2026-08-23 (**D1–D4**, recorded in
+> [`design/decisions.md`](design/decisions.md)) that cut the 1 September ship down to what
+> nine days can hold. The plan is [`SHIP-PLAN.md`](SHIP-PLAN.md).
+>
+> **Nothing below is deleted, because nothing below was answered.** It is *deferred* —
+> researched, correct, and not being built for this ship. Deferred items keep their
+> numbers and their research; they are simply not work any more.
+>
+> | Section | Ship status |
+> |---|---|
+> | **M1 — Combat gray box** | **PARTLY LIVE.** The graybox equivalents of most of it already exist in `game/`. Items describing the *planned* M1 architecture (`DA_TuningGlobals`, `BP_DuelDirector`, `DA_FighterProfile`, `BP_LockOnComponent`) describe a build that was never taken — the prototype went a different, working route. **Read them as reference, not as a worklist.** |
+> | **M2 — Rival state loop** | **PARTLY LIVE, route changed.** `M2-04` (`DT_VanguardAttacks`, all four rows) is **DEFERRED** under **D4** — the DataTable route is paused permanently for this ship. Three attacks arrive on the graybox driver instead, under **D2**. |
+> | **M3 — Impact handoff** | **DEFERRED WHOLE** under **D1.** `BP_AscensionComponent`, `BP_ImpactWindowDirector`, the meter, the Impact Windows. Not being built. |
+> | **M4 — Complete duel** | **REDEFINED** under **D1.** `BP_FinalClashDirector`, the double gate, the two timing beats, `LS_FinalClash` and the seven-step failure recovery are **DEFERRED WHOLE**. What ships as "complete duel" is health-zero win, health-zero loss, and a restart. |
+> | **M5 — Presentation pass** | **PARTLY LIVE.** Arena, lighting, materials and character recolor are asset dressing and proceed now under **D3**. The tuned feel pass still waits on a stable duel. |
+> | **V1–V5** (cinematic corrections) | **DEFERRED** under **D4.** APPROVED, unapplied, and no longer a ship blocker — they correct a cinematic restore that no longer exists. |
+> | **Item 64** (constraint C3) | **CLOSED BY DEFERRAL** under **D1.** Not answered. Revives with the Final Clash if that is ever revived. |
+> | **Item 74** (README/CLAUDE diagram debt) | **CLOSED 2026-08-23** — the goal-planner is now mirrored into `README.md`. |
+>
+> **The 35 PROPOSED items are mostly moot for this ship.** Those attached to the meter,
+> the Final Clash, Impact Windows or the DataTable route are deferred with their systems.
+> The rest were always tuning values, and tuning now happens in **T6** of `SHIP-PLAN.md` —
+> in PIE, by hand, against a duel you can actually play, which is a better instrument than
+> a table. They still belong to the human, and still may not be settled by an agent.
+
+### NEW 2026-08-23 — item 75 · the GDD is out of date (rule 4)
+
+**⚠ This is the only genuinely new open item, and it is the human's.**
+
+`design/decisions.md` rule 4 fired for the first time. **D1 supersedes a line the GDD
+actually states:**
+
+> *"Win / Loss  Final Clash success / selected fighter health reaches zero  Complete duel
+> loop"* — `gdd/sections/03-ascension-meter-final-clash-and-encounter-flow.md`, PDF pages 3–4.
+
+Until the source PDF is revised and re-extracted, **the GDD remains the source of truth
+and is known-stale on that one row.** That is the acceptable visible state, not a defect
+to route around, and **no agent may edit `gdd/` to fix it** — `gdd/` is generated.
+
+**Clearing it means:** the designer of record revises the GDD PDF, re-exports it, and
+re-extracts `gdd/` with `pypdf`. **Blocking step: none.** It blocks no build work and
+should not consume any of the nine days; it is a documentation debt to settle after ship
+or alongside the final write-up.
 
 > **INSPECTED 2026-08-03.** A cross-consistency pass over all nine dispatches
 > (`design/inspection-design-answers.md`) found **3 process-authority violations and 11
@@ -12,12 +59,12 @@ Last worked 2026-08-03.
 > `design-brief.md` §13.2 that have no row and no Q number. The list grew because the
 > work found holes, which is the list working.
 
-> **SETTLED AND BINDING — Q22 (approved 2026-08-02).** The 1 HP floor is **permanent**;
-> `MinHealthFloor = 1` from `BeginPlay`, lowered to `0` only by `ClashSuccess()`.
-> **The Final Clash is the only way to win the duel.** Three constraints follow and bind
-> every answer below: **C1** Q9 must resolve to *no meter decay*; **C2** the HUD must
-> show which gate is still locked once the health bar pins; **C3** Q2 must be tuned so
-> ≤25% rival health and meter 100 arrive close together. See `design/decisions.md`.
+> **~~SETTLED AND BINDING — Q22 (approved 2026-08-02).~~ AMENDED 2026-08-23 by D1.**
+> Q22 made the Final Clash the only way to win, with `MinHealthFloor = 1` and three
+> binding constraints C1–C3. **None of that is in ship scope any more.** `MinHealthFloor`
+> stays **0**, **health zero wins**, and C1, C2 and C3 are released. Q22's reasoning about
+> the GDD was correct and is kept in `design/decisions.md` for whenever the Final Clash is
+> picked back up. **Do not build from the old banner.**
 
 ## ⏳ PROPOSED — awaiting your approval
 

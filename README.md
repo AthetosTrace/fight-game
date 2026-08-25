@@ -26,11 +26,25 @@ approval.
 
 ## What this crew produces
 
-A gated, six-agent pipeline that turns the game's design into an actionable,
+A gated, six-agent pipeline — plus a **goal planner** added later for Assignment #05,
+which runs ahead of it and decides what to dispatch — that turns the game's design into an
+actionable,
 independently audited Unreal build plan for **this specific game**. A commander
 organizes the work and dispatches one specialist at a time. The pipeline has two
 halves: the original three-agent core crew, and Tony's three-agent specialist
 extension that runs strictly after it.
+
+### The planner that runs first
+
+- **Goal Planner** — decides *what should run next*. It runs before everything and has no
+  upstream agent, because gating the agent that chooses the next dispatch on another
+  agent's output would deadlock the pipeline. It diffs what the GDD says the game is
+  against what `design/` records as decided, ranks the outstanding list by the lowest
+  `build-sequence.md` step each item blocks, classifies each as engineering or design, and
+  recommends a dispatch → produces `design/goal-plan.md`. It holds **`Read` and `Write`
+  and deliberately no `Edit`**, so it cannot modify what it audits. **It may propose and
+  it may rank; it may never decide a design question, and it stops when the top item is
+  one.** Submitted as Assignment #05 in [`assignment-05/`](assignment-05/).
 
 ### The original three-agent crew
 
@@ -145,11 +159,22 @@ The game ships in two phases. **Phase 1 (due 1 September 2026)** is M1–M4: a d
 that can be fought start to finish, dressed with free proxy assets so it reads as a
 game rather than a gray-box demo. **Phase 2** is M5, the polish pass.
 
+**Amended 23 August 2026 by decision D1.** M3 (Impact Windows and the Ascension Meter) is
+deferred whole, and M4 now means *win and loss by health zero, plus a restart* rather than
+the Final Clash and its failure recovery. The ordering principle is unchanged and M5's
+tuned work still waits on a stable M4 — but arena, lighting, materials and character
+recolor are **asset dressing**, which Phase 1 has always permitted, and they run earlier.
+The day-by-day plan is [`SHIP-PLAN.md`](SHIP-PLAN.md).
+
 ## Pipeline
 
 ```mermaid
 flowchart TD
-    C[Commander · CLAUDE.md] -->|project-brief.md| D[Designer]
+    C[Commander · CLAUDE.md] --> GP[Goal Planner<br/>runs first, no upstream agent]
+    GP -->|design/goal-plan.md| GQ{top item a design question?}
+    GQ -->|yes| HS([STOP - hand to the human])
+    GQ -->|no| C2[Commander dispatches]
+    C2 -->|project-brief.md| D[Designer]
     D -->|design-brief.md| G1{designer complete?}
     G1 -->|no| X1[BLOCKED]
     G1 -->|yes| BR{design-only pass<br/>or build pass?}
@@ -196,6 +221,12 @@ rather than invented, and a deterministic validator plus 25 tests enforcing the 
 contract. As of 2026-08-02 the validator passes, the agent review passes, and the
 approval packet is signed.
 
+**⛔ The bridge is PAUSED as of 2026-08-23** (decision D4 in
+[`design/decisions.md`](design/decisions.md)) — not broken, and not revoked. With nine days
+to ship, the three rival attacks are being built directly on the working prototype instead,
+so the DataTable import is a road not taken for this build. The pipeline, its validator and
+its tests all still pass; reviving it needs a new recorded decision.
+
 The canonical copy of both diagrams lives in [`CLAUDE.md`](CLAUDE.md); these are
 mirrors. If the pipeline changes, `CLAUDE.md` is updated first and this file is
 kept in sync.
@@ -204,7 +235,7 @@ kept in sync.
 
 | Deliverable | File |
 |---|---|
-| Crew code — six coordinating agents | [`.claude/agents/`](.claude/agents/) (`designer`, `developer`, `inspector`, `framework-evaluator`, `combat-integration-architect`, `cinematic-integration-inspector`), plus the Unreal data bridge's review contract in [`agents/unreal/`](agents/unreal/) |
+| Crew code — six coordinating agents, plus the #05 planner | [`.claude/agents/`](.claude/agents/) (`designer`, `developer`, `inspector`, `framework-evaluator`, `combat-integration-architect`, `cinematic-integration-inspector`, and `goal-planner`), plus the Unreal data bridge's review contract in [`agents/unreal/`](agents/unreal/) |
 | Orchestration and gating | Hard Python hooks for the original three-agent crew: [`.claude/hooks/`](.claude/hooks/), wired in [`.claude/settings.json`](.claude/settings.json). Tony's specialist extension is ordered by self-blocking dependency contracts in each agent definition (required inputs, explicit `BLOCKED` behavior, artifact-existence checks, recorded human approval) rather than by the hooks. |
 | Mermaid diagram — roles, connections, data flow | this file and [`CLAUDE.md`](CLAUDE.md) |
 | ReadMe — what the crew produces and for which game | this file |
@@ -216,10 +247,29 @@ kept in sync.
 The game is **Ascendant Impact**. Course requirement docs are in
 [`assignments/`](assignments/).
 
-## Status
+## Status — 23 August 2026
 
-All six agents have run to completion; the chain verdict is **APPROVED WITH REQUIRED
-CHANGES**, with five cinematic-restore corrections (V1–V5) still awaiting the
-designer before M3 sign-off. Assignments #02, #03, and #04 are delivered. The build
-is at **M1 and not yet started in-engine** — the next work is Unreal, not more
-documents. Phase 1 (M1–M4, a duel fought start to finish) is due **1 September 2026**.
+**The game exists and runs.** The Unreal project lives in this repository at
+[`game/`](game/) (UE 5.8, Blueprint-only, Git LFS), with **fifteen build milestones
+complete and validated in PIE**: a player who moves, jumps over the rival and punches; a
+Crimson Vanguard with range-band AI movement, directional locomotion and one telegraphed,
+interruptible, honestly-dodgeable strike; a 2.5D duel camera; a health HUD; ragdoll
+knockouts; and a full octagon arena blockout. The running record is
+[`game/docs/agent/PROTOTYPE_BLACKBOARD.md`](game/docs/agent/PROTOTYPE_BLACKBOARD.md).
+
+**What is left is the fight itself.** The player has no dodge and no attack cost, so
+mashing wins; the Vanguard has one move, so it repeats. Both are missing systems rather
+than tuning, and both are the subject of **[`SHIP-PLAN.md`](SHIP-PLAN.md)** — the nine-day
+plan to 1 September, with the duel playable and contested by **27 August** and the visual
+pass following it.
+
+**Scope was cut on 23 August** (decisions D1–D4 in
+[`design/decisions.md`](design/decisions.md)): the duel is won at **health zero**, and the
+Ascension Meter, Impact Windows and Final Clash are deferred future scope. One consequence
+is recorded honestly rather than quietly — D1 supersedes the GDD's own Win / Loss row, so
+the GDD is now **known-stale on that one line** until the source PDF is revised and
+re-extracted (`TODO.md` item 75).
+
+All seven agents have run to completion; the chain verdict is **APPROVED WITH REQUIRED
+CHANGES**, and its five cinematic-restore corrections (V1–V5) are deferred with the
+cinematic system they describe. **Assignments #02 through #07 are delivered.**

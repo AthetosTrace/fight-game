@@ -1,136 +1,144 @@
-# Session resume — written 2026-08-03
+# Session resume — rewritten 2026-08-23
 
-> **2026-08-04 — read [`STOP-2026-08-04.md`](STOP-2026-08-04.md) BEFORE this file.** A task was
-> interrupted mid-run, and **OneDrive rolled two files backward during a folder move, losing
-> `design/goal-plan.md` sections 5–8.** That note carries the loss, the recovery options, and
-> the resume list. It also supersedes two rows below: the `goal-planner` **has** now been run,
-> and the working tree is **not** clean.
+Not a gate file. The gate hooks read `designer.md`, `developer.md` and `inspector.md`;
+this file is here for the next session to read **first**.
 
-Not a gate file. The gate hooks read `designer.md`, `developer.md` and `inspector.md`; this
-file is here for the next session to read **first**.
+**Recompute every date on session start.** This was written with **nine days** left to the
+**1 September 2026** ship date.
 
-**Recompute every date on session start — they are stale the moment this file is saved.**
+> **This file replaces the 2026-08-03 version wholesale.** That version said the milestone
+> was "M1, not started in-engine — no `.uproject`, no `Content/` anywhere." **That is no
+> longer true and had already stopped being true.** `leave-offs/STOP-2026-08-04.md` is now
+> **historical**: its lost-work incident is real and recorded, but its resume list is
+> superseded by `SHIP-PLAN.md`.
 
 ## Read these three, in this order
 
-1. **This file** — where things stand.
-2. **`TODO.md`** — 66 open items, every one carrying the `build-sequence.md` step it blocks.
-3. **`design/decisions.md`** — what is settled and what is only proposed. **Trust its status
-   field over any group file's prose**: an inspection reopened two items whose own sections
-   still read APPROVED in places.
+1. **[`SHIP-PLAN.md`](../SHIP-PLAN.md)** — the nine-day plan. What we build, on which day,
+   and what gets cut first if a day slips. **This is now the answer to "what next".**
+2. **This file** — what changed on 2026-08-23 and what state everything is in.
+3. **[`game/docs/agent/PROTOTYPE_BLACKBOARD.md`](../game/docs/agent/PROTOTYPE_BLACKBOARD.md)**
+   — fifteen milestones of what is actually live in the editor, plus `game/CLAUDE.md`'s
+   long list of hard-won Unreal MCP gotchas. **Read the gotchas before touching the editor.**
+   They will save hours, and several of them are things that fail *silently*.
 
 ## Where the project actually stands
 
 | Thing | State |
 |---|---|
-| Milestone | **M1 — not started in-engine.** No `.uproject`, no `Content/` anywhere |
+| **The game** | **Exists and runs.** `game/AscendantImpact.uproject`, UE 5.8, Blueprint-only, subtree'd into this repo 2026-08-23 with Git LFS. **Fifteen milestones** built and PIE-validated |
+| Milestone | Prototype route, not the planned one. Roughly **M1–M2 complete**; M3 **deferred whole**; M4 **redefined**; M5's tuned work still correctly locked |
 | Phase | **Phase 1** — a duel fought start to finish, due **1 Sept 2026** |
-| Coursework | **#02, #03, #04, #05 all delivered.** Nothing outstanding |
-| Git | local `main` == `origin/main` == `0f762df`, clean, pushed |
-| Agents | **seven exist.** The new `goal-planner` runs first and has never been run |
-| Design answers | **43 questions answered** across 9 dispatches, **8 closed**, **35 PROPOSED and awaiting the designer** |
-| Inspections | **3 passes.** Zero GDD violations. 3 process-authority violations found and corrected |
+| Coursework | **#02 through #07 all delivered.** No requirement doc on disk for #08–#10 — **ask the user** |
+| Partner | **Anthony is unresponsive.** The user is now sole commander and sole designer of record |
+| Scope | **Cut on 2026-08-23** — decisions **D1–D4**, in `design/decisions.md` |
 
-## The one thing that matters most
+## What happened this session (2026-08-23)
 
-**35 items are PROPOSED and waiting on the human designer.** They are researched, sourced
-against real shipped games, and cross-checked — but **not decided.** Nothing downstream should
-be built on a PROPOSED value as though it were settled.
+Planning only. **No engine work, no assets touched, no branches cut** — the user had
+agents working against the live editor and a second open project is how work gets lost.
 
-**`TODO.md`'s ⏳ PROPOSED table lists every one, grouped by dispatch.** The fastest useful
-thing the next session can do is walk that table with the user and convert approvals into
-deletions.
+1. **Audited the real state of the build** — the root `CLAUDE.md` was stale by fifteen
+   milestones and claimed nothing existed in Unreal.
+2. **Named the two gaps that actually block "playable"** (below).
+3. **Took four scope decisions from the designer of record** — D1–D4.
+4. **Wrote [`SHIP-PLAN.md`](../SHIP-PLAN.md)** — day-by-day to 1 September, published also
+   as an artifact.
+5. **Truth-passed the documentation** so no agent plans against a repo that no longer
+   exists: `CLAUDE.md`, `README.md`, `TODO.md`, `design/decisions.md`, this file.
 
-## What happened 2026-08-02 → 2026-08-03
+## The two gaps — this is the whole job
 
-1. **Pulled Anthony's `planning/unreal-attack-a-integration`** — 15 commits, the Unreal data
-   bridge (attack CSV, validator, 25 tests, Attack A plan). Verified in-tree: validator PASS,
-   25 CSV tests, 175 assignment-04 tests.
-2. **Recovered GDD pages 10–14.** They are image reference sheets no agent had ever seen —
-   `pdftoppm` is absent, so pages cannot be rendered. The embedded JPEGs were pulled from the
-   PDF's `/XObject` resources with `pypdf` and read directly. Now in `gdd/reference/`.
-   Re-split the authored text into `gdd/sections/` by the document's own numbering.
-3. **Fixed a gate that would have deadlocked the work** — `entry_gate.py` made the inspector
-   depend on the developer, so a design-only pass could never inspect anything.
-4. **Worked the whole `TODO.md`** in 9 grouped designer dispatches. See below.
-5. **Ran the inspector three times.** Corrected everything that was mine to correct.
-6. **Built Assignment 05** — the `goal-planner` agent and `assignment-05/`.
+Both are **missing systems, not tuning.** Do not try to fix either with numbers.
+
+1. **The player wins nearly every time.** Punch costs nothing and there is no dodge, block
+   or counter — mash the attack ten times and the fight is over. Nothing asks the player to
+   read anything. → `SHIP-PLAN.md` **T2** (attack commitment) and **T3** (dodge, i-frames).
+2. **The Vanguard repeats one move forever.** One telegraph, one swing, one wait, at one
+   range, on one timing. → **T4** (three attacks) and **T5** (pressure and punish).
+
+**Also genuinely missing:** win/loss resolution — at zero health a body drops and *nothing
+happens* — plus restart and a round timer. **T1** is the cheapest high-value task on the
+list and should go first.
 
 ## Do this first, next session
 
-1. **Run the `goal-planner`.** It has never been run. Its gate is open (it needs only
-   `project-brief.md`, the extracted GDD, and `build-sequence.md`). It produces
-   `design/goal-plan.md` — a ranked worklist and one dispatch recommendation — and **stops
-   when the top item is a design question.** That replaces the by-hand ranking this session
-   did.
-2. **Or skip it and walk `TODO.md`'s PROPOSED table with the user**, if the user wants to
-   approve in a batch instead. That is the higher-value move if they have time.
-3. **Then stop writing documents and start building in Unreal.** Everything needed exists:
-   `build-sequence.md` (63 steps), `combat-integration-plan.md` (28 systems),
-   `docs/unreal/ATTACK_A_IMPLEMENTATION_PLAN.md`, `ATTACK_A_ACCEPTANCE_TESTS.md`.
+1. **T1 — fight-end resolution and restart.** Half a day, highest value per hour on the
+   board, and it is the thing a grader notices missing in the first ten seconds.
+2. **P1 — the packaging spike, on 24 August.** This project **has never been packaged
+   once**, the default map is still `Lvl_ThirdPerson`, and `ModelContextProtocol` is an
+   Editor-only plugin. A first UE 5.8 package failure routinely costs a day, and the 31st
+   is the one day that cannot absorb it. **Do not defer this.**
+3. **T2 — player attack commitment.** Then follow `SHIP-PLAN.md` by date.
 
-## Blocked, and needs the user — not solvable by any agent
+## Settled 2026-08-23 — do not re-litigate
 
-- **Unreal MCP is not connected.** `TODO.md` item 1. **This blocks all 63 build steps.**
-- **Item 26** — whether GDD page 14's *"plasma-gauntlet weapons"* contradicts Attack A. The
-  transcription disclaims its own confidence, so a dispatch refused to settle canon from it.
-  **Clearing it means zooming page 14 by eye.** Four specific questions are written out in
-  `design/group-07-structure-and-canon.md`.
-- **Item 64** — constraint **C3 from the approved Q22 is not satisfied.** Q2 = 1200 puts meter
-  100 and the ≤25% health gate **90–135 s apart**, not "close together". Either amend C3 on the
-  record or take Q2 → 1050–1100.
-- **Items 6 and 29** — Q17 and Q18, reopened by the inspection because they were closed as
-  engineering when they were actually designer choices. Recommendations intact.
+**D1 — health zero wins the duel.** The Ascension Meter, Impact Windows and the Final
+Clash are **deferred future scope**. `MinHealthFloor` stays **0**.
+
+- **This amends Q22**, which is recorded as *settled and binding*. Q22's reasoning about
+  the GDD was correct; it was amended on ship-scope grounds by the only person who could.
+- **Constraints C1, C2, C3 are released. Item 64 is closed by deferral, not answered.**
+- **⚠ D1 supersedes a line the GDD actually states** — the Win / Loss row in §03. **Rule 4
+  has fired for the first time.** The GDD is now *known-stale on that one row* until the
+  PDF is revised and re-extracted. That is **`TODO.md` item 75**, it blocks no build work,
+  and **no agent may edit `gdd/` to "fix" it** — `gdd/` is generated.
+
+**D2 — three Vanguard attacks**, Phase 2 optional. Scopes `game/AGENTS.md`'s *"only Attack
+A is enabled"* to the paused DataTable route. Within the scope lock, which permits four.
+**Every value stays provisional.**
+
+**D3 — material-instance recolor** is the character look. A free Fab/Mixamo swap is
+optional, attempted only from a finished duel, and is the **last** thing cut — the user
+wants it and it is also the likeliest to break the validated animation path.
+
+**D4 — the `DT_VanguardAttacks` DataTable route is paused permanently** for this ship.
+
+## Two things that used to be blockers and are not any more
+
+**Stop surfacing both of these.** They were real, they are closed, and raising them again
+costs a day of the nine.
+
+- **V1–V5**, the five cinematic-restore corrections gating M3 sign-off. They correct a
+  cinematic restore that D1 deferred. APPROVED, unapplied, and correctly at rest.
+- **The countersignature on `docs/unreal/VANGUARD_ATTACK_DATA_APPROVAL.md`.** Anthony
+  signed it for a route D4 paused. Nothing is revoked; the signature simply stands over
+  work that is not being done.
 
 ## Traps that will bite whoever goes next
 
-- **Item 65 — Telegraph and Recover are specified two incompatible ways.** Absolute seconds in
-  `design/group-07-structure-and-canon.md`, a scale factor in `design-brief.md` §13.1 and
-  `build-sequence.md` M4-04. **`M2-04` and `M4-04` cannot both be built as written**, and the
-  four phase ratios (0.786 / 0.800 / 0.775 / 0.778) are not uniform, so no single
-  `TelegraphScale` can express them.
-- **Items 49 + 67 — the rival's `MaxWalkSpeed` does not exist** in any table, and under the
-  approved Q22 a rival slower than the player **can be kited forever and the duel cannot end.**
-  Three dispatches assumed three different speeds. Tune 49, 67 and Q21 in one session.
-- **Item 63 — V1–V5 are written and APPROVED but NOT APPLIED.** The
-  `combat-integration-architect` has to put them into `combat-integration-plan.md`. That is
-  what clears hard check 7 and unlocks **M3**. **M1 and M2 may proceed now regardless.**
-- **Items 68–71 — `build-sequence.md` is stale** in four places against the new answers.
-- **`ActiveSeconds` must never gain a per-phase field.** Scaling Attack D's 0.45 s by the
-  Phase 2 ratio crosses 600 cm at 1714 cm/s and breaks the GDD's own no-snap rule.
-- **Attack B's first-to-last hit notify must span ≤ 0.26 s**, or the 0.28 s i-frames cannot
-  cover it and **B becomes unavoidable**.
-- **Two numbering spaces overlap.** `TODO.md` **item** numbers and proposed `design-brief.md`
-  **§13.2 row** numbers both run through the high 50s and early 60s and mean unrelated things.
+- **The PIE world advances in real time between MCP calls.** The Vanguard keeps striking an
+  idle player while you deliberate — the player can be KO'd between two tool calls. Read
+  health and flags at every step; restart PIE for clean phases.
+- **Compiling a Blueprint while PIE runs silently kills Slate-injected input** for the rest
+  of that session. Restart PIE after any mid-session compile before trusting an input test.
+- **One editor session at a time.** The user runs agents against a live editor.
+- **`.uasset` files are binary and unmergeable** — two branches editing one always loses a
+  side. One branch touches assets at a time.
+- **`game/CLAUDE.md` has a page of Blueprint-DSL gotchas that fail silently** — positional
+  args binding to `self`, ghost UMG `Tick`/`Construct` nodes, stale per-instance component
+  data, OFPA level saves. **Read them; do not rediscover them.**
+- **`design-brief.md`, `combat-integration-plan.md`, `build-sequence.md` and most of
+  `TODO.md` describe a LARGER game than the one shipping.** They are correct documents
+  about the full GDD design. **Read them as reference.** Where they disagree with
+  `SHIP-PLAN.md` about the next nine days, `SHIP-PLAN.md` wins.
+- **`docs/unreal/ATTACK_A_IMPLEMENTATION_PLAN.md` is no longer the thing to execute.** It
+  belongs to the route D4 paused.
+- **Two numbering spaces overlap.** `TODO.md` **item** numbers and `design-brief.md`
+  **§13.2 row** numbers both run through the high 50s and 60s and mean unrelated things.
   Always write "item N" or "§13.2 row N", never a bare number.
-- **Item 74 — a HARD RULE debt, opened knowingly.** `CLAUDE.md`'s diagram shows the
-  `goal-planner`; the root `README.md` does not, because the Assignment 05 instruction said not
-  to touch it. The two diagrams disagree until someone mirrors two blocks across.
-
-## Settled and binding — do not re-litigate
-
-**Q22, approved by the designer of record 2026-08-02.** `MinHealthFloor = 1` on the rival from
-`BeginPlay`, lowered to `0` only by `ClashSuccess()`. **The Final Clash is the only way to win
-the duel.** Three constraints follow and bind every later answer:
-
-- **C1** — Q9 must resolve to **no meter decay**. (Done; group 06 proposes none.)
-- **C2** — the HUD must show **which gate is still locked** once the health bar pins.
-- **C3** — Q2 must place ≤25% health and meter 100 **close together**. **NOT SATISFIED —
-  item 64.**
-
-Also settled: **item 28** — Crimson Vanguard is **208 cm**, transcribed from GDD page 10, which
-filled a blank in `design-brief.md` §13.1 row 28.
 
 ## Where the work lives
 
 | Path | What |
 |---|---|
-| `TODO.md` | the worklist — 66 items, each with its blocking step |
-| `design/decisions.md` | the permanent record, 9 entries + a corrections note |
-| `design/group-0*.md` | the reasoning behind every answer, 10,005 lines total |
-| `design/inspection-design-answers*.md` | three inspection passes |
-| `gdd/INDEX.md` | start here for the GDD — `sections/` for text, `reference/` for the images |
-| `assignment-05/` | the goal-planner submission |
-| `.claude/agents/goal-planner.md` | the live agent |
+| **`SHIP-PLAN.md`** | **the plan — start here** |
+| `game/` | the Unreal project (LFS) |
+| `game/docs/agent/PROTOTYPE_BLACKBOARD.md` | fifteen milestones of what is live |
+| `game/CLAUDE.md` | how to work in the editor + the MCP gotchas |
+| `design/decisions.md` | the permanent record — D1–D4 at the top of the log |
+| `TODO.md` | the old worklist, with a 2026-08-23 banner marking what is deferred |
+| `gdd/INDEX.md` | the GDD — `sections/` for text, `reference/` for the image sheets |
+| `leave-offs/STOP-2026-08-04.md` | historical; the lost-work incident |
 
 **`gdd/` is generated and never hand-edited.** To change it, change the PDF and re-extract.
