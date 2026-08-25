@@ -1,0 +1,5 @@
+finding_id,invariant_id,error_type,severity,classification,location,game_context,repro,seed,backend
+F001,B3,boundary_break,S1,DEFECT,BP_VanguardDuelMover.ApplyConstraints,"capsule interpenetration: separation 48.7 < contact 69.0; crossing=False, side=1",seed=7; close to contact range and press,7,pie
+F002,X7,exploit,S1,DEFECT,BP_DuelKnockoutCoordinator.StopMover -> BP_VanguardDuelMover.ApplyConstraints,"after KO (player=False, vanguard=True) position constraints are no longer enforced: separation 48.7 < capsule contact 69.0. crossing=False, side=1","seed=7; punch the Vanguard to the arena bound, KO it there, then keep walking forward into and past the body",7,pie
+F003,B1,boundary_break,S1,DEFECT,BP_VanguardDuelMover.ApplyConstraints,"player at x=688.1, outside [-650.0, 650.0] for 3.7s; sep=38.12907198248922",seed=7; drive player toward the bound and hold,7,pie
+F004,B5,boundary_break,S2,DEFECT,BP_VanguardDuelMover.UpdateSideOwnership,"ordering inverted: CurrentSideSign=1 but vanguard is left (player 688.1, vanguard 650.0)",seed=7; jump over and land inside the deadzone,7,pie

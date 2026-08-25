@@ -59,6 +59,13 @@ clamp is allowed to correct within, how long counts as stuck. Those are **harnes
 parameters, not design values.** This agent changes no number in the game, and a value the
 project records as OPEN or PROVISIONAL stays that way.
 
+**05. Read-only by contract**
+
+The agent samples properties and injects real input. It never edits a `.uasset` or `.umap`,
+never writes a design value, and never resolves anything the project records as OPEN or
+PROVISIONAL. Sprint task `Q01` makes this explicit: *"Text-only track. Do not touch
+`.uasset` or `.umap` from this branch; `G` owns the editor and the assets."*
+
 ---
 
 *Every invariant cites `PROTOTYPE_BLACKBOARD.md` by section, because the blackboard is the

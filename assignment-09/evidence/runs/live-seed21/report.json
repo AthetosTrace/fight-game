@@ -1,0 +1,184 @@
+{
+  "run": {
+    "seed": 21,
+    "backend": "pie",
+    "level": "/Game/AscendantImpact/Maps/Lvl_DuelGraybox",
+    "sample_count": 35,
+    "duration_s": 75.0,
+    "sample_dt_requested_s": 0.2,
+    "sample_dt_observed_s": 2.001,
+    "plan": [
+      [
+        "baseline_idle",
+        6.0,
+        "none"
+      ],
+      [
+        "punch_loop",
+        22.0,
+        "punch"
+      ],
+      [
+        "jump_cross",
+        10.0,
+        "jump"
+      ],
+      [
+        "punch_loop",
+        16.0,
+        "punch"
+      ],
+      [
+        "jump_punch_mix",
+        10.0,
+        "mix"
+      ],
+      [
+        "idle_tail",
+        6.0,
+        "none"
+      ]
+    ],
+    "generated": "2026-08-24T21:19:00"
+  },
+  "summary": {
+    "findings_total": 4,
+    "defects": 4,
+    "known": 0,
+    "by_severity": {
+      "S1": 3,
+      "S2": 1,
+      "S3": 0
+    }
+  },
+  "live_tuning_verified": {
+    "mover": {
+      "combatAxisMin": -650,
+      "combatAxisMax": 650,
+      "minimumAxisSeparation": 78,
+      "preferredDistance": 180,
+      "rangeDeadZone": 45,
+      "retreatSpeedScale": 0.5,
+      "currentSideSign": 1,
+      "sideDeadzone": 20,
+      "crossingMinRelativeHeight": 50,
+      "bCrossingActive": false,
+      "bExternalMovementLocked": true,
+      "movementIntent": 0,
+      "depthLaneCenter": 0,
+      "depthLaneHalfWidth": 180,
+      "currentDepthTarget": -145.33066805452108,
+      "bMoverActivated": true
+    },
+    "driver": {
+      "attackState": 2,
+      "stateTimer": 0,
+      "cooldownRemaining": 0.26113393157720566,
+      "bImpactDone": false,
+      "attackRange": 240,
+      "windupDuration": 1.1,
+      "strikeImpactDelay": 0.3,
+      "strikeDuration": 0.6,
+      "recoveryDuration": 1,
+      "attackCooldownMin": 2.5,
+      "attackCooldownMax": 4,
+      "attackDecisionChance": 0.65,
+      "retryDelay": 0.6,
+      "attackDamage": 10,
+      "impactForwardOffset": 100,
+      "impactRadius": 90,
+      "impactDepthTolerance": 55,
+      "windupStartVanguardHealth": 100,
+      "bDriverActivated": true
+    },
+    "knockout": {
+      "bPlayerKO": false,
+      "bVanguardKO": false,
+      "bPlayerRagdolled": false,
+      "bVanguardRagdolled": false,
+      "playerKOTimer": 0,
+      "vanguardKOTimer": 0,
+      "impactToRagdollDelay": 0.2
+    },
+    "player": {
+      "currentHealth": 90,
+      "maxHealth": 100,
+      "bIsAttacking": false,
+      "bDuelModeActive": true
+    }
+  },
+  "findings": [
+    {
+      "finding_id": "F001",
+      "invariant_id": "B3",
+      "location": "BP_VanguardDuelMover.ApplyConstraints",
+      "error_type": "boundary_break",
+      "game_context": "capsule interpenetration: separation 47.3 < contact 69.0; crossing=False, side=1",
+      "seed": 21,
+      "backend": "pie",
+      "repro": "seed=21; close to contact range and press",
+      "severity": "S1",
+      "classification": "DEFECT",
+      "invariant": "Capsules never interpenetrate: separation is always at least 69 cm.",
+      "evidence": {
+        "separation": 47.3338201621026,
+        "crossing": false
+      }
+    },
+    {
+      "finding_id": "F002",
+      "invariant_id": "X7",
+      "location": "BP_DuelKnockoutCoordinator.StopMover -> BP_VanguardDuelMover.ApplyConstraints",
+      "error_type": "exploit",
+      "game_context": "after KO (player=False, vanguard=True) position constraints are no longer enforced: separation 47.3 < capsule contact 69.0. crossing=False, side=1",
+      "seed": 21,
+      "backend": "pie",
+      "repro": "seed=21; punch the Vanguard to the arena bound, KO it there, then keep walking forward into and past the body",
+      "severity": "S1",
+      "classification": "DEFECT",
+      "invariant": "Position constraints stay enforced after a knockout.",
+      "evidence": {
+        "player_x": 602.6661798378974,
+        "vanguard_x": 650,
+        "separation": 47.3338201621026,
+        "player_ko": false,
+        "vanguard_ko": true
+      }
+    },
+    {
+      "finding_id": "F003",
+      "invariant_id": "B1",
+      "location": "BP_VanguardDuelMover.ApplyConstraints",
+      "error_type": "boundary_break",
+      "game_context": "player at x=691.9, outside [-650.0, 650.0] for 4.7s; sep=41.89423763650825",
+      "seed": 21,
+      "backend": "pie",
+      "repro": "seed=21; drive player toward the bound and hold",
+      "severity": "S1",
+      "classification": "DEFECT",
+      "invariant": "Both fighters stay inside the combat-axis bounds of plus or minus 650.",
+      "evidence": {
+        "actor": "player",
+        "x": 691.8942376365083,
+        "held_s": 4.67
+      }
+    },
+    {
+      "finding_id": "F004",
+      "invariant_id": "B5",
+      "location": "BP_VanguardDuelMover.UpdateSideOwnership",
+      "error_type": "boundary_break",
+      "game_context": "ordering inverted: CurrentSideSign=1 but vanguard is left (player 691.9, vanguard 650.0)",
+      "seed": 21,
+      "backend": "pie",
+      "repro": "seed=21; jump over and land inside the deadzone",
+      "severity": "S2",
+      "classification": "DEFECT",
+      "invariant": "While no crossing is active, the sign of (vanguardX - playerX) equals CurrentSideSign.",
+      "evidence": {
+        "side_sign": 1,
+        "actual": -1
+      }
+    }
+  ]
+}

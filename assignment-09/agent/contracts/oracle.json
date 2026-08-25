@@ -1,0 +1,593 @@
+{
+  "schema_version": "1.0",
+  "title": "Ascendant Impact \u2014 adversarial QA oracle",
+  "written": "2026-08-24",
+  "authority": "game/docs/agent/PROTOTYPE_BLACKBOARD.md",
+  "note": "Every constant below was measured in the live editor and recorded with its milestone. This agent reads them and never writes them. All values remain provisional and pending playtest.",
+  "scope": {
+    "basis": "the live graybox duel in game/, fifteen validated milestones",
+    "not_basis": "the GDD combat economy \u2014 the Ascension Meter, Impact Windows and the Final Clash are deferred whole by decision D1 (2026-08-23, design/decisions.md)",
+    "ship_decisions": [
+      "D1",
+      "D2",
+      "D3",
+      "D4"
+    ]
+  },
+  "constants": {
+    "arena": {
+      "combat_axis_min": {
+        "value": -650.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#14.1",
+        "unit": "cm"
+      },
+      "combat_axis_max": {
+        "value": 650.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#14.1",
+        "unit": "cm"
+      },
+      "max_legal_separation": {
+        "value": 1300.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#14.1",
+        "unit": "cm"
+      },
+      "ground_plane_z": {
+        "value": 0.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#22",
+        "unit": "cm"
+      }
+    },
+    "spacing": {
+      "minimum_axis_separation": {
+        "value": 78.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#15.2",
+        "unit": "cm"
+      },
+      "player_capsule_radius": {
+        "value": 35.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#15.1",
+        "unit": "cm"
+      },
+      "vanguard_capsule_radius": {
+        "value": 34.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#15.1",
+        "unit": "cm"
+      },
+      "capsule_contact_distance": {
+        "value": 69.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#15.1",
+        "unit": "cm",
+        "note": "35 + 34; never legal to breach"
+      },
+      "preferred_distance": {
+        "value": 180.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#15.2",
+        "unit": "cm"
+      },
+      "range_dead_zone": {
+        "value": 45.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#15.2",
+        "unit": "cm"
+      },
+      "retreat_below": {
+        "value": 135.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#15.2",
+        "unit": "cm"
+      },
+      "advance_beyond": {
+        "value": 225.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#15.2",
+        "unit": "cm"
+      },
+      "retreat_speed_scale": {
+        "value": 0.5,
+        "source": "PROTOTYPE_BLACKBOARD.md#15.2"
+      },
+      "vanguard_jog_speed": {
+        "value": 300.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#15.2",
+        "unit": "cm/s"
+      },
+      "player_max_walk_speed": {
+        "value": 600.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#22",
+        "unit": "cm/s"
+      }
+    },
+    "crossing": {
+      "side_deadzone": {
+        "value": 20.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#22",
+        "unit": "cm"
+      },
+      "crossing_min_relative_height": {
+        "value": 50.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#22",
+        "unit": "cm"
+      },
+      "jump_z_velocity": {
+        "value": 820.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#23"
+      },
+      "gravity_scale": {
+        "value": 1.9,
+        "source": "PROTOTYPE_BLACKBOARD.md#23"
+      },
+      "air_control": {
+        "value": 0.35,
+        "source": "PROTOTYPE_BLACKBOARD.md#23"
+      },
+      "jump_apex_rise": {
+        "value": 180.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#23",
+        "unit": "cm"
+      },
+      "jump_airtime_min": {
+        "value": 0.89,
+        "source": "PROTOTYPE_BLACKBOARD.md#23",
+        "unit": "s"
+      },
+      "jump_airtime_max": {
+        "value": 0.92,
+        "source": "PROTOTYPE_BLACKBOARD.md#23",
+        "unit": "s"
+      },
+      "vanguard_capsule_top": {
+        "value": 176.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#22",
+        "unit": "cm"
+      },
+      "crossing_window_min": {
+        "value": 0.6,
+        "source": "PROTOTYPE_BLACKBOARD.md#23",
+        "unit": "s"
+      },
+      "crossing_window_max": {
+        "value": 0.7,
+        "source": "PROTOTYPE_BLACKBOARD.md#23",
+        "unit": "s"
+      }
+    },
+    "attack_driver": {
+      "attack_range": {
+        "value": 240.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#16.3",
+        "unit": "cm",
+        "note": "combat-axis separation gate; widened from 190 2D in the 16.4 fix"
+      },
+      "windup_duration": {
+        "value": 1.1,
+        "source": "PROTOTYPE_BLACKBOARD.md#17.1",
+        "unit": "s"
+      },
+      "strike_impact_delay": {
+        "value": 0.3,
+        "source": "PROTOTYPE_BLACKBOARD.md#16.3",
+        "unit": "s"
+      },
+      "strike_duration": {
+        "value": 0.6,
+        "source": "PROTOTYPE_BLACKBOARD.md#16.3",
+        "unit": "s"
+      },
+      "recovery_duration": {
+        "value": 1.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#16.3",
+        "unit": "s"
+      },
+      "attack_cooldown_min": {
+        "value": 2.5,
+        "source": "PROTOTYPE_BLACKBOARD.md#16.3",
+        "unit": "s"
+      },
+      "attack_cooldown_max": {
+        "value": 4.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#16.3",
+        "unit": "s"
+      },
+      "attack_decision_chance": {
+        "value": 0.65,
+        "source": "PROTOTYPE_BLACKBOARD.md#16.3"
+      },
+      "retry_delay": {
+        "value": 0.6,
+        "source": "PROTOTYPE_BLACKBOARD.md#16.3",
+        "unit": "s"
+      },
+      "initial_attack_delay": {
+        "value": 1.5,
+        "source": "PROTOTYPE_BLACKBOARD.md#16.3",
+        "unit": "s"
+      },
+      "impact_forward_offset": {
+        "value": 100.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#16.3",
+        "unit": "cm"
+      },
+      "impact_radius": {
+        "value": 90.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#16.3",
+        "unit": "cm"
+      },
+      "max_reach": {
+        "value": 225.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#16.2",
+        "unit": "cm",
+        "note": "100 + 90 + player capsule 35"
+      },
+      "impact_depth_tolerance": {
+        "value": 55.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#17.1",
+        "unit": "cm"
+      },
+      "attack_damage": {
+        "value": 10.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#16.3"
+      },
+      "cancellable_seconds_per_attack": {
+        "value": 1.4,
+        "source": "PROTOTYPE_BLACKBOARD.md#17.1",
+        "unit": "s",
+        "note": "windup 1.1 + impact delay 0.3; any player hit in this span cancels and rerolls the full cooldown"
+      }
+    },
+    "player": {
+      "max_health": {
+        "value": 100.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#16.1"
+      },
+      "punch_damage": {
+        "value": 10.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#22"
+      },
+      "punch_forward_offset": {
+        "value": 120.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#22",
+        "unit": "cm"
+      },
+      "punch_radius": {
+        "value": 110.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#22",
+        "unit": "cm"
+      }
+    },
+    "vanguard": {
+      "max_health": {
+        "value": 100.0,
+        "source": "PROTOTYPE_BLACKBOARD.md#17.2",
+        "note": "hardcoded in both the proxy graph and the HUD divisor \u2014 see K5"
+      }
+    },
+    "knockout": {
+      "impact_to_ragdoll_delay": {
+        "value": 0.2,
+        "source": "PROTOTYPE_BLACKBOARD.md#19",
+        "unit": "s"
+      }
+    }
+  },
+  "invariants": [
+    {
+      "id": "B1",
+      "class": "boundary",
+      "severity": "S1",
+      "statement": "Both fighters stay inside the combat-axis bounds of plus or minus 650.",
+      "detect": "abs(x) > combat_axis_max + position_tolerance_cm sustained beyond correction_frames",
+      "actors": [
+        "BP_ThirdPersonCharacter",
+        "BP_VanguardProxy"
+      ],
+      "system": "BP_VanguardDuelMover.ApplyConstraints",
+      "source": "PROTOTYPE_BLACKBOARD.md#14.1"
+    },
+    {
+      "id": "B2",
+      "class": "boundary",
+      "severity": "S2",
+      "statement": "Axis separation never drops below MinimumAxisSeparation 78 for longer than the correction window.",
+      "detect": "separation < minimum_axis_separation sustained beyond correction_frames, while not crossing",
+      "system": "BP_VanguardDuelMover.ApplyConstraints",
+      "source": "PROTOTYPE_BLACKBOARD.md#15.2"
+    },
+    {
+      "id": "B3",
+      "class": "boundary",
+      "severity": "S1",
+      "statement": "Capsules never interpenetrate: separation is always at least 69 cm.",
+      "detect": "separation < capsule_contact_distance at any sample, crossing included",
+      "system": "BP_VanguardDuelMover.ApplyConstraints",
+      "source": "PROTOTYPE_BLACKBOARD.md#15.1",
+      "note": "15.3 records that overlap below 69 never occurred in validation"
+    },
+    {
+      "id": "B4",
+      "class": "boundary",
+      "severity": "S2",
+      "statement": "The Vanguard stays within its authored depth lane.",
+      "detect": "vanguard Y outside the lane clamp read from the mover CDO",
+      "system": "BP_VanguardDuelMover.ApplyConstraints",
+      "source": "PROTOTYPE_BLACKBOARD.md#14.1",
+      "lane_bound_source": "read from CDO at run start; never hardcoded here"
+    },
+    {
+      "id": "B5",
+      "class": "boundary",
+      "severity": "S2",
+      "statement": "While no crossing is active, the sign of (vanguardX - playerX) equals CurrentSideSign.",
+      "detect": "sign mismatch while bCrossingActive is false and player is grounded",
+      "system": "BP_VanguardDuelMover.UpdateSideOwnership",
+      "source": "PROTOTYPE_BLACKBOARD.md#22"
+    },
+    {
+      "id": "S1",
+      "class": "stuck",
+      "severity": "S1",
+      "statement": "Every crossing closes: bCrossingActive returns to false once the player is grounded.",
+      "detect": "bCrossingActive true while player grounded beyond stuck_seconds",
+      "system": "BP_VanguardDuelMover.UpdateCrossingState",
+      "source": "PROTOTYPE_BLACKBOARD.md#22"
+    },
+    {
+      "id": "S2",
+      "class": "stuck",
+      "severity": "S1",
+      "statement": "The mover is never left locked while the attack driver is idle.",
+      "detect": "bExternalMovementLocked true while AttackState == 0 beyond stuck_seconds",
+      "system": "BP_VanguardBasicAttackDriver / BP_VanguardDuelMover.SetExternalMovementLocked",
+      "source": "PROTOTYPE_BLACKBOARD.md#16.1"
+    },
+    {
+      "id": "S3",
+      "class": "stuck",
+      "severity": "S1",
+      "statement": "The Vanguard never parks legally inside its hold band yet outside its own attack gate and stops attacking.",
+      "detect": "axis separation <= attack_range continuously while AttackState stays 0 past attack_cooldown_max plus several retry_delay rolls",
+      "system": "BP_VanguardBasicAttackDriver.TryStartAttack",
+      "source": "PROTOTYPE_BLACKBOARD.md#16.4",
+      "regression_of": "16.4 failure 1 \u2014 gate was 2D distance <= 190, mover held to 225, Vanguard settled at 209 and never attacked again"
+    },
+    {
+      "id": "S4",
+      "class": "stuck",
+      "severity": "S2",
+      "statement": "A ragdoll never settles below the floor plane.",
+      "detect": "mesh Z < ground_plane_z - position_tolerance_cm after impact_to_ragdoll_delay",
+      "system": "BP_DuelKnockoutCoordinator.ApplyRagdoll",
+      "source": "PROTOTYPE_BLACKBOARD.md#19"
+    },
+    {
+      "id": "S5",
+      "class": "stuck",
+      "severity": "S1",
+      "statement": "The duel always remains progressable: at least one fighter can still lose health.",
+      "detect": "both alive and no damage event from either side sustained beyond stuck_seconds while in range",
+      "system": "duel loop",
+      "source": "PROTOTYPE_BLACKBOARD.md#16, #22"
+    },
+    {
+      "id": "X1",
+      "class": "exploit",
+      "severity": "S2",
+      "statement": "No damage event lands on a fighter that is already knocked out.",
+      "detect": "health delta on a fighter whose KO flag is set",
+      "system": "BP_DuelKnockoutCoordinator \u2014 capsule set to NoCollision",
+      "source": "PROTOTYPE_BLACKBOARD.md#18.1"
+    },
+    {
+      "id": "X2",
+      "class": "exploit",
+      "severity": "S2",
+      "statement": "Punch cadence cannot outrun the bIsAttacking re-entry guard.",
+      "detect": "damage events per second above what the guard and montage length permit",
+      "system": "BP_ThirdPersonCharacter attack chain",
+      "source": "PROTOTYPE_BLACKBOARD.md#18.1"
+    },
+    {
+      "id": "X3",
+      "class": "exploit",
+      "severity": "S2",
+      "statement": "Collision-ignore never leaks past a knockout.",
+      "detect": "bCrossingActive true after either KO flag sets",
+      "system": "BP_DuelKnockoutCoordinator.StopMover",
+      "source": "PROTOTYPE_BLACKBOARD.md#22",
+      "regression_of": "22 added StopMover -> SetCrossingCollisionEnabled(false) precisely for this"
+    },
+    {
+      "id": "X4",
+      "class": "exploit",
+      "severity": "S1",
+      "statement": "Jump-over cannot push either fighter out of bounds.",
+      "detect": "during a crossing the player X clamp relaxes to the full arena and min-separation is suspended; watch for the Vanguard being pushed through combat_axis_max by landing overlap resolution",
+      "system": "BP_VanguardDuelMover.ApplyConstraints (crossing branch)",
+      "source": "PROTOTYPE_BLACKBOARD.md#22"
+    },
+    {
+      "id": "X5",
+      "class": "exploit",
+      "severity": "S2",
+      "statement": "A knocked-out player deals no damage.",
+      "detect": "vanguard health delta while bPlayerKO is true",
+      "system": "BP_DuelKnockoutCoordinator \u2014 sets bIsAttacking true permanently",
+      "source": "PROTOTYPE_BLACKBOARD.md#18.1"
+    },
+    {
+      "id": "X6",
+      "class": "exploit",
+      "severity": "S2",
+      "statement": "The Vanguard is not cancel-locked out of every attack it starts.",
+      "detect": "fraction of started attacks reaching PerformImpactCheck under continuous player punching; a fraction at or near zero is the finding",
+      "system": "BP_VanguardBasicAttackDriver \u2014 health-drop cancel in states 1 and 2",
+      "source": "PROTOTYPE_BLACKBOARD.md#17.1",
+      "design_note": "1.4 s cancellable per attack against a 2.5-4.0 s cooldown that a cancel rerolls in full. If confirmed, the remedy is a design decision owned by the designer of record. This agent reports and does not resolve."
+    },
+    {
+      "id": "L1",
+      "class": "logic",
+      "severity": "S1",
+      "statement": "Health stays within [0, max] for both fighters.",
+      "detect": "health < 0 or health > max at any sample",
+      "system": "BP_ThirdPersonCharacter.HandleDamage / BP_VanguardProxy",
+      "source": "PROTOTYPE_BLACKBOARD.md#16.1"
+    },
+    {
+      "id": "L2",
+      "class": "logic",
+      "severity": "S1",
+      "statement": "Both fighters are never knocked out at once.",
+      "detect": "bVanguardKO and bPlayerKO both true",
+      "system": "BP_DuelKnockoutCoordinator",
+      "source": "PROTOTYPE_BLACKBOARD.md#18.1",
+      "note": "nothing in the build resolves a double KO"
+    },
+    {
+      "id": "L3",
+      "class": "logic",
+      "severity": "S2",
+      "statement": "Side sign flips exactly once per crossing.",
+      "detect": "flip count between crossing open and close is not exactly 1",
+      "system": "BP_VanguardDuelMover.UpdateSideOwnership",
+      "source": "PROTOTYPE_BLACKBOARD.md#22, #23"
+    },
+    {
+      "id": "L4",
+      "class": "logic",
+      "severity": "S1",
+      "statement": "A cancelled attack applies no damage.",
+      "detect": "damage event after CancelAttack for the same attack instance",
+      "system": "BP_VanguardBasicAttackDriver.CancelAttack",
+      "source": "PROTOTYPE_BLACKBOARD.md#16.2, #17.1"
+    },
+    {
+      "id": "L5",
+      "class": "logic",
+      "severity": "S1",
+      "statement": "Exactly one damage event per strike.",
+      "detect": "more than one damage event between BeginStrike and FinishAttack",
+      "system": "BP_VanguardBasicAttackDriver.PerformImpactCheck \u2014 bImpactDone guard",
+      "source": "PROTOTYPE_BLACKBOARD.md#16.2"
+    },
+    {
+      "id": "L6",
+      "class": "logic",
+      "severity": "S2",
+      "statement": "Damage magnitude is exactly 10 in both directions.",
+      "detect": "any health step that is not attack_damage or punch_damage",
+      "system": "BP_VanguardBasicAttackDriver / player punch",
+      "source": "PROTOTYPE_BLACKBOARD.md#16.3, #22"
+    },
+    {
+      "id": "L7",
+      "class": "logic",
+      "severity": "S2",
+      "statement": "A knocked-out fighter's health does not recover mid-match.",
+      "detect": "health above 0 after that fighter's KO flag set",
+      "system": "BP_DuelKnockoutCoordinator",
+      "source": "PROTOTYPE_BLACKBOARD.md#18.1"
+    },
+    {
+      "id": "L8",
+      "class": "logic",
+      "severity": "S1",
+      "statement": "A knockout reaches a stated result.",
+      "detect": "no result state within a bounded window after a KO flag sets",
+      "system": "match loop",
+      "status": "KNOWN_OPEN",
+      "gated_on": "G05",
+      "known_limitation": "K1",
+      "source": "PROTOTYPE_BLACKBOARD.md#18.4"
+    },
+    {
+      "id": "X7",
+      "class": "exploit",
+      "severity": "S1",
+      "statement": "Position constraints stay enforced after a knockout.",
+      "detect": "any positional invariant (B1 bounds, B3 capsule contact, B5 ordering) violated while either KO flag is set",
+      "system": "BP_DuelKnockoutCoordinator.StopMover disables the mover tick; BP_VanguardDuelMover.ApplyConstraints runs on that tick",
+      "source": "PROTOTYPE_BLACKBOARD.md#18.1, #14.1",
+      "discovery": "Found empirically by the live run on 2026-08-24 (seed 7), then formalized here. B1, B3 and B5 caught the symptoms; this invariant names the shared cause.",
+      "design_note": "Exceeds known limitation K6. K6 accepts that the survivor may walk, jump and punch freely after a KO. It does not accept leaving the arena or passing through the other fighter's capsule."
+    }
+  ],
+  "known_limitations": [
+    {
+      "id": "K1",
+      "statement": "No victory or defeat resolution after a KO; the survivor acts freely and the loser stays down.",
+      "source": "PROTOTYPE_BLACKBOARD.md#18.4",
+      "status": "G05 closes it",
+      "blocks_invariant": "L8"
+    },
+    {
+      "id": "K2",
+      "statement": "Same-frame punch-versus-impact trade, about one frame wide.",
+      "source": "PROTOTYPE_BLACKBOARD.md#17.1",
+      "status": "accepted"
+    },
+    {
+      "id": "K3",
+      "statement": "The ragdolled mesh can drift from its capsule; the camera frames capsules.",
+      "source": "PROTOTYPE_BLACKBOARD.md#18.4",
+      "status": "graybox-accepted"
+    },
+    {
+      "id": "K4",
+      "statement": "Telegraph exclamation yaw is fixed to the +Y camera side.",
+      "source": "PROTOTYPE_BLACKBOARD.md#17.7",
+      "status": "one value, deferred"
+    },
+    {
+      "id": "K5",
+      "statement": "Vanguard max health hardcoded as 100 in both its graph and the HUD divisor.",
+      "source": "PROTOTYPE_BLACKBOARD.md#17.7",
+      "status": "deferred"
+    },
+    {
+      "id": "K6",
+      "statement": "Post-KO the surviving player can walk, jump and punch freely.",
+      "source": "PROTOTYPE_BLACKBOARD.md#18.4",
+      "status": "intentional, pending G05"
+    },
+    {
+      "id": "K7",
+      "statement": "Ragdoll settle depends on template physics assets; no per-bone tuning and no impulse.",
+      "source": "PROTOTYPE_BLACKBOARD.md#19",
+      "status": "deferred knob"
+    },
+    {
+      "id": "K8",
+      "statement": "Player boundary behaviour is walk-in-place at the edge; no input suppression.",
+      "source": "PROTOTYPE_BLACKBOARD.md#14.1",
+      "status": "deliberate"
+    },
+    {
+      "id": "K9",
+      "statement": "Template jump, fall and land timing was authored for slower arcs than GravityScale 1.9; foot-skate persists.",
+      "source": "PROTOTYPE_BLACKBOARD.md#21, #23",
+      "status": "flagged for the animation pass"
+    }
+  ],
+  "harness_parameters": {
+    "_note": "Detection thresholds owned by the QA harness. They change how sensitive the agent is, never how the game behaves. They are NOT design values.",
+    "sample_hz": 20,
+    "correction_frames": 4,
+    "position_tolerance_cm": 2.0,
+    "stuck_seconds": 3.0,
+    "seed": null
+  },
+  "finding_schema": {
+    "required": [
+      "finding_id",
+      "invariant_id",
+      "location",
+      "error_type",
+      "game_context",
+      "seed",
+      "backend",
+      "repro"
+    ],
+    "location": "the actor and system, e.g. BP_VanguardDuelMover.ApplyConstraints",
+    "error_type": "one of: boundary_break, stuck_state, exploit, logic_violation",
+    "game_context": "what the duel state was \u2014 health, positions, separation, side sign, attack state, crossing flag, elapsed time",
+    "backend": "sim or pie",
+    "classification": "one of: DEFECT, KNOWN, HARNESS_ARTEFACT"
+  }
+}
