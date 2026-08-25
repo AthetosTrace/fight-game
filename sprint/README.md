@@ -12,21 +12,34 @@ file `BOARD.md` points at.** Nothing else. Do not read `TODO.md` — see "Stale 
 Either may be driving. Tasks are not assigned by person; whoever sits down takes the next
 open task in whichever track they are working.
 
-## Three tracks, three windows
+## One folder — the worktrees are gone
 
-| Track | Prefix | Worktree | Editor? |
+**Everything happens in `C:\Users\athet\Documents\FightGame` on `main`.** As of 2026-08-24
+the `fightgame-a7`, `a8` and `a10` worktrees were removed; all their work was merged into
+`main` first. Do not create new worktrees for this sprint.
+
+The Unreal project is `game\AscendantImpact.uproject` in that folder and it is the only
+copy, which makes the one-editor rule automatic — the MCP binds `127.0.0.1:8000` and only
+one editor can hold it.
+
+`AscendantCapstone\fightgame-a9` may still exist while the `Q` track finishes. It is the
+last worktree; remove it once `Q03` merges.
+
+## Three tracks
+
+| Track | Prefix | Editor? | State |
 |---|---|---|---|
-| Game — Assignment 10 | `G` | `AscendantCapstone\fightgame-a10` | yes |
-| Narrative — Assignment 08 | `N` | `AscendantCapstone\fightgame-a8` | no |
-| Adversarial QA — Assignment 09 | `Q` | `AscendantCapstone\fightgame-a9` | runs only |
+| Game — Assignment 10 | `G` | yes | active |
+| Narrative — Assignment 08 | `N` | no | **delivered**, see below |
+| Adversarial QA — Assignment 09 | `Q` | runs only | active |
 
-Tracks run in parallel. **Within a track, tasks are strictly ordered** — do not start
-`G05` while `G03` is open unless the task file says it is independent.
+**Within a track, tasks are strictly ordered** — do not start `G05` while `G03` is open
+unless the task file says it is independent.
 
-**Only one Unreal editor, ever**, and only on
-`fightgame-a10\game\AscendantImpact.uproject`. The MCP binds `127.0.0.1:8000` and a second
-editor fights it for the port. This is why `Q` writes code in parallel but schedules its
-runs against `G`.
+**Assignment 08 is delivered and lives outside this repo**, at
+`AthetosTrace/ascendant-dm`, checked out at `C:\Users\athet\Documents\ascendant-dm`.
+Standalone by design, as the assignment permits. Its `transcripts/*/run.json` files carry
+the real token counts `G11`'s cost analysis needs. Nothing about it merges here.
 
 ## The protocol — how to "jump on"
 

@@ -12,9 +12,9 @@ Statuses: `todo` · `in-progress` · `blocked` · `done`
 
 | Track | Task | Why this one |
 |---|---|---|
-| **G — Game** | **`G01`** — Scope lock | No editor needed. Writes down what ships and what is cut, so every later task has a fixed target. |
-| **N — Narrative** | **`N01`** — API key + cost instrumentation | Hard blocker for A08 *and* for A10's cost analysis. Nothing in this track moves until it lands. |
-| **Q — QA** | **`Q01`** — Agent design + code | Text-only, no editor contention. Can start immediately. |
+| **G — Game** | **`G02`** — Verify migration + first package | `G01` is done. This is the highest-risk unknown left: nothing has ever been packaged. |
+| **N — Narrative** | — | **Track complete.** Delivered in `AthetosTrace/ascendant-dm`. |
+| **Q — QA** | **`Q01`** — Agent design + code | In progress. Declaration and oracle written 24 Aug. |
 
 ---
 
@@ -22,7 +22,7 @@ Statuses: `todo` · `in-progress` · `blocked` · `done`
 
 | ID | Task | Status | Editor | Depends on |
 |---|---|---|---|---|
-| G01 | Scope lock — GDD cut addendum, reconcile stale docs | `todo` | no | — |
+| G01 | Scope lock — GDD cut addendum, reconcile stale docs | `done` | no | — |
 | G02 | Verify migration + first package smoke test | `todo` | yes | G01 |
 | G03 | Make the package actually launch | `todo` | yes | G02 |
 | G04 | itch.io page + butler, upload the graybox build | `todo` | no | G03 |
@@ -34,23 +34,37 @@ Statuses: `todo` · `in-progress` · `blocked` · `done`
 | G10 | Ship candidate — package, upload, stranger test | `todo` | yes | G04, G06, G07, G08, G09 |
 | G11 | A10 submission — audit and cost analysis | `todo` | no | G10, N01 |
 
-## N — Narrative (Assignment 08, due 25 Aug)
+## N — Narrative (Assignment 08, due 25 Aug) — COMPLETE
+
+Delivered as a standalone repo, **not** in `fight-game`:
+`AthetosTrace/ascendant-dm`, checked out at `C:\Users\athet\Documents\ascendant-dm`.
+Three commits, clean, pushed. Engine in `dm/`, tests, and three recorded transcripts —
+`betrayal-run` (7 turns), `loyal-run`, `hand-run` — with per-turn ledger snapshots.
 
 | ID | Task | Status | Editor | Depends on |
 |---|---|---|---|---|
-| N01 | API key + shared cost-instrumentation helper | `todo` | no | — |
-| N02 | Narrative engine — ledger and reactive DM | `todo` | no | N01 |
-| N03 | 5+ turn run, evidence, README | `todo` | no | N02 |
+| N01 | API key + shared cost-instrumentation helper | `done` | no | — |
+| N02 | Narrative engine — ledger and reactive DM | `done` | no | N01 |
+| N03 | 5+ turn run, evidence, README | `done` | no | N02 |
+
+**`G11` still needs this track:** pull the real token counts from
+`ascendant-dm/transcripts/*/run.json` for the A10 cost analysis. Do not re-estimate them.
 
 ## Q — Adversarial QA (Assignment 09, due 27 Aug)
 
 | ID | Task | Status | Editor | Depends on |
 |---|---|---|---|---|
-| Q01 | Agent design and code | `todo` | no | — |
+| Q01 | Agent design and code | `in-progress` | no | — |
 | Q02 | Run against the build, produce the report | `todo` | runs | Q01, G05 |
 | Q03 | README, and triage findings into G tasks | `todo` | no | Q02 |
 
 ---
+
+## Working directory — one folder
+
+All work happens in `C:\Users\athet\Documents\FightGame` on `main`. The `a7`, `a8` and
+`a10` worktrees were removed 2026-08-24 after their work was merged.
+`AscendantCapstone\fightgame-a9` is the last one standing and only until `Q03` merges.
 
 ## Blocked on a human, not on an agent
 
