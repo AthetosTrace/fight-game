@@ -31,8 +31,31 @@ Statuses: `todo` · `in-progress` · `blocked` · `done`
 | G07 | Octagon swap — move the duel into the real arena | `todo` | yes | G05 |
 | G08 | Title and controls screen | `todo` | yes | G05 |
 | G09 | Audio minimum — hit, whiff, KO, ambience | `todo` | yes | G05 |
+| G12 | Attack data from the A06 pipeline — DataTable + driver reads rows | `todo` | yes | G05 |
+| G13 | Vanguard attack B — close-range punish | `todo` | yes | G12 |
+| G14 | Vanguard attack C — advancing anti-kite | `todo` | yes | G13 |
+| G15 | Player block — defensive option (**first to cut**) | `todo` | yes | G13 |
 | G10 | Ship candidate — package, upload, stranger test | `todo` | yes | G04, G06, G07, G08, G09 |
 | G11 | A10 submission — audit and cost analysis | `todo` | no | G10, N01 |
+
+### How we build, by purpose — not by preference
+
+- **Gameplay logic → Blueprints, authored through the Unreal MCP.** Fifteen milestones
+  already work this way. Rewriting them in Python buys nothing and costs the animation and
+  montage integration.
+- **Geometry and anything parameterised → Python payload scripts** run inside the editor
+  via MCP `execute_tool`. That is how the octagon was built and it is repeatable and
+  tunable.
+- **Tuning values → CSV to DataTable.** `G12` is the switch. It is also the cheapest way to
+  make attacks B and C a row plus a branch instead of another wall of floats.
+
+Everything runs through MCP agents either way. The distinction is where a value lives, not
+which language authored it.
+
+### Cut order if the schedule slips
+
+`G09` audio → `G15` block → `G14` attack C. Cut whole tasks, never half-build one.
+`G05` and the packaging chain `G02`–`G04` are not cuttable — they are the gate.
 
 ## N — Narrative (Assignment 08, due 25 Aug) — COMPLETE
 
@@ -59,6 +82,26 @@ Three commits, clean, pushed. Engine in `dm/`, tests, and three recorded transcr
 | Q03 | README, and triage findings into G tasks | `todo` | no | Q02 |
 
 ---
+
+## Day by day — 24 Aug to 1 Sept
+
+There is **no slack** in this. Every day that slips comes out of the cut list, not the end.
+
+| Day | Tasks | Note |
+|---|---|---|
+| **Mon 24** | `G02` | Open the editor, verify the migration, attempt the first package. Long unattended shader compile — start it before anything else. |
+| **Tue 25** | `G03`, `G04` | Make the package launch, then get it onto itch.io. **The gate is retired at the end of this day or the plan is in trouble.** |
+| **Wed 26** | `G05` | Match loop. Nothing else. It is the largest single gameplay task. |
+| **Thu 27** | `G12`, `Q02`, `Q03` | Attack DataTable. A09 is due today — the QA runs happen against the match loop built yesterday. |
+| **Fri 28** | `G13`, `G14` | Attacks B and C. The fight becomes a fight. |
+| **Sat 29** | `G06`, `G15` | Balance to a 60–70% win rate. Block only if the fight needs it. |
+| **Sun 30** | `G07`, `G10` | Octagon swap, then first ship candidate live. **Target: playable link up.** |
+| **Mon 31** | `G08`, `G09`, re-ship | Title screen, audio, second upload. |
+| **Tue 1** | `G11` | Submission and audit. Due 11:59 PM ET. |
+
+The octagon swap sits late on purpose: keeping the ±650 combat clamps and centring them in
+the arena means spacing does not change, so attacks and balance are arena-independent and
+can be built first. If that decision is reversed, `G07` moves ahead of `G06`.
 
 ## Working directory — one folder
 
