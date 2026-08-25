@@ -83,3 +83,10 @@ see it.
 ## Log
 
 - 2026-08-23 — created.
+
+- 2026-08-25 — note from `G02`. Packaging cooks only the maps reachable from `GameDefaultMap`,
+  which is now `/Game/AscendantImpact/Maps/Lvl_DuelGraybox`. **`Lvl_ArenaOctagon` is not
+  referenced by anything and is not in the packaged build.** Whichever way the swap goes, this
+  task owns making the octagon actually cook — either by pointing `GameDefaultMap` at it, or by
+  adding it to `MapsToCook` / `DirectoriesToAlwaysCook` in Project Settings, Packaging. Verify by
+  repackaging and confirming the map is in the staged manifest, not by assuming.

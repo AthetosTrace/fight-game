@@ -12,7 +12,7 @@ Statuses: `todo` · `in-progress` · `blocked` · `done`
 
 | Track | Task | Why this one |
 |---|---|---|
-| **G — Game** | **`G02`** — Verify migration + first package | `G01` is done. This is the highest-risk unknown left: nothing has ever been packaged. |
+| **G — Game** | **`G03`** — Make the package launch | `G02` is done — **the project packages**, 647 MB Win64 Shipping, after three attempts and three real defects. The exe has not been run yet. |
 | **N — Narrative** | — | **Track complete.** Delivered in `AthetosTrace/ascendant-dm`. |
 | **Q — QA** | **`Q03`** — README + triage | `Q01` and `Q02` are done; three live runs found two S1 defect classes. |
 
@@ -23,7 +23,7 @@ Statuses: `todo` · `in-progress` · `blocked` · `done`
 | ID | Task | Status | Editor | Depends on |
 |---|---|---|---|---|
 | G01 | Scope lock — GDD cut addendum, reconcile stale docs | `done` | no | — |
-| G02 | Verify migration + first package smoke test | `todo` | yes | G01 |
+| G02 | Verify migration + first package smoke test | `done` | yes | G01 |
 | G03 | Make the package actually launch | `todo` | yes | G02 |
 | G04 | itch.io page + butler, upload the graybox build | `todo` | no | G03 |
 | G05 | Match loop — intro, win, lose, restart | `todo` | yes | G02 |
@@ -51,6 +51,20 @@ Statuses: `todo` · `in-progress` · `blocked` · `done`
 
 Everything runs through MCP agents either way. The distinction is where a value lives, not
 which language authored it.
+
+### Packaging constraints — learned the hard way in `G02`, and they bind every later task
+
+- **There is no C++ toolchain on this machine.** No Visual Studio, no Windows SDK. The project
+  packages only because it is genuinely Blueprint-only and can use the engine's prebuilt
+  `UnrealGame-Win64-Shipping.exe`. **Enabling any plugin with a Runtime module that is not
+  precompiled in the installed engine silently reclassifies the project as code-based and breaks
+  packaging outright.** `GameplayStateTree` did exactly this and is now disabled. Check before
+  enabling anything.
+- **Dev tooling is `TargetAllowList: ["Editor"]` and must stay that way.** `ModelContextProtocol`
+  has Runtime modules and would otherwise ship an MCP server inside the public build.
+- **Only maps reachable from `GameDefaultMap` are cooked.** `Lvl_ArenaOctagon` is not referenced
+  by anything and is **not in the current build** — `G07` owns getting it into the cook set.
+- **The build is 647 MB.** Check that against itch.io's limits in `G04` before uploading.
 
 ### Cut order if the schedule slips
 

@@ -1,0 +1,30 @@
+Running AutomationTool...
+Using bundled DotNet SDK version: 10.0 win-x64
+Starting AutomationTool...
+Parsing command line: BuildCookRun -project=C:\Users\athet\Documents\FightGame\game\AscendantImpact.uproject -noP4 -nocompile -nocompileeditor -platform=Win64 -clientconfig=Shipping -cook -build -stage -pak -archive -archivedirectory=C:\Users\athet\Documents\FightGame\game\Build\Shipping -utf8output
+Initializing script modules...
+Total script module initialization time: 0.57 s.
+Using C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\ThirdParty\DotNet\10.0\win-x64\dotnet.exe
+Executing commands...
+Setting up ProjectParams for C:\Users\athet\Documents\FightGame\game\AscendantImpact.uproject
+AscendantImpact.uproject is has no code, but is being treated as a code-based project for platforms Android, IOS, Linux, Mac, TVOS, Win64 because: GameplayStateTree plugin is enabled. Creating temporary .Target.cs files.
+********** BUILD COMMAND STARTED **********
+Running: C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\ThirdParty\DotNet\10.0\win-x64\dotnet.exe "C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.dll" AscendantImpact Win64 Shipping -Project=C:\Users\athet\Documents\FightGame\game\AscendantImpact.uproject  -remoteini="C:\Users\athet\Documents\FightGame\game"   -log="C:\Users\athet\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.8\UBA-AscendantImpact-Win64-Shipping.txt"
+Log file: C:\Users\athet\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.8\UBA-AscendantImpact-Win64-Shipping.txt
+Determining max actions to execute in parallel (24 physical cores, 24 logical cores)
+  Executing up to 24 processes, one per physical core
+Using 'git status' to determine working set for adaptive non-unity build (C:\Users\athet\Documents\FightGame).
+Creating makefile for AscendantImpact (no existing makefile)
+UbaServer - Listening on 0.0.0.0:1345
+Platform Win64 is not a valid platform to build. SDK validation failed:
+  Sdk: not found. Required version 10.0.19041.0.
+
+Result: Failed (OtherCompilationError)
+Total execution time: 0.44 seconds
+Trace written to file C:\Users\athet\AppData\Local\UnrealBuildTool\Trace.uba with size 1.4kb
+Took 0.61s to run dotnet.exe, ExitCode=6
+UnrealBuildTool failed. See log for more details. (C:\Users\athet\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.8\UBA-AscendantImpact-Win64-Shipping.txt)
+AutomationTool executed for 0h 0m 2s
+AutomationTool exiting with ExitCode=6 (6)
+BUILD FAILED
+EXITCODE=6
