@@ -4,6 +4,9 @@ This directory is the operating system for the final push. If you are an agent o
 person picking this project up cold, **read this file, then `BOARD.md`, then the one task
 file `BOARD.md` points at.** Nothing else. Do not read `TODO.md` — see "Stale files" below.
 
+**`HANDOFF.md` is the current briefing** — how to start a session that can do the work, what
+the next two tasks are, and the traps in them. Read it after `BOARD.md`.
+
 ## Who is on this
 
 - **Adrian Delgado** — capstone owner, the student of record.
