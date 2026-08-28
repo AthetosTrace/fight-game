@@ -12,7 +12,7 @@ Statuses: `todo` · `in-progress` · `blocked` · `done`
 
 | Track | Task | Why this one |
 |---|---|---|
-| **G — Game** | **`G16`** — Reorganize Content, then **`G07`** — merge the octagon in | Adrian's call 2026-08-27: get the project organized and the arena visible on open, before more gameplay. Both need the editor **and** a running MCP server. `G03` (run the packaged exe) is a ten-minute job that can happen either side of these. |
+| **G — Game** | **`G07`** — merge the octagon in | `G16` is done bar one human check (see its row). Adrian's call 2026-08-27: get the project organized and the arena visible on open, before more gameplay. `G07` needs the editor **and** a running MCP server — which now **auto-starts**, see below. `G03` (run the packaged exe) is a ten-minute job that can happen either side. |
 | **N — Narrative** | — | **Track complete.** Delivered in `AthetosTrace/ascendant-dm`. |
 | **Q — QA** | **`Q03`** — README + triage | `Q01` and `Q02` are done; three live runs found two S1 defect classes. |
 
@@ -24,7 +24,7 @@ Statuses: `todo` · `in-progress` · `blocked` · `done`
 |---|---|---|---|---|
 | G01 | Scope lock — GDD cut addendum, reconcile stale docs | `done` | no | — |
 | G02 | Verify migration + first package smoke test | `done` | yes | G01 |
-| G16 | **Reorganize Content under one root** (18 asset moves) | `todo` | yes + MCP | — |
+| G16 | **Reorganize Content under one root** (18 asset moves) | `in-progress` | yes + MCP | — |
 | G03 | Make the package actually launch | `todo` | yes | G02 |
 | G04 | itch.io page + butler, upload the graybox build | `todo` | no | G03 |
 | G05 | Match loop — intro, win, lose, restart | `todo` | yes | G02 |
@@ -38,6 +38,27 @@ Statuses: `todo` · `in-progress` · `blocked` · `done`
 | G15 | Player block — defensive option (**first to cut**) | `todo` | yes | G13 |
 | G10 | Ship candidate — package, upload, stranger test | `todo` | yes | G04, G06, G07, G08, G09 |
 | G11 | A10 submission — audit and cost analysis | `todo` | no | G10, N01 |
+
+**`G16` — all 18 moves done, committed and packaged. One line is open and it needs a
+human, not an agent.** Seven of its eight acceptance checks passed: assets moved, zero
+redirectors, config repointed, editor restarts clean, octagon geometry intact, repackage
+`BUILD SUCCESSFUL`, committed. The eighth is a PIE pass. The Vanguard half is confirmed live
+— it advances, strikes, drives the player 100 → 0 and the knockout coordinator fires — but
+**player input could not be driven from an agent.** Under `PlayMode_InViewPort` the level
+viewport has no node in the Slate accessibility tree, and under `PlayMode_InEditorFloating`
+`PressKey` is swallowed by the window chrome. Every input asset reference is proven
+repointed and the cook resolves all of them, so this is a verification gap, not a suspected
+break. **Someone press W, Space and left-click once, then tick the box and mark `G16`
+done.**
+
+**The MCP server now auto-starts with the editor.** `bAutoStartServer` was `false` — the
+"Trap 1" CLAUDE.md warns about, where nothing listens on 8000 until you type
+`ModelContextProtocol.StartServer`. It is `true` now. Opening the project is enough.
+
+**One Slate rule worth keeping**, learned the hard way in `G16`: call `SlateInspector` tools
+as top-level `call_tool`, **never** from inside a `ProgrammaticToolset.execute_tool_script`
+payload. Its observers walk their subtree on a ~100 ms game-thread tick, and a script payload
+holds that thread, so `Snapshot` silently returns empty. `Q02`'s agent gets this right.
 
 ### How we build, by purpose — not by preference
 

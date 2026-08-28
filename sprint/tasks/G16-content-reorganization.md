@@ -136,15 +136,16 @@ the player Blueprint, not config. Verified 2026-08-27.
 - [x] All 18 assets are at their new paths.
 - [x] **Zero ObjectRedirectors remain** under `/Game` — check the Content Browser filter.
 - [x] `GlobalDefaultGameMode` in `DefaultEngine.ini` points at the new GameMode path.
-- [ ] Editor restarted clean: **zero** missing-asset or missing-reference errors in the
+- [x] Editor restarted clean: **zero** missing-asset or missing-reference errors in the
       Message Log.
 - [ ] PIE in `Lvl_DuelGraybox` still works end to end — move, jump, punch lands damage,
       Vanguard advances and strikes, both health bars respond, KO ragdolls.
-      **Partly verified — left open deliberately.** Vanguard advance, strike, damage, the
-      health values and the KO all confirmed live (100 → 0, `bPlayerKO = true`). Move, jump
-      and the punch were NOT driven: attack is on Left Mouse Button and `SlateInspector`
-      could not produce a clickable widget tree. Their asset references are all proven
-      repointed. See the 2026-08-27 Log entry.
+      **Partly verified — left open deliberately, for a human to close in 60 seconds.**
+      Vanguard advance, strike, damage, the health values and the KO are all confirmed live
+      (100 → 0, `bPlayerKO = true`), and both HUD health bars exist as real widgets. Move,
+      jump and punch could not be driven from here — see "the input wall" in the Log. Every
+      input asset reference is proven repointed, which is the part this task could have
+      broken. **What is left is: press W, press Space, left-click.**
 - [x] `Lvl_ArenaOctagon` still opens and its geometry is intact — 43 actors, not an empty level.
 - [x] **Repackaged successfully.** The `G02` recipe is proven, so this is a rebuild, not an
       investigation. If it fails, the reorg broke something the editor did not report.
@@ -254,3 +255,47 @@ the player Blueprint, not config. Verified 2026-08-27.
   back by itself - CLAUDE.md calls its `false` default "Trap 1". Next concrete action: close
   the editor, relaunch `game/AscendantImpact.uproject`, confirm port 8000 is listening, and
   read the Message Log.
+
+- 2026-08-27 (later) - **editor restarted, and it comes up clean.** Closed the editor with
+  everything saved, relaunched `game/AscendantImpact.uproject`. The MCP server came back by
+  itself on 8000 - `bAutoStartServer` works, so CLAUDE.md's "Trap 1" is closed for this
+  project and nobody has to remember `ModelContextProtocol.StartServer` again.
+
+  Fresh session reports: **zero ObjectRedirectors** under `/Game` (the two phantom registry
+  entries cleared on the rescan, as predicted), **zero `Error:` lines in the whole log**, 25
+  assets under `/Game/AscendantImpact`, `/Game/ArenaTools` and `/Game/Variant_Combat` empty,
+  `/Game/ThirdPerson` holding only the two this file said to leave. The editor opened
+  straight onto `Lvl_DuelGraybox`, so `EditorStartupMap` still resolves.
+
+  **`IMC_Default` read back intact**, which is the moved asset that would have hurt most:
+  all four actions present and every one of their references pointing at the new
+  `/Game/AscendantImpact/Input/Actions/` paths, 13 keys bound including `W/A/S/D`,
+  `SpaceBar`, `LeftMouseButton` and gamepad.
+
+  **The input wall, and why it is not a G16 defect.** Three distinct routes were tried to
+  drive the player, all failed, and the reason is environmental rather than anything this
+  task changed:
+
+  1. `Snapshot` nested inside `ProgrammaticToolset.execute_tool_script` always returns
+     empty. The observer walks its subtree on a ~100 ms game-thread tick, and the MCP script
+     is itself holding that thread. **Slate tools have to be called as top-level `call_tool`,
+     never from inside a script payload.** Calling them directly does work - `Q02`'s agent
+     does exactly this, which is how it landed punches on 2026-08-24.
+  2. Even called directly, under `PlayMode_InViewPort` there is nothing to click: the level
+     viewport has no node in the accessibility tree. The central splitter contains only its
+     own 8x8 drag handle. `Q02`'s `viewport_ref()` looks for a line containing "Viewport" and
+     would find nothing here either.
+  3. Under `PlayMode_InEditorFloating` the PIE window *is* a top-level Slate window and comes
+     up `[focused]`, and its tree is readable - **both HUD health bars show up as
+     `progressbar` widgets, which is independent confirmation `UI_DuelHUD` is live.** But
+     `PressKey` returns `true` while `jumpCurrentCount` stays 0, `movementMode` never leaves
+     `MOVE_Walking` and the player never leaves `(0, 0)`. The key is being accepted by the
+     window chrome, not routed into Enhanced Input.
+
+  Compounding it: the Vanguard kills an idle player in roughly 20 seconds, so every attempt
+  raced a clock - two reads came back with the player already at 0 health and `MOVE_None`.
+  Chaining restart, press and read into a single pass did not beat it either.
+
+  Stopped here rather than iterating further. The right tool for live input is the `Q02`
+  agent, which is purpose-built for it, and the right check for a reorg is the cook - which
+  passed.
