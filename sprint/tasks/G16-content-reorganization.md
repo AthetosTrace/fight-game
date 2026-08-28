@@ -2,7 +2,7 @@
 id: G16
 track: G
 title: Reorganize Content so every gameplay asset lives under one root
-status: todo
+status: in-progress
 assignment: 10
 editor-required: true
 mcp-required: true
@@ -149,3 +149,7 @@ the player Blueprint, not config. Verified 2026-08-27.
 
 - 2026-08-27 — created. Inventory taken from the live tree: 30 non-template assets, of which
   18 move. Config grep done — `GlobalDefaultGameMode` is the only `.ini` path that breaks.
+
+- 2026-08-27 — started. Preconditions all four verified live in the editor: tree clean at
+  `f98aca0`, editor open on `/Game/AscendantImpact/Maps/Lvl_DuelGraybox`, MCP listening on
+  8000, PIE not running. All 18 source assets resolve; no destination path is occupied.
