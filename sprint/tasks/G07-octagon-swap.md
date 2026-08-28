@@ -2,7 +2,7 @@
 id: G07
 track: G
 title: Octagon swap — move the duel into the real arena
-status: todo
+status: in-progress
 assignment: 10
 editor-required: true
 depends-on: [G05]
@@ -85,9 +85,13 @@ see it.
 
 ## Done when
 
-- [ ] A full match plays start to finish in `Lvl_ArenaOctagon`.
-- [ ] The arena-size decision is recorded in the Log with its reasoning.
-- [ ] Vanguard mesh scale and anim class confirmed live on the placed instance, not just
+- [ ] A full match plays start to finish. **Blocked on `G05`, not on this task.** The
+      duel runs in the arena — both fighters spawn, the Vanguard closes and lands hits — but
+      there is no win/lose/restart yet, so there is no "full match" to play start to finish.
+      Also note the level is `Lvl_DuelGraybox`, not `Lvl_ArenaOctagon`: the merge direction
+      was reversed in `ea0fe6e` and the geometry moved, not the fighters.
+- [x] The arena-size decision is recorded in the Log with its reasoning.
+- [x] Vanguard mesh scale and anim class confirmed live on the placed instance, not just
       the CDO.
 - [ ] No geometry the player can get stuck on or escape through.
       **This cannot be verified until `G05` closes X7.** After a knockout the mover's tick
@@ -96,8 +100,11 @@ see it.
       just won can walk out of the combat strip and into the ramps, gallery and truss
       walls — the exact failure this criterion exists to catch. Do not sign this off on a
       build where X7 is still open.
-- [ ] `G05` and `G06` acceptance re-verified in the octagon.
-- [ ] Default map updated so a packaged build opens here.
+- [ ] `G05` and `G06` acceptance re-verified in the octagon. **Blocked — neither task has
+      run.** Nothing to re-verify yet.
+- [x] Default map updated so a packaged build opens here. **No change was needed** —
+      `GameDefaultMap` and `EditorStartupMap` already point at `Lvl_DuelGraybox`, and the
+      arena is now inside it. That is the whole reason the merge direction was reversed.
 
 ## Log
 
@@ -109,3 +116,92 @@ see it.
   task owns making the octagon actually cook — either by pointing `GameDefaultMap` at it, or by
   adding it to `MapsToCook` / `DirectoriesToAlwaysCook` in Project Settings, Packaging. Verify by
   repackaging and confirming the map is in the staged manifest, not by assuming.
+
+- 2026-08-28 — **the octagon is merged into `Lvl_DuelGraybox` and the duel runs inside it.**
+  Three of six acceptance lines are closed; the other three are blocked on `G05`, which has
+  not run. That was predictable from this task's own Preconditions and is called out below
+  rather than worked around.
+
+  **Precondition not met, and the work went ahead deliberately.** This task declares
+  `depends-on: [G05]` and `G05` is still `todo`. The board's NEXT UP put `G16` then `G07`
+  anyway — Adrian's call on 2026-08-27, to get the project organised and the arena visible on
+  open before more gameplay. The geometry merge does not need the match loop, so it was done;
+  everything that genuinely needs `G05` is left open and labelled.
+
+  **Arena-size decision — U1, recorded as this task's Done-when requires.**
+  **Keep the fighter clamp at ±650 and centre the octagon on it.** That is this file's own
+  recommended resolution and it is what the generators do unmodified, so **no authored number
+  was changed by anyone.** Concretely, `build_octagon_arena.py` read the live level and
+  reported:
+
+  * spawns read at PlayerStart `(0, 0, 94)` and Vanguard `(350, 0, 90)`, spawn midpoint
+    `175, 0`, floor Z `0.0` by trace;
+  * centre chosen `(0, 0, 0)` — the **fighter clamp centre**, not the spawn midpoint, because
+    `CENTRE_MODE = "combat_axis"`. The spawns say where the fight starts, the clamp says where
+    it ranges, and for a symmetric shape the clamp centre is the one that reads as centred.
+  * `centre_to_face` **1590 cm**, grown from the 1200 cm spec by the authored camera-containment
+    rule: the duel rig's worst case at 1300 cm separation puts the camera 1490 cm from centre,
+    plus the 100 cm wall margin. So `flat_to_flat` **3180 cm**, floor area 838 m².
+
+  So the fighters use a 1300 cm strip inside a 3180 cm space, exactly as this file described,
+  and the surrounding depth is what the gallery is for. **Widening the clamps was not
+  considered** — it would mean re-tuning spacing, camera framing and the Vanguard's approach,
+  and re-validating all of it, and the fight has not been played enough to say it feels
+  cramped.
+
+  **One number for the designer, surfaced not changed.** The build reports
+  `gallery_to_fighter_bound_cm = 490` — the gallery's inner edge is 10 cm inside the 500 cm
+  `FIGHTER_CLEARANCE_CM`. The script's own checks pass, because the gallery is overhead: its
+  underside is 550 cm, clear of the 388 cm character-plus-jump envelope, so it is not blocking
+  geometry at fighter height. The walls themselves stand 940 cm clear of the bound. This is
+  also **identical to the approved `Lvl_ArenaOctagon`**, so it is not a new deviation — it is
+  a pre-existing property of the shape, noted here because this task re-derived it.
+
+  **How the merge was done.**
+  1. Checkpoint first: `Maps/Checkpoints/Lvl_DuelGraybox_CP01_PreOctagon`, all 49 external
+     actor packages carried.
+  2. Cleared the `Playground` folder — 36 `SM_*` template obstacles out. **The `Floor` stayed**:
+     `build_octagon_arena.py` runs `PLACE_FLOOR = False` and reuses the level's existing floor,
+     which is how `Lvl_ArenaOctagon` was built too. Deleting it would have left the arena with
+     no ground.
+  3. Ran the three generators. Result: `Lvl_DuelGraybox` now holds **exactly the same 30
+     `ArenaOct_*` actors as `Lvl_ArenaOctagon`**, and exactly the same 20 non-arena actors —
+     50 each, diffed both ways, zero on either side.
+
+  **The generator order is arena → detail → tiers, and this file did not say so.** Running
+  arena → tiers → detail leaves **16 stray `ArenaOct_ParapetStep_*` actors** in the level.
+  `build_octagon_detail.py` places the parapets *with* blocky step runs, and
+  `build_octagon_tiers.py`'s first act is to delete anything prefixed `ArenaOct_ParapetStep_`
+  and replace it with a smooth wedge ramp. Run tiers second and it finds nothing to remove;
+  detail then puts the steps back. Caught by diffing against `Lvl_ArenaOctagon`, fixed by
+  wiping all 46 arena actors and rebuilding in the right order. **Nobody should have to
+  rediscover this** — the checkpoint names `CP01_ShellGood` and `CP02_TrussAndParapets` hint at
+  it, but the order is now written down.
+
+  **`Lvl_DuelGraybox` came off `PROTECTED_LEVEL_NAMES` in all three build scripts.** The list
+  began as "levels owned by Anthony" and that rule is retired — one repo, one owner. This
+  task's revised direction requires writing into the duel level. `Lvl_ThirdPerson` stays
+  protected. The reason is written into `build_octagon_arena.py` next to the list.
+
+  **Verified.**
+  * Arena actor set identical to the approved reference, both directions of the diff empty.
+  * **Vanguard per-instance overrides live on the placed actor** — mesh `relativeScale3D`
+    `(1.1, 1.1, 1.1)` and `animClass` `ABP_VanguardLocomotion_C`, read off `CharacterMesh0`
+    itself, not the CDO. The stale-instance trap did not fire, which is exactly what reversing
+    the merge direction was for. Its anim class also resolves to the new `G16` path.
+  * PIE in the merged level: all six duel actors spawn, player stands at Z 92.15 (not through
+    the floor), the Vanguard's mover closed from its placed `(350, 0)` to `(221, -77)` and
+    landed a hit — 100 → 90. Zero missing-asset errors; the only `Error:` lines in the log are
+    EOS/HTTP hostname failures with no network, and one malformed MCP call of my own.
+  * Two viewport captures taken, one overhead and one at fight level.
+
+  **Still to do inside this task, all of it needing `G05` first.**
+  * **Step 5, the lighting pass, is not done.** The interior is still flat-lit and the gallery
+    overhangs read as dark bands. The arena also sits on the template floor plane, whose ±2000
+    corners stick out past the 3180 cm octagon and read as a floating island. Both are asset
+    dressing under D3 rather than M5-gated, so they can proceed whenever.
+  * **Step 6, collision, cannot be signed off yet** — this file says so itself. After a
+    knockout the mover's tick stops, taking `ApplyConstraints` with it, so the arena clamp
+    stops being enforced. That is `X7`, and `G05` owns it. In the flat graybox it was
+    invisible; in the octagon it means a player who just won can walk into the ramps and truss
+    walls. Do not tick that box on a build where `X7` is open.

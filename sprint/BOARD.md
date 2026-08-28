@@ -12,7 +12,7 @@ Statuses: `todo` · `in-progress` · `blocked` · `done`
 
 | Track | Task | Why this one |
 |---|---|---|
-| **G — Game** | **`G07`** — merge the octagon in | `G16` is done bar one human check (see its row). Adrian's call 2026-08-27: get the project organized and the arena visible on open, before more gameplay. `G07` needs the editor **and** a running MCP server — which now **auto-starts**, see below. `G03` (run the packaged exe) is a ten-minute job that can happen either side. |
+| **G — Game** | **`G05`** — match loop | `G16` and `G07` are both done bar checks that need something else first (see their rows). Adrian's ordering — organise the project, get the arena visible on open — is delivered. **`G05` is now the bottleneck for three separate things**: `G07`'s remaining boxes, `G06` balance, and `X7`. `G03` (run the packaged exe) is still a ten-minute job that can happen either side. |
 | **N — Narrative** | — | **Track complete.** Delivered in `AthetosTrace/ascendant-dm`. |
 | **Q — QA** | **`Q03`** — README + triage | `Q01` and `Q02` are done; three live runs found two S1 defect classes. |
 
@@ -29,7 +29,7 @@ Statuses: `todo` · `in-progress` · `blocked` · `done`
 | G04 | itch.io page + butler, upload the graybox build | `todo` | no | G03 |
 | G05 | Match loop — intro, win, lose, restart | `todo` | yes | G02 |
 | G06 | Balance — measure, then tune so the boss can win | `todo` | yes | G05 |
-| G07 | Octagon swap — move the duel into the real arena | `todo` | yes | G05 |
+| G07 | Octagon swap — merge the arena into the duel level | `in-progress` | yes | G05 |
 | G08 | Title and controls screen | `todo` | yes | G05 |
 | G09 | Audio minimum — hit, whiff, KO, ambience | `todo` | yes | G05 |
 | G12 | Attack data from the A06 pipeline — DataTable + driver reads rows | `todo` | yes | G05 |
@@ -51,9 +51,47 @@ repointed and the cook resolves all of them, so this is a verification gap, not 
 break. **Someone press W, Space and left-click once, then tick the box and mark `G16`
 done.**
 
-**The MCP server now auto-starts with the editor.** `bAutoStartServer` was `false` — the
-"Trap 1" CLAUDE.md warns about, where nothing listens on 8000 until you type
-`ModelContextProtocol.StartServer`. It is `true` now. Opening the project is enough.
+**`G07` — the octagon is merged into `Lvl_DuelGraybox` and the duel runs inside it.** Three
+of its six acceptance lines are closed: the arena-size decision is recorded, the Vanguard's
+per-instance overrides are confirmed live on the placed actor, and the default map needed **no
+change at all** — which is exactly what reversing the merge direction bought. The level now
+holds precisely the same 30 `ArenaOct_*` actors as `Lvl_ArenaOctagon`, diffed both ways. The
+arena is in the cook automatically because it is inside the map `GameDefaultMap` already
+points at.
+
+**The other three lines are blocked on `G05`, not on `G07`.** There is no win/lose/restart, so
+there is no "full match" to play start to finish; there is no `G05`/`G06` acceptance to
+re-verify; and the collision sign-off is explicitly gated on `X7`, because after a knockout the
+mover's tick stops and takes the arena clamp with it — invisible on a flat plane, but in the
+octagon it means walking into the ramps and truss walls. **`G05` is now the single thing
+holding three separate boxes.**
+
+Still open inside `G07` and not blocked by anything: the **lighting pass**. The interior is
+flat-lit, the gallery overhangs read as dark bands, and the template floor plane's corners
+stick out past the octagon and read as a floating island. Asset dressing under D3, so it can
+proceed whenever.
+
+**Generator order is `arena` → `detail` → `tiers`.** Not arena → tiers → detail: `detail`
+places the parapets with blocky step runs and `tiers` exists to replace them with wedge ramps,
+so running tiers second leaves 16 stray `ArenaOct_ParapetStep_*` actors behind. Also,
+`Lvl_DuelGraybox` came off `PROTECTED_LEVEL_NAMES` in all three scripts — the list began as
+"levels owned by Anthony" and that rule is retired. `Lvl_ThirdPerson` stays protected.
+
+**`bAutoStartServer` was turned on and then turned back off — do not re-enable it.** It
+works, and the editor did come back with MCP listening. But the cook runs
+`UnrealEditor-Cmd.exe -run=Cook`, which is an editor process and so loads the plugin too;
+with auto-start on it tries to bind `127.0.0.1:8000`, the live editor already holds that
+port, and that single bind failure fails the whole cook:
+
+```
+LogHttpListener: Error: HttpListener unable to bind to 127.0.0.1:8000
+Failure - 1 error(s), 1 warning(s)
+AutomationTool exiting with ExitCode=25 (Error_UnknownCookFailure)
+```
+
+Packaging with the editor open is the normal workflow here, and packaging is the gate that
+caps the whole assignment if it breaks. So **Trap 1 stays a trap**: after opening the
+project, type `ModelContextProtocol.StartServer` in the console.
 
 **One Slate rule worth keeping**, learned the hard way in `G16`: call `SlateInspector` tools
 as top-level `call_tool`, **never** from inside a `ProgrammaticToolset.execute_tool_script`

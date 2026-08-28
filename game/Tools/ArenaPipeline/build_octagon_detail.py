@@ -62,7 +62,9 @@ UNIT_CUBE_ASSET = "/Engine/BasicShapes/Cube"
 UNIT_CUBE_SIZE_CM = 100.0
 CENTRE = {"x": 0.0, "y": 0.0, "z": 0.0}
 
-PROTECTED_LEVEL_NAMES = ["Lvl_ThirdPerson", "Lvl_DuelGraybox"]
+# Lvl_DuelGraybox came off this list on 2026-08-27 for G07 -- see the note in
+# build_octagon_arena.py. Checkpoint: Lvl_DuelGraybox_CP01_PreOctagon.
+PROTECTED_LEVEL_NAMES = ["Lvl_ThirdPerson"]
 DRY_RUN = False
 
 # =============================================================================

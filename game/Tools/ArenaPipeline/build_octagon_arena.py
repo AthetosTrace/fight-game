@@ -85,12 +85,23 @@ FLOOR_TRACE_UP_CM = 500.0
 FLOOR_TRACE_DOWN_CM = 500.0
 
 # --- Safety -----------------------------------------------------------------
-# Levels owned by Anthony. The build refuses to touch these; duplicate to a new
-# level first and build there. Matched on LEVEL NAME, not full path, so a copy
-# of a protected level parked at some other path is still caught.
+# The build refuses to touch these; duplicate to a new level first and build
+# there. Matched on LEVEL NAME, not full path, so a copy of a protected level
+# parked at some other path is still caught.
+#
+# Lvl_DuelGraybox was on this list and came off on 2026-08-27 for G07. The list
+# began as "levels owned by Anthony", and that rule is retired -- there is one
+# repo and one owner now. G07's revised direction (ea0fe6e) is to merge the
+# octagon geometry INTO the duel level rather than move the fighters out of it,
+# because that keeps the cook set, the Vanguard's per-instance overrides and the
+# PlayerStart/GameMode wiring untouched. So this build has to be able to write
+# there. Lvl_ThirdPerson stays protected: it is Epic template leftover that
+# nothing should be generating into.
+#
+# A checkpoint is taken before this runs -- see
+# /Game/AscendantImpact/Maps/Checkpoints/Lvl_DuelGraybox_CP01_PreOctagon.
 PROTECTED_LEVEL_NAMES = [
     "Lvl_ThirdPerson",
-    "Lvl_DuelGraybox",
 ]
 DRY_RUN = False                   # True = compute and report, place nothing
 

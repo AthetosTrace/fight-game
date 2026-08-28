@@ -251,15 +251,16 @@ the player Blueprint, not config. Verified 2026-08-27.
   exposed - but the coordinator firing `bPlayerKO` is the gate in front of it.
 
   **Still open, both needing a restart:** the clean-Message-Log check, and the phantom
-  registry entries clearing. `bAutoStartServer` has been set **true** so the MCP server comes
-  back by itself - CLAUDE.md calls its `false` default "Trap 1". Next concrete action: close
+  registry entries clearing. `bAutoStartServer` was set **true** so the MCP server would come
+  back by itself, and it did - but see the correction at the end of this file, it has since
+  been set back to `false` because it breaks the cook. Next concrete action: close
   the editor, relaunch `game/AscendantImpact.uproject`, confirm port 8000 is listening, and
   read the Message Log.
 
 - 2026-08-27 (later) - **editor restarted, and it comes up clean.** Closed the editor with
   everything saved, relaunched `game/AscendantImpact.uproject`. The MCP server came back by
-  itself on 8000 - `bAutoStartServer` works, so CLAUDE.md's "Trap 1" is closed for this
-  project and nobody has to remember `ModelContextProtocol.StartServer` again.
+  itself on 8000, because `bAutoStartServer` had been set true. **That setting has since been
+  reverted - see the correction at the end of this file.**
 
   Fresh session reports: **zero ObjectRedirectors** under `/Game` (the two phantom registry
   entries cleared on the rescan, as predicted), **zero `Error:` lines in the whole log**, 25
@@ -299,3 +300,26 @@ the player Blueprint, not config. Verified 2026-08-27.
   Stopped here rather than iterating further. The right tool for live input is the `Q02`
   agent, which is purpose-built for it, and the right check for a reorg is the cook - which
   passed.
+
+- 2026-08-28 — **correction: `bAutoStartServer` is back to `false`, and it must stay there.**
+
+  **`bAutoStartServer` was turned on and then turned back off — do not re-enable it.** It
+  works, and the editor did come back with MCP listening. But the cook runs
+  `UnrealEditor-Cmd.exe -run=Cook`, which is an editor process and so loads the plugin too;
+  with auto-start on it tries to bind `127.0.0.1:8000`, the live editor already holds that
+  port, and that single bind failure fails the whole cook:
+  
+  ```
+  LogHttpListener: Error: HttpListener unable to bind to 127.0.0.1:8000
+  Failure - 1 error(s), 1 warning(s)
+  AutomationTool exiting with ExitCode=25 (Error_UnknownCookFailure)
+  ```
+  
+  Packaging with the editor open is the normal workflow here, and packaging is the gate that
+  caps the whole assignment if it breaks. So **Trap 1 stays a trap**: after opening the
+  project, type `ModelContextProtocol.StartServer` in the console.
+
+  Found by `G07`'s repackage, which failed with exactly this and nothing else. `G16`'s own
+  repackage had passed earlier the same session because the setting was still `false` then.
+  Nothing about `G16`'s asset moves is affected — the reorg packaged clean and packages clean
+  again with the setting reverted.
