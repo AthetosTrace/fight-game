@@ -463,7 +463,8 @@ def main(argv):
     parser.add_argument("--rules", default=DEFAULT_RULES)
     parser.add_argument("--allow-proposed", action="store_true",
                         help="build using PROPOSED graybox extents")
-    parser.add_argument("--level-path", default="/Game/ArenaTools/Maps/Lvl_ArenaGen",
+    parser.add_argument("--level-path",
+                        default="/Game/AscendantImpact/Maps/Lvl_ArenaGen",
                         help="content path of the level the script will target")
     parser.add_argument("--out-dir", help="write manifest.json, manifest.md and "
                                           "build_level.py here")
