@@ -12,7 +12,7 @@ Statuses: `todo` · `in-progress` · `blocked` · `done`
 
 | Track | Task | Why this one |
 |---|---|---|
-| **G — Game** | **`G03`** — Make the package launch | `G02` is done — **the project packages**, 647 MB Win64 Shipping, after three attempts and three real defects. The exe has not been run yet. |
+| **G — Game** | **`G16`** — Reorganize Content, then **`G07`** — merge the octagon in | Adrian's call 2026-08-27: get the project organized and the arena visible on open, before more gameplay. Both need the editor **and** a running MCP server. `G03` (run the packaged exe) is a ten-minute job that can happen either side of these. |
 | **N — Narrative** | — | **Track complete.** Delivered in `AthetosTrace/ascendant-dm`. |
 | **Q — QA** | **`Q03`** — README + triage | `Q01` and `Q02` are done; three live runs found two S1 defect classes. |
 
@@ -24,6 +24,7 @@ Statuses: `todo` · `in-progress` · `blocked` · `done`
 |---|---|---|---|---|
 | G01 | Scope lock — GDD cut addendum, reconcile stale docs | `done` | no | — |
 | G02 | Verify migration + first package smoke test | `done` | yes | G01 |
+| G16 | **Reorganize Content under one root** (18 asset moves) | `todo` | yes + MCP | — |
 | G03 | Make the package actually launch | `todo` | yes | G02 |
 | G04 | itch.io page + butler, upload the graybox build | `todo` | no | G03 |
 | G05 | Match loop — intro, win, lose, restart | `todo` | yes | G02 |
