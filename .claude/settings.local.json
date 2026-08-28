@@ -3,5 +3,8 @@
     "allow": [
       "WebSearch"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "unreal-mcp"
+  ]
 }
