@@ -93,7 +93,12 @@ Three commits, clean, pushed. Engine in `dm/`, tests, and three recorded transcr
 |---|---|---|---|---|
 | Q01 | Agent design and code | `done` | no | — |
 | Q02 | Run against the build, produce the report | `done` | runs | Q01 |
-| Q03 | README, and triage findings into G tasks | `todo` | no | Q02 |
+| Q03 | README, and triage findings into G tasks | `done` | no | Q02 |
+
+**TRACK CLOSED 2026-08-27.** Tagged `assignment-09-submission` at `e850938`, pushed.
+Submission link: `github.com/AthetosTrace/fight-game/tree/assignment-09-submission/assignment-09`
+The branch was merged into `main` and deleted locally and on the remote; the tag preserves
+the exact submitted state. The `fightgame-a9` worktree is gone — **no worktrees remain.**
 
 **Three live runs landed in `e850938`** — seeds 3, 7 and 21, under
 `assignment-09/evidence/runs/`. Two defect classes, both `S1`:
@@ -132,9 +137,9 @@ can be built first. If that decision is reversed, `G07` moves ahead of `G06`.
 
 ## Working directory — one folder
 
-All work happens in `C:\Users\athet\Documents\FightGame` on `main`. The `a7`, `a8` and
-`a10` worktrees were removed 2026-08-24 after their work was merged.
-`AscendantCapstone\fightgame-a9` is the last one standing and only until `Q03` merges.
+All work happens in `C:\Users\athet\Documents\FightGame` on `main`. **No worktrees remain** —
+`a7`, `a8` and `a10` went on 2026-08-24, `a9` on 2026-08-27 when the Q track closed.
+Do not create new ones.
 
 ## Blocked on a human, not on an agent
 
