@@ -15,22 +15,43 @@ back before this ships.
 Change a row's status as work lands. `start-session.ps1` reads this table to tell you
 what is next, so it is the one place that has to stay honest.
 
-| Step | What | Status |
-|---|---|---|
-| 1 | Prove the packaged build launches | `todo` |
-| 2 | Win, lose, and restart | `todo` |
-| 3 | Vanguard's second attack | `todo` |
-| 4 | The anti-kite attack | `todo` |
-| 5 | Balance until it is a fight | `todo` |
-| 6 | Research the art assets | `todo` |
-| 7 | Apply the character art | `todo` |
-| 8 | Arena lighting and materials | `todo` |
-| 9 | Title screen and controls | `todo` |
-| 10 | Audio minimum | `todo` |
-| 11 | Package and publish the playable link | `todo` |
-| 12 | Assignment 10 submission | `todo` |
+| Step | What | Status | Closed by |
+|---|---|---|---|
+| 1 | Prove the packaged build launches | `todo` | `human` |
+| 2 | Win, lose, and restart | `todo` | `both` |
+| 3 | Vanguard's second attack | `todo` | `both` |
+| 4 | The anti-kite attack | `todo` | `both` |
+| 5 | Balance until it is a fight | `todo` | `human` |
+| 6 | Research the art assets | `todo` | `agent` |
+| 7 | Apply the character art | `todo` | `both` |
+| 8 | Arena lighting and materials | `todo` | `both` |
+| 9 | Title screen and controls | `todo` | `human` |
+| 10 | Audio minimum | `todo` | `human` |
+| 11 | Package and publish the playable link | `todo` | `human` |
+| 12 | Assignment 10 submission | `todo` | `human` |
 
 Statuses: `todo` · `in-progress` · `done` · `cut`
+
+### What "Closed by" means, and why it exists
+
+It names **who can produce the final verification signal** — not who does the work.
+
+- **`agent`** — the agent can confirm this alone. Its output is a document or a readback.
+- **`both`** — the agent builds it and can verify part of it (compile clean, read the graph
+  back, sample PIE state through MCP), but only a human confirms it actually plays right.
+- **`human`** — no agent can close this. It needs a key press, a pair of eyes, or an upload.
+
+**Eleven of the twelve need you.** That is not pessimism, it is this project: agent-driven
+player input does not work here, three routes were tried and all failed, so anything that
+has to be *played* is verified by a person.
+
+**This is what the plan drifts on.** If you package the build or play ten matches and don't
+say so, nothing writes it down and the table quietly goes stale — which is exactly how the
+old board ended up claiming finished work was open and unfinished work was done.
+
+So `/jump-on` asks. At the start of every session it will check any `in-progress` row and
+any `human` / `both` row that is next, and put the question to you directly. **Answer it and
+the record stays true; you never have to remember to report anything.**
 
 ---
 

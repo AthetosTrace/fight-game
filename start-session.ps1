@@ -116,12 +116,13 @@ if (-not (Test-Path $planPath)) {
     Line STOP 'FINISH-PLAN.md is missing. That file is the plan.'
     $script:Blockers += 'Restore FINISH-PLAN.md.'
 } else {
-    $rows = Select-String -Path $planPath -Pattern '^\|\s*(\d{1,2})\s*\|\s*([^|]+?)\s*\|\s*`(todo|in-progress|done|cut)`\s*\|'
+    $rows = Select-String -Path $planPath -Pattern '^\|\s*(\d{1,2})\s*\|\s*([^|]+?)\s*\|\s*`(todo|in-progress|done|cut)`\s*\|\s*`(agent|human|both)`\s*\|'
     $steps = foreach ($r in $rows) {
         [pscustomobject]@{
-            N      = [int]$r.Matches[0].Groups[1].Value
-            Title  = $r.Matches[0].Groups[2].Value.Trim()
-            Status = $r.Matches[0].Groups[3].Value
+            N        = [int]$r.Matches[0].Groups[1].Value
+            Title    = $r.Matches[0].Groups[2].Value.Trim()
+            Status   = $r.Matches[0].Groups[3].Value
+            ClosedBy = $r.Matches[0].Groups[4].Value
         }
     }
     if (-not $steps) {
@@ -135,6 +136,19 @@ if (-not (Test-Path $planPath)) {
         foreach ($w in $wip) { Line WARN "IN PROGRESS - Step $($w.N): $($w.Title)" }
         if ($next) { Line OK "NEXT - Step $($next.N): $($next.Title)" }
         else { Line OK 'No steps left in todo. Check the plan.' }
+
+        # Anything the agent cannot close on its own is where the record goes stale.
+        $ask = @($wip) + @($next | Where-Object { $_ -and $_.ClosedBy -in 'human','both' })
+        $ask = @($ask | Where-Object { $_ } | Sort-Object N -Unique)
+        if ($ask.Count -gt 0) {
+            Write-Host ''
+            Write-Host '       You close these - an agent cannot:' -ForegroundColor Yellow
+            foreach ($a in $ask) {
+                Write-Host "         Step $($a.N) ($($a.ClosedBy)) - $($a.Title)" -ForegroundColor Gray
+            }
+            Write-Host '       If you already did one, say so - /jump-on will ask, but it' -ForegroundColor DarkGray
+            Write-Host '       cannot see work you did outside a session.' -ForegroundColor DarkGray
+        }
         Line INFO '  Full detail: FINISH-PLAN.md'
     }
 }
