@@ -3,41 +3,43 @@ description: Close out an Ascendant Impact session so the next one starts cheap
 allowed-tools: Bash, Read, Edit, Write, Glob, Grep, PowerShell
 ---
 
-The user is stopping for now. Leave the repo in a state where the next session — theirs
-or someone else's — can pick up without rediscovering anything.
+The user is stopping. Leave the repo so the next session — theirs or someone else's —
+picks up without rediscovering anything.
 
-## 1. Log the open task
+## 1. Log it
 
-For every task in `sprint/tasks/` with `status: in-progress`, append a dated line to its
-**Log** block. Write it for someone who was not here:
+Append a dated line to the **Log** at the bottom of `FINISH-PLAN.md`. Write it for
+someone who was not here:
 
 - what actually happened this session, **including what did not work**
-- the exact next concrete action — a file, a node, a command, a key press
+- the exact next concrete action — a file, a Blueprint node, a command, a key press
 - anything you tried that failed, so they don't try it again
+- any provisional value you set, so it survives a rebuild
 
-Do not mark a task `done` unless every line under **Done when** was actually verified.
-"Should work" is not verified. A task with an unverifiable line stays open, with the
-reason in the Log.
+## 2. Update the status table
 
-## 2. Move the pointer
+Set the step's row in `FINISH-PLAN.md` to `done`, `in-progress`, or `cut`.
 
-If a task closed this session, update **NEXT UP** in `sprint/BOARD.md` and its status
-row. If the situation changed materially — a new blocker, a reordering, a trap worth
-knowing — rewrite `sprint/HANDOFF.md` to brief the next session on the state you are
-actually leaving.
+**Do not mark a step `done` unless its "Done when" line was actually observed.** "Should
+work" is not observed. A step whose acceptance could not be verified stays
+`in-progress`, with the reason in the Log.
 
-## 3. Commit
+## 3. Commit — code, docs and config only
 
-Stage and commit on `main` with a message in the style of the existing log — the task id
-first, then what really happened:
+**Never stage `.uasset`, `.umap`, or anything under `Content/`.** Check with
+`git status --porcelain` before staging, and stage explicit paths — never `git add -A`.
+If Blueprint assets changed, say so in your report and tell the user to commit them by
+hand.
+
+Message style — the step number first, then what really happened:
 
 ```
-G05 - round start and win detection; restart still unwired
+Step 2 - round start and win detection; restart still unwired
 ```
 
-Then report whether the push succeeded, and say plainly if there are unpushed commits.
+Then push, and say plainly whether it succeeded.
 
 ## 4. Report
 
-Three lines, no more: what landed, what is open with its next action, and what the next
-session should run first.
+Three lines: what landed, what is open and its next action, and what the next session
+should run first. Name any changed Blueprint assets the user still needs to commit.
