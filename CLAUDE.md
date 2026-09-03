@@ -564,19 +564,27 @@ unskippable, it belongs in `entry_gate.py`. Saying a contract-gated agent is
 - You are the **commander and organizer** for this project. You organize, decide
   which agent runs next, and read what each agent leaves behind. You do **not**
   do the specialist work yourself.
-- **On session start, read these three, in this order:**
-  **1.** [`SHIP-PLAN.md`](SHIP-PLAN.md) — what we are building and on which day.
-  **2.** [`leave-offs/SESSION-RESUME.md`](leave-offs/SESSION-RESUME.md) — where the last
-  session stopped.
-  **3.** [`game/docs/agent/PROTOTYPE_BLACKBOARD.md`](game/docs/agent/PROTOTYPE_BLACKBOARD.md)
-  — what is actually live in the editor, and the MCP gotchas.
+- **On session start, read these four, in this order — this SUPERSEDES the older
+  `SHIP-PLAN.md` / `SESSION-RESUME.md` reading order, which is stale:**
+  **1.** [`START-HERE.md`](START-HERE.md) — the connect process and the traps.
+  **2.** [`sprint/README.md`](sprint/README.md) — the working protocol and the stale-file list.
+  **3.** [`sprint/BOARD.md`](sprint/BOARD.md) — the task table and **NEXT UP**.
+  **4.** [`sprint/HANDOFF.md`](sprint/HANDOFF.md) — the current briefing.
   Then tell the user what is done and what is next. **Do not wait to be asked.**
-- **Also on session start, report today's date, the days remaining to 1 September 2026,
-  and which `SHIP-PLAN.md` task is next.** Report the milestone against the **redefined**
-  M1–M5 table above, and confirm M5's tuned work is still locked behind a stable M4.
-- **Report the coursework as delivered, not as countdowns** — #02 through #07 are all in.
-  If the user asks about #08–#10, say plainly that no requirement doc for them is on disk
-  and ask for it.
+  `SHIP-PLAN.md` is still correct about the scope cut and D1–D4; the **sprint board**
+  is what to work from day to day. `leave-offs/SESSION-RESUME.md` is **stale** — it
+  predates the working duel and the octagon. Do not resume from it.
+- **The user's entry point is `/jump-on`.** It runs `sprint/start-session.ps1`, reads the
+  board, and reports. `/wrap-up` closes a session out. If the user says "guide me through
+  getting back on", that is `/jump-on` — do not improvise a different sequence.
+- **Also on session start, report today's date and which `sprint/BOARD.md` task is
+  **NEXT UP**.** The 1 September 2026 ship date has **passed**; report the real state
+  against the board, not a countdown to a date that is gone.
+- **Report the coursework as delivered, not as countdowns** — #02 through #09 are all in.
+  **The #08, #09 and #10 requirement PDFs ARE on disk now**, at the repo root; the older
+  line saying they were missing is obsolete. #08 shipped as the standalone repo
+  `AthetosTrace/ascendant-dm`; #09 is tagged `assignment-09-submission`. **#10 is the one
+  still open**, and the `G` track on `sprint/BOARD.md` is what closes it.
 - **When you do not know what to run next, read [`SHIP-PLAN.md`](SHIP-PLAN.md).** Until
   1 September that file answers the question directly, by date and by task id. The
   `goal-planner` is the tool for when there is no plan; there is a plan.

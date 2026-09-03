@@ -1,5 +1,9 @@
 # Sprint board — read this first
 
+**Connecting to the project for the first time today? Read [`../START-HERE.md`](../START-HERE.md)
+first** — it is the one-page connect process (open editor → start MCP → preflight → session),
+and it is what `/jump-on` runs. This file is what you work from once you are connected.
+
 This directory is the operating system for the final push. If you are an agent or a
 person picking this project up cold, **read this file, then `BOARD.md`, then the one task
 file `BOARD.md` points at.** Nothing else. Do not read `TODO.md` — see "Stale files" below.
@@ -46,7 +50,11 @@ the real token counts `G11`'s cost analysis needs. Nothing about it merges here.
 
 ## The protocol — how to "jump on"
 
-Say *"work the next task"* (or name one, e.g. *"work G05"*). The agent then:
+**From a cold start, type `/jump-on`.** It runs the preflight (`start-session.ps1`), reads
+this file, `BOARD.md` and `HANDOFF.md`, and reports where you left off and what is next
+without starting any work. `/wrap-up` closes the session out at the other end.
+
+To work something, say *"work the next task"* (or name one, e.g. *"work G05"*). The agent then:
 
 1. Reads `BOARD.md`, takes the task under **NEXT UP** for that track.
 2. Opens `sprint/tasks/<ID>-*.md` and reads it whole.
